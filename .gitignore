@@ -1,15 +1,24 @@
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
-
-# Test binary, built with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
+build/
+*.bak
+*.iml
+*.log
+*.swo
+*.swp
+*.cpuprof
+*.memprof
 *.out
-
-# Dependency directories (remove the comment below to include it)
-# vendor/
+*.coverprofile
+*.test
+*.orig
+*/vendor
+vendor
+.DS_Store
+.bak
+.idea/
+.vscode/
+celestia
+cel-shed
+cel-key
+coverage.txt
+go.work
+__debug_bin
