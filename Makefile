@@ -7,8 +7,8 @@ DOCKER := $(shell which docker)
 all: install
 
 install: go.sum
-	@echo "--> Installing qgbd"
-	@go install -mod=readonly ./cmd/qgbd
+	@echo "--> Installing qgb"
+	@go install -mod=readonly ./cmd/qgb
 
 go.sum: mod
 	@echo "--> Verifying dependencies have expected content"
@@ -24,7 +24,7 @@ pre-build:
 
 build: mod
 	@mkdir -p build/
-	@go build -o build/ ./cmd
+	@go build -o build ./cmd/qgb
 
 build-docker:
 	@echo "--> Building Docker image"
