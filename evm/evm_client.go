@@ -55,10 +55,10 @@ type Client struct {
 	gasLimit   uint64
 }
 
-// NewEvmClient Creates a new EVM Client that can be used to deploy the QGB contract and
+// NewClient Creates a new EVM Client that can be used to deploy the QGB contract and
 // interact with it.
 // The wrapper parameter can be nil when creating the client for contract deployment.
-func NewEvmClient(
+func NewClient(
 	logger tmlog.Logger,
 	wrapper *wrapper.QuantumGravityBridge,
 	privateKey *ecdsa.PrivateKey,
