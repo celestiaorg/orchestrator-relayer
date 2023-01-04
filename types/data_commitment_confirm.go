@@ -1,0 +1,135 @@
+package types
+
+import (
+	"fmt"
+	"math/big"
+
+	"github.com/celestiaorg/celestia-app/x/qgb/types"
+	"github.com/celestiaorg/orchestrator-relayer/evm"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ethcmn "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/pkg/errors"
+)
+
+var _ AttestationConfirm = &DataCommitmentConfirm{}
+
+// DataCommitmentConfirm describes a data commitment for a set of blocks.
+type DataCommitmentConfirm struct {
+	// Universal nonce referencing the Data Commitment.
+	Nonce uint64
+	// Signature over the commitment, the range of blocks, the validator address
+	// and the Ethereum address.
+	Signature string
+	// Orchestrator account address who will be signing the message.
+	ValidatorAddress string
+	// Hex `0x` encoded Ethereum public key that will be used by this validator on
+	// Ethereum.
+	EthAddress string
+	// Merkle root over a merkle tree containing the data roots of a set of
+	// blocks.
+	Commitment string
+	// First block defining the ordered set of blocks used to create the
+	// commitment.
+	BeginBlock uint64
+	// Last block defining the ordered set of blocks used to create the
+	// commitment.
+	EndBlock uint64
+}
+
+// NewMsgDataCommitmentConfirm creates a new NewMsgDataCommitmentConfirm.
+func NewMsgDataCommitmentConfirm(
+	commitment string,
+	signature string,
+	validatorAddress sdk.AccAddress,
+	ethAddress ethcmn.Address,
+	beginBlock uint64,
+	endBlock uint64,
+	nonce uint64,
+) *DataCommitmentConfirm {
+	return &DataCommitmentConfirm{
+		Commitment:       commitment,
+		Signature:        signature,
+		ValidatorAddress: validatorAddress.String(),
+		EthAddress:       ethAddress.Hex(),
+		BeginBlock:       beginBlock,
+		EndBlock:         endBlock,
+		Nonce:            nonce,
+	}
+}
+
+func IsEmptyMsgDataCommitmentConfirm(dcc DataCommitmentConfirm) bool {
+	emptyDcc := DataCommitmentConfirm{}
+	return dcc.Nonce == emptyDcc.Nonce &&
+		dcc.EthAddress == emptyDcc.EthAddress &&
+		dcc.ValidatorAddress == emptyDcc.ValidatorAddress &&
+		dcc.Commitment == emptyDcc.Commitment &&
+		dcc.Signature == emptyDcc.Signature &&
+		dcc.BeginBlock == emptyDcc.BeginBlock &&
+		dcc.EndBlock == emptyDcc.EndBlock
+}
+
+// DataCommitmentTupleRootSignBytes EncodeDomainSeparatedDataCommitment takes the required input data and
+// produces the required signature to confirm a validator set update on the QGB Ethereum contract.
+// This value will then be signed before being submitted to Cosmos, verified, and then relayed to Ethereum.
+func DataCommitmentTupleRootSignBytes(nonce *big.Int, commitment []byte) ethcmn.Hash {
+	var dataCommitment [32]uint8
+	copy(dataCommitment[:], commitment)
+
+	// the word 'transactionBatch' needs to be the same as the 'name' above in the DataCommitmentConfirmABIJSON
+	// but other than that it's a constant that has no impact on the output. This is because
+	// it gets encoded as a function name which we must then discard.
+	bytes, err := types.InternalQGBabi.Pack(
+		"domainSeparateDataRootTupleRoot",
+		types.DcDomainSeparator,
+		nonce,
+		dataCommitment,
+	)
+	// this should never happen outside of test since any case that could crash on encoding
+	// should be filtered above.
+	if err != nil {
+		panic(fmt.Sprintf("Error packing checkpoint! %s/n", err))
+	}
+
+	// we hash the resulting encoded bytes discarding the first 4 bytes these 4 bytes are the constant
+	// method name 'checkpoint'. If you where to replace the checkpoint constant in this code you would
+	// then need to adjust how many bytes you truncate off the front to get the output of abi.encode()
+	hash := crypto.Keccak256Hash(bytes[4:])
+	return hash
+}
+
+// Validate runs validation on the data commitment confirm to make sure it was well created.
+// it tests if the commitment it carries is the correct commitment. Then, checks whether the signature
+// is valid.
+func (msg *DataCommitmentConfirm) Validate(commitment string) error {
+	if _, err := sdk.AccAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return errors.Wrap(sdkerrors.ErrInvalidAddress, msg.ValidatorAddress)
+	}
+	if msg.BeginBlock > msg.EndBlock {
+		return errors.Wrap(ErrInvalid, "begin block should be less than end block")
+	}
+	if !ethcmn.IsHexAddress(msg.EthAddress) {
+		return errors.Wrap(stakingtypes.ErrEVMAddressNotHex, "ethereum address")
+	}
+	if msg.Commitment != commitment {
+		return ErrInvalidCommitmentInConfirm
+	}
+	bCommitment := ethcmn.Hex2Bytes(commitment)
+	dataRootHash := DataCommitmentTupleRootSignBytes(big.NewInt(int64(msg.Nonce)), bCommitment)
+	err := evm.ValidateEthereumSignature(dataRootHash.Bytes(), ethcmn.Hex2Bytes(msg.Signature), ethcmn.HexToAddress(msg.EthAddress))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetSigners defines whose signature is required.
+func (msg *DataCommitmentConfirm) GetSigners() []sdk.AccAddress {
+	acc, err := sdk.AccAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{acc}
+}
