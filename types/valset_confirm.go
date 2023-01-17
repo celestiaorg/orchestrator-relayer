@@ -66,7 +66,7 @@ func (msg *ValsetConfirm) Validate(vs celestiatypes.Valset) error {
 	if !common.IsHexAddress(msg.EthAddress) {
 		return errors.Wrap(stakingtypes.ErrEVMAddressNotHex, "ethereum address")
 	}
-	signBytes, err := vs.SignBytes(celestiatypes.BridgeID)
+	signBytes, err := vs.SignBytes()
 	if err != nil {
 		return err
 	}

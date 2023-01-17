@@ -319,7 +319,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 }
 
 func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestiatypes.Valset) error {
-	signBytes, err := valset.SignBytes(celestiatypes.BridgeID) // TODO remove and update dependency
+	signBytes, err := valset.SignBytes()
 	if err != nil {
 		return err
 	}
