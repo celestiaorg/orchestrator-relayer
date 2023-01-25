@@ -22,8 +22,8 @@ Use the DHT as an indexing engine for the confirms and then getting the confirms
 
 ```go
 struct SignatureIndex {
-	CID cid.CID
-	IndexSignature []byte // optional: we can write a validator to validate this signature: <https://github.com/libp2p/go-libp2p-record/blob/f093f9649af5edc2edcb3c262bd2d2a4b022d601/validator.go#L27>
+  CID cid.CID
+  IndexSignature []byte // optional: we can write a validator to validate this signature: <https://github.com/libp2p/go-libp2p-record/blob/f093f9649af5edc2edcb3c262bd2d2a4b022d601/validator.go#L27>
 }
 ```
 
@@ -41,8 +41,8 @@ attestationConfirm := AttestationConfirm {
 }
 cid, err := cidlink.DefaultLinkSystem().Store(..., attestationConfirm)
 signatureIndex := SignatureIndex {
-	CID: cid,
-	// other fields
+  CID: cid,
+  // other fields
 }
 indexKey := "<nonce,orchestrator_addr,type>"
 dht.PutValue(ctx, indexKey, signatureIndex)
@@ -114,9 +114,9 @@ The following structs will be stored as DHT values:
 
 ```go
 type DataCommitmentConfirm struct {
-	Signature string
-	EthAddress string
-	Commitment string
+  Signature string
+  EthAddress string
+  Commitment string
 }
 ```
 
@@ -124,8 +124,8 @@ and:
 
 ```go
 type ValsetConfirm struct {
-	EthAddress string
-	Signature string
+  EthAddress string
+  Signature string
 }
 ```
 
@@ -140,17 +140,17 @@ type ValsetValidator struct {
 }
 
 func (vv ValsetValidator) Validate(key string, value []byte) error {
-	// TODO Should verify that the valset is valid, i.e. running stateless checks on it.
-	// The checks should include:
-	// - Correct signature verification
-	// - Correct fields checks. Example, checking if an address field as a correctly formatted address.
-	return nil
+  // TODO Should verify that the valset is valid, i.e. running stateless checks on it.
+  // The checks should include:
+  // - Correct signature verification
+  // - Correct fields checks. Example, checking if an address field as a correctly formatted address.
+  return nil
 }
 
 func (vv ValsetValidator) Select(key string, values [][]byte) (int, error) {
-	// TODO Should run the same stateless checks as the `Validate` function to avoid querying
-	// faulty values.
-	return 0, nil
+  // TODO Should run the same stateless checks as the `Validate` function to avoid querying
+  // faulty values.
+  return 0, nil
 }
 ```
 
@@ -162,10 +162,10 @@ To register a validator, we should do the following when creating the DHT:
 
 ```go
 dht.New(
-		...
-		dht.NamespacedValidator("vs", ValsetValidator{}),
-		dht.NamespacedValidator("dc", DataCommitmentValidator{}),
-	)
+    ...
+    dht.NamespacedValidator("vs", ValsetValidator{}),
+    dht.NamespacedValidator("dc", DataCommitmentValidator{}),
+  )
 ```
 
 This way, we can add values to the DHT following their types:
