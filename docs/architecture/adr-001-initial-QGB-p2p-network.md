@@ -2,7 +2,7 @@
 
 ## Context
 
-The QGB V2 will rely on a P2P network to exchange attestations signatures. This comes after deciding that using the state will result in state bloat,  and using block data will always have an opportunity cost for validators. Thus, we will rely on a P2P network for exchanging attestations' signatures between orchestrators and relayers .
+The QGB V2 will rely on a P2P network to exchange attestations signatures. This comes after deciding that using the state will result in state bloat, and using block data will always have an opportunity cost for validators. Thus, we will rely on a P2P network for exchanging attestations' signatures between orchestrators and relayers.
 
 An attestation signature can be identified by the `(nonce,orchestrator,type)` tuple:
 
@@ -67,14 +67,14 @@ confirm, err := exchange.GetBlock(ctx, index.CID)
 Using the above approach will give us the following limitations:
 
 - Consumers will have to know when to query the network:
-  - This won't be a big of an issue since we can define a delay to start querying: the time when the attestation request was created in the state machine + a few minutes
+  - This won't be an issue since we can define a delay to start querying: the time when the attestation request was created in the state machine + a few minutes
 - We will need to handle republishing the signature indexes periodically. This is because the DHT has a delay of 48 hours before it deletes the values put on it.
 
 ### Options 2: DHT alone
 
 Instead of using bitswap along with the DHT, we could use only the DHT to keep the signatures as values.
 
-This will have the same limitations of option 1. However, these shouldn't be an issue with our use case.
+This will have the same limitations as option 1. However, these shouldn't be an issue with our use case.
 
 Also, it won't be much of a difference between using the DHT as an indexing mechanism, in terms of storage as the structs are almost similar.
 
@@ -129,7 +129,7 @@ type ValsetConfirm struct {
 }
 ```
 
-These will submitted by orchestrators who sign attestations, and will be queried by relayers who submit the confirms to the target EVM chain.
+These will be submitted by orchestrators who sign attestations, and will be queried by relayers who submit the confirms to the target EVM chain.
 
 ### Validators
 
@@ -171,7 +171,7 @@ dht.New(
 This way, we can add values to the DHT following their types:
 
 - `"/vs/<key>"`: refers to a valset confirm with key `<key>`.
-- `"/dc/<key>"`: refers to a data commitment conrirm with key `<key>`.
+- `"/dc/<key>"`: refers to a data commitment confirm with key `<key>`.
 
 ### Keys
 
