@@ -106,4 +106,3 @@ func (q QgbDHT) GetValsetConfirm(ctx context.Context, key string) (types.ValsetC
 	return confirm, nil
 }
 
-// TODO republishing mechanism
