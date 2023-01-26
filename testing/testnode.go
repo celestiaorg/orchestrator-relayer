@@ -12,21 +12,21 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 )
 
-// TestNetwork is a test network that can be used for tests.
-type TestNetwork struct {
+// TestDHTNetwork is a test DHT network that can be used for tests.
+type TestDHTNetwork struct {
 	Context context.Context
 	Hosts   []host.Host
 	Stores  []ds.Batching
 	DHTs    []*p2p.QgbDHT
 }
 
-// NewTestNetwork creates a new test network running in-memory.
+// NewDHTNetwork creates a new DHT test network running in-memory.
 // The stores are in-memory stores.
 // The hosts listen on real ports.
 // The nodes are all connected to `hosts[0]` node.
 // The `count` parameter specifies the number of nodes that the network will run.
 // This function doesn't return any errors, and panics in case any unexpected happened.
-func NewTestNetwork(ctx context.Context, count int) *TestNetwork {
+func NewDHTNetwork(ctx context.Context, count int) *TestDHTNetwork {
 	if count <= 0 {
 		panic("can't create a test network with a negative nodes count")
 	}
@@ -58,7 +58,7 @@ func NewTestNetwork(ctx context.Context, count int) *TestNetwork {
 	}
 	// to give time for the DHT to update its peer table
 	time.Sleep(time.Millisecond)
-	return &TestNetwork{
+	return &TestDHTNetwork{
 		Context: ctx,
 		Hosts:   hosts,
 		Stores:  stores,
@@ -68,7 +68,7 @@ func NewTestNetwork(ctx context.Context, count int) *TestNetwork {
 
 // Stop tears down the test network and stops all the services.
 // Panics if an error occurs.
-func (tn TestNetwork) Stop() {
+func (tn TestDHTNetwork) Stop() {
 	for i := range tn.DHTs {
 		err := tn.DHTs[i].Close()
 		if err != nil {

@@ -11,7 +11,7 @@ import (
 )
 
 func TestPutDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewTestNetwork(context.Background(), 2)
+	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
 	// create a test DataCommitmentConfirm
@@ -37,7 +37,7 @@ func TestPutDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewTestNetwork(context.Background(), 10)
+	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	// create a test DataCommitmentConfirm
@@ -63,7 +63,7 @@ func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestNetworkGetNonExistentDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewTestNetwork(context.Background(), 10)
+	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	// generate a test key for the DataCommitmentConfirm
@@ -76,7 +76,7 @@ func TestNetworkGetNonExistentDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestPutValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewTestNetwork(context.Background(), 2)
+	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
 	// create a test ValsetConfirm
@@ -101,7 +101,7 @@ func TestPutValsetConfirm(t *testing.T) {
 }
 
 func TestNetworkPutValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewTestNetwork(context.Background(), 10)
+	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	// create a test ValsetConfirm
@@ -126,7 +126,7 @@ func TestNetworkPutValsetConfirm(t *testing.T) {
 }
 
 func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewTestNetwork(context.Background(), 10)
+	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	// generate a test key for the ValsetConfirm
