@@ -1,12 +1,19 @@
 name: Lint
-# Lint runs golangci-lint over the entire cosmos-sdk repository
-# This workflow is run on every pull request and push to main
-# The `golangci` will pass without running if no *.{go, mod, sum} files have
-# been changed.
+
 on:
   workflow_call:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: celestiaorg/.github/.github/actions/markdown-lint@main
+
   golangci:
     name: golangci-lint
     runs-on: ubuntu-latest
