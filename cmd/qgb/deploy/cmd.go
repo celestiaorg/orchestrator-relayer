@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func DeployCmd() *cobra.Command {
+func Command() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "deploy <flags>",
 		Short: "Deploys the QGB contract and initializes it using the provided Celestia chain",
