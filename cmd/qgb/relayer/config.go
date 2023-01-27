@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	//nolint:unused
+	//nolint
 	celestiaChainIDFlag = "celes-chain-id"
 	privateKeyFlag      = "eth-priv-key"
 	evmChainIDFlag      = "evm-chain-id"
@@ -21,7 +21,7 @@ const (
 	tendermintRPCFlag   = "celes-http-rpc"
 	evmRPCFlag          = "evm-rpc"
 	contractAddressFlag = "contract-address"
-	//nolint:unused
+	//nolint
 	startingNonceFlag = "starting-nonce"
 	evmGasLimitFlag   = "evm-gas-limit"
 )
