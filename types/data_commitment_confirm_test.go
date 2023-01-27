@@ -43,9 +43,9 @@ func TestDataCommitmentTupleRootSignBytes(t *testing.T) {
 	assert.Equal(t, expectedHash, result)
 }
 
-// padBytes Pad bytes to given length
-func padBytes(byt []byte, length int) ([]byte, error) {
-	l := len(byt)
+// padBytes Pad bytes to a given length
+func padBytes(buf []byte, length int) ([]byte, error) {
+	l := len(buf)
 	if l > length {
 		return nil, fmt.Errorf(
 			"cannot pad bytes because length of bytes array: %d is greater than given length: %d",
@@ -54,9 +54,9 @@ func padBytes(byt []byte, length int) ([]byte, error) {
 		)
 	}
 	if l == length {
-		return byt, nil
+		return buf, nil
 	}
 	tmp := make([]byte, length)
-	copy(tmp[length-l:], byt)
+	copy(tmp[length-l:], buf)
 	return tmp, nil
 }
