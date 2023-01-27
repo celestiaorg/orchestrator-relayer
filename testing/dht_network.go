@@ -20,13 +20,13 @@ type TestDHTNetwork struct {
 	DHTs    []*p2p.QgbDHT
 }
 
-// NewDHTNetwork creates a new DHT test network running in-memory.
+// NewTestDHTNetwork creates a new DHT test network running in-memory.
 // The stores are in-memory stores.
 // The hosts listen on real ports.
 // The nodes are all connected to `hosts[0]` node.
 // The `count` parameter specifies the number of nodes that the network will run.
 // This function doesn't return any errors, and panics in case any unexpected happened.
-func NewDHTNetwork(ctx context.Context, count int) *TestDHTNetwork {
+func NewTestDHTNetwork(ctx context.Context, count int) *TestDHTNetwork {
 	if count <= 0 {
 		panic("can't create a test network with a negative nodes count")
 	}
