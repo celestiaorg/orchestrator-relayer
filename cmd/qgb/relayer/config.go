@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	//nolint:unused
 	celestiaChainIDFlag = "celes-chain-id"
 	privateKeyFlag      = "eth-priv-key"
 	evmChainIDFlag      = "evm-chain-id"
@@ -20,8 +21,9 @@ const (
 	tendermintRPCFlag   = "celes-http-rpc"
 	evmRPCFlag          = "evm-rpc"
 	contractAddressFlag = "contract-address"
-	startingNonceFlag   = "starting-nonce"
-	evmGasLimitFlag     = "evm-gas-limit"
+	//nolint:unused
+	startingNonceFlag = "starting-nonce"
+	evmGasLimitFlag   = "evm-gas-limit"
 )
 
 func addRelayerFlags(cmd *cobra.Command) *cobra.Command {

@@ -27,6 +27,7 @@ func DeployCmd() *cobra.Command {
 	return addDeployFlags(command)
 }
 
+//nolint:unused
 func getStartingValset(ctx context.Context, querier rpc.AppQuerierI, startingNonce string) (*types.Valset, error) {
 	switch startingNonce {
 	case "latest":
