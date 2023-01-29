@@ -1,8 +1,6 @@
 package types_test
 
 import (
-	"testing"
-
 	"bytes"
 	"encoding/hex"
 	"fmt"
@@ -11,11 +9,10 @@ import (
 	"testing"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/require"
-
 	"github.com/celestiaorg/orchestrator-relayer/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDataCommitmentTupleRootSignBytes(t *testing.T) {
