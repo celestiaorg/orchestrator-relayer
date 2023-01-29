@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func RelayerCmd() *cobra.Command {
+func Command() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "relayer <flags>",
 		Short: "Runs the QGB relayer to submit attestations to the target EVM chain",
