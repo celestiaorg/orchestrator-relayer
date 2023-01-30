@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	coregethtypes "github.com/ethereum/go-ethereum/core/types"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
@@ -70,13 +72,37 @@ func (r *Relayer) Start(ctx context.Context) error {
 			r.logger.Error(ErrAttestationNotFound.Error())
 			continue
 		}
-		err = r.ProcessAttestation(ctx, att)
+
+		opts, err := r.EVMClient.NewTransactionOpts(ctx)
 		if err != nil {
 			r.logger.Error(ErrAttestationNotFound.Error())
 			time.Sleep(10 * time.Second)
 			// will keep retrying indefinitely
 			continue
 		}
+
+		tx, err := r.ProcessAttestation(ctx, opts, att)
+		if err != nil {
+			r.logger.Error(ErrAttestationNotFound.Error())
+			time.Sleep(10 * time.Second)
+			// will keep retrying indefinitely
+			continue
+		}
+
+		// wait for transaction to be mined
+		ethClient, err := r.EVMClient.NewEthClient()
+		if err != nil {
+			r.logger.Error(err.Error())
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx)
+		if err != nil {
+			r.logger.Error(err.Error())
+			time.Sleep(2 * time.Second)
+			continue
+		}
+		ethClient.Close()
 	}
 }
 
@@ -88,59 +114,61 @@ func (r *Relayer) Stop() error {
 	return nil
 }
 
-func (r *Relayer) ProcessAttestation(ctx context.Context, att celestiatypes.AttestationRequestI) error {
+func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, att celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
+	var tx *coregethtypes.Transaction
 	if att.Type() == celestiatypes.ValsetRequestType {
 		vs, ok := att.(*celestiatypes.Valset)
 		if !ok {
-			return ErrAttestationNotValsetRequest
+			return nil, ErrAttestationNotValsetRequest
 		}
 		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, time.Minute*30, *vs)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		// FIXME: arguments to be verified
-		err = r.UpdateValidatorSet(ctx, *vs, vs.TwoThirdsThreshold(), confirms)
+		tx, err = r.UpdateValidatorSet(ctx, opts, *vs, vs.TwoThirdsThreshold(), confirms)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	} else {
 		dc, ok := att.(*celestiatypes.DataCommitment)
 		if !ok {
-			return ErrAttestationNotDataCommitmentRequest
+			return nil, ErrAttestationNotDataCommitmentRequest
 		}
 		// todo: make times configurable
 		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *dc)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		err = r.SubmitDataRootTupleRoot(ctx, *valset, confirms[0].Commitment, confirms)
+		tx, err = r.SubmitDataRootTupleRoot(opts, *valset, confirms[0].Commitment, confirms)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return tx, nil
 }
 
 func (r *Relayer) UpdateValidatorSet(
 	ctx context.Context,
+	opts *bind.TransactOpts,
 	valset celestiatypes.Valset,
 	newThreshhold uint64,
 	confirms []types.ValsetConfirm,
-) error {
+) (*coregethtypes.Transaction, error) {
 	var currentValset celestiatypes.Valset
 	if valset.Nonce == 1 {
 		currentValset = valset
 	} else {
 		vs, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, valset.Nonce)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		currentValset = *vs
 	}
@@ -153,30 +181,29 @@ func (r *Relayer) UpdateValidatorSet(
 
 	sigs, err := matchAttestationConfirmSigs(sigsMap, currentValset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = r.EVMClient.UpdateValidatorSet(
-		ctx,
+	tx, err := r.EVMClient.UpdateValidatorSet(
+		opts,
 		valset.Nonce,
 		newThreshhold,
 		currentValset,
 		valset,
 		sigs,
-		true,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return tx, nil
 }
 
 func (r *Relayer) SubmitDataRootTupleRoot(
-	ctx context.Context,
+	opts *bind.TransactOpts,
 	currentValset celestiatypes.Valset,
 	commitment string,
 	confirms []types.DataCommitmentConfirm,
-) error {
+) (*coregethtypes.Transaction, error) {
 	sigsMap := make(map[string]string)
 	// to fetch the signatures easilly by eth address
 	for _, c := range confirms {
@@ -185,7 +212,7 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 
 	sigs, err := matchAttestationConfirmSigs(sigsMap, currentValset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// the confirm carries the correct nonce to be submitted
@@ -197,18 +224,17 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 		confirms[0].EndBlock,
 	))
 
-	err = r.EVMClient.SubmitDataRootTupleRoot(
-		ctx,
+	tx, err := r.EVMClient.SubmitDataRootTupleRoot(
+		opts,
 		ethcmn.HexToHash(commitment),
 		newDataCommitmentNonce,
 		currentValset,
 		sigs,
-		true,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return tx, nil
 }
 
 // matchAttestationConfirmSigs matches and sorts the confirm signatures with the valset
