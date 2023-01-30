@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
+
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
@@ -40,7 +41,7 @@ func NewRelayer(
 	}, nil
 }
 
-func (r *Relayer) ProcessEvents(ctx context.Context) error {
+func (r *Relayer) Start(ctx context.Context) error {
 	for {
 		lastContractNonce, err := r.EVMClient.StateLastEventNonce(&bind.CallOpts{})
 		if err != nil {
@@ -69,43 +70,62 @@ func (r *Relayer) ProcessEvents(ctx context.Context) error {
 			r.logger.Error(ErrAttestationNotFound.Error())
 			continue
 		}
-		if att.Type() == celestiatypes.ValsetRequestType {
-			vs, ok := att.(*celestiatypes.Valset)
-			if !ok {
-				return ErrAttestationNotValsetRequest
-			}
-			confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, time.Minute*30, *vs)
-			if err != nil {
-				return err
-			}
-
-			// FIXME: arguments to be verified
-			err = r.UpdateValidatorSet(ctx, *vs, vs.TwoThirdsThreshold(), confirms)
-			if err != nil {
-				return err
-			}
-		} else {
-			dc, ok := att.(*celestiatypes.DataCommitment)
-			if !ok {
-				return ErrAttestationNotDataCommitmentRequest
-			}
-			// todo: make times configurable
-			confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *dc)
-			if err != nil {
-				return err
-			}
-
-			valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
-			if err != nil {
-				return err
-			}
-
-			err = r.SubmitDataRootTupleRoot(ctx, *valset, confirms[0].Commitment, confirms)
-			if err != nil {
-				return err
-			}
+		err = r.ProcessAttestation(ctx, att)
+		if err != nil {
+			r.logger.Error(ErrAttestationNotFound.Error())
+			time.Sleep(10 * time.Second)
+			// will keep retrying indefinitely
+			continue
 		}
 	}
+}
+
+func (r *Relayer) Stop() error {
+	err := r.TmQuerier.Stop()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Relayer) ProcessAttestation(ctx context.Context, att celestiatypes.AttestationRequestI) error {
+	if att.Type() == celestiatypes.ValsetRequestType {
+		vs, ok := att.(*celestiatypes.Valset)
+		if !ok {
+			return ErrAttestationNotValsetRequest
+		}
+		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, time.Minute*30, *vs)
+		if err != nil {
+			return err
+		}
+
+		// FIXME: arguments to be verified
+		err = r.UpdateValidatorSet(ctx, *vs, vs.TwoThirdsThreshold(), confirms)
+		if err != nil {
+			return err
+		}
+	} else {
+		dc, ok := att.(*celestiatypes.DataCommitment)
+		if !ok {
+			return ErrAttestationNotDataCommitmentRequest
+		}
+		// todo: make times configurable
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *dc)
+		if err != nil {
+			return err
+		}
+
+		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
+		if err != nil {
+			return err
+		}
+
+		err = r.SubmitDataRootTupleRoot(ctx, *valset, confirms[0].Commitment, confirms)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *Relayer) UpdateValidatorSet(
