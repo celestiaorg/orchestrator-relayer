@@ -120,7 +120,7 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, att celestiatypes.Atte
 			return err
 		}
 
-		err = r.SubmitDataRootTupleRoot(ctx, *valset, confirms[0].Commitment, confirms)
+		err = r.SubmitDataRootTupleRoot(ctx, *dc, *valset, confirms[0].Commitment, confirms)
 		if err != nil {
 			return err
 		}
@@ -173,6 +173,7 @@ func (r *Relayer) UpdateValidatorSet(
 
 func (r *Relayer) SubmitDataRootTupleRoot(
 	ctx context.Context,
+	dataCommitment celestiatypes.DataCommitment,
 	currentValset celestiatypes.Valset,
 	commitment string,
 	confirms []types.DataCommitmentConfirm,
@@ -189,12 +190,12 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 	}
 
 	// the confirm carries the correct nonce to be submitted
-	newDataCommitmentNonce := confirms[0].Nonce
+	newDataCommitmentNonce := dataCommitment.Nonce
 
 	r.logger.Info(fmt.Sprintf(
 		"relaying data commitment %d-%d...",
-		confirms[0].BeginBlock,
-		confirms[0].EndBlock,
+		dataCommitment.BeginBlock,
+		dataCommitment.EndBlock,
 	))
 
 	err = r.EVMClient.SubmitDataRootTupleRoot(
