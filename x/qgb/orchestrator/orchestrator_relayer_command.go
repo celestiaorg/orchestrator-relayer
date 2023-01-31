@@ -6,13 +6,10 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
-	blobtypes "github.com/celestiaorg/celestia-app/x/blob/types"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
@@ -66,30 +63,11 @@ func OrchRelayerCmd() *cobra.Command {
 
 			ctx, cancel := context.WithCancel(cmd.Context())
 
-			// creates the Signer
-			// TODO: optionally ask for input for a password
-			ring, err := keyring.New("orchestrator", config.keyringBackend, config.keyringPath, strings.NewReader(""), encCfg.Codec)
-			if err != nil {
-				panic(err)
-			}
-			signer := blobtypes.NewKeyringSigner(
-				ring,
-				config.keyringAccount,
-				config.celestiaChainID,
-			)
-
-			broadcaster, err := NewBroadcaster(config.celesGRPC, signer, config.celestiaGasLimit, config.celestiaTxFee)
-			if err != nil {
-				panic(err)
-			}
-
 			retrier := NewRetrier(logger, 5)
 			orch, err := NewOrchestrator(
 				logger,
 				querier,
-				broadcaster,
 				retrier,
-				signer,
 				*config.privateKey,
 				relay,
 			)

@@ -9,21 +9,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/celestiaorg/celestia-app/app"
-
-	blobtypes "github.com/celestiaorg/celestia-app/x/blob/types"
-	"github.com/celestiaorg/celestia-app/x/qgb/keeper"
-	"github.com/celestiaorg/celestia-app/x/qgb/types"
+	"github.com/celestiaorg/orchestrator-relayer/x/qgb/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktypestx "github.com/cosmos/cosmos-sdk/types/tx"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	corerpctypes "github.com/tendermint/tendermint/rpc/core/types"
 	coretypes "github.com/tendermint/tendermint/types"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -46,13 +39,11 @@ type Orchestrator struct {
 	Logger tmlog.Logger // maybe use a more general interface
 
 	EvmPrivateKey  ecdsa.PrivateKey
-	Signer         *blobtypes.KeyringSigner
 	OrchEVMAddress ethcmn.Address
 	OrchAccAddress sdk.AccAddress
 
-	Querier     Querier
-	Broadcaster BroadcasterI
-	Retrier     RetrierI
+	Querier Querier
+	Retrier RetrierI
 
 	Relayer *Relayer
 }
@@ -60,26 +51,23 @@ type Orchestrator struct {
 func NewOrchestrator(
 	logger tmlog.Logger,
 	querier Querier,
-	broadcaster BroadcasterI,
 	retrier RetrierI,
-	signer *blobtypes.KeyringSigner,
 	evmPrivateKey ecdsa.PrivateKey,
 	relayer *Relayer,
 ) (*Orchestrator, error) {
 	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
 
-	orchAccAddr, err := signer.GetSignerInfo().GetAddress()
-	if err != nil {
-		return nil, err
-	}
+	//orchAccAddr, err := signer.GetSignerInfo().GetAddress()
+	//if err != nil {
+	//	return nil, err
+	//}
+	orchAccAddr := ""
 
 	return &Orchestrator{
 		Logger:         logger,
-		Signer:         signer,
 		EvmPrivateKey:  evmPrivateKey,
 		OrchEVMAddress: orchEVMAddr,
 		Querier:        querier,
-		Broadcaster:    broadcaster,
 		Retrier:        retrier,
 		OrchAccAddress: orchAccAddr,
 		Relayer:        relayer,
@@ -276,11 +264,6 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			EvmAddress: orch.OrchEVMAddress.String(),
 		},
 	}
-	if !keeper.ValidatorPartOfValset(previousValset.Members, orch.OrchEVMAddress.Hex()) {
-		// no need to sign if the orchestrator is not part of the validator set that needs to sign the attestation
-		orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
-		return nil
-	}
 	switch att.Type() {
 	case types.ValsetRequestType:
 		vs, ok := att.(*types.Valset)
@@ -379,84 +362,6 @@ const (
 	DEFAULTCELESTIAGASLIMIT = 100000
 	DEFAULTCELESTIATXFEE    = 100
 )
-
-var _ BroadcasterI = &Broadcaster{}
-
-type BroadcasterI interface {
-	BroadcastTx(ctx context.Context, msg sdk.Msg) (string, error)
-}
-
-type Broadcaster struct {
-	mutex            *sync.Mutex
-	signer           *blobtypes.KeyringSigner
-	qgbGrpc          *grpc.ClientConn
-	celestiaGasLimit uint64
-	fee              int64
-}
-
-func NewBroadcaster(
-	qgbGrpcAddr string,
-	signer *blobtypes.KeyringSigner,
-	celestiaGasLimit uint64,
-	fee int64,
-) (*Broadcaster, error) {
-	qgbGrpc, err := grpc.Dial(qgbGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
-	}
-
-	return &Broadcaster{
-		mutex:            &sync.Mutex{}, // investigate if this is needed
-		signer:           signer,
-		qgbGrpc:          qgbGrpc,
-		celestiaGasLimit: celestiaGasLimit,
-		fee:              fee,
-	}, nil
-}
-
-func (bc *Broadcaster) BroadcastTx(ctx context.Context, msg sdk.Msg) (string, error) {
-	bc.mutex.Lock()
-	defer bc.mutex.Unlock()
-	err := bc.signer.QueryAccountNumber(ctx, bc.qgbGrpc)
-	if err != nil {
-		return "", err
-	}
-
-	builder := bc.signer.NewTxBuilder()
-	builder.SetGasLimit(bc.celestiaGasLimit)
-	builder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(app.BondDenom, sdk.NewInt(bc.fee))))
-
-	// TODO: update this api
-	// via https://github.com/celestiaorg/celestia-app/pull/187/commits/37f96d9af30011736a3e6048bbb35bad6f5b795c
-	tx, err := bc.signer.BuildSignedTx(builder, msg)
-	if err != nil {
-		return "", err
-	}
-
-	rawTx, err := bc.signer.EncodeTx(tx)
-	if err != nil {
-		return "", err
-	}
-
-	// FIXME sdktypestx.BroadcastMode_BROADCAST_MODE_BLOCK waits for a block to be minted containing
-	// the transaction to continue. This makes the orchestrator slow to catchup.
-	// It would be better to just send the transaction. Then, another job would keep an eye
-	// if the transaction was included. If not, retry it. But this would mean we should increment ourselves
-	// the sequence number after each broadcasted transaction.
-	// We can also use BroadcastMode_BROADCAST_MODE_SYNC but it will also fail due to a non incremented
-	// sequence number.
-
-	resp, err := blobtypes.BroadcastTx(ctx, bc.qgbGrpc, sdktypestx.BroadcastMode_BROADCAST_MODE_BLOCK, rawTx)
-	if err != nil {
-		return "", err
-	}
-
-	if resp.TxResponse.Code != 0 {
-		return "", errors.Wrap(ErrFailedBroadcast, resp.TxResponse.RawLog)
-	}
-
-	return resp.TxResponse.TxHash, nil
-}
 
 var _ RetrierI = &Retrier{}
 
