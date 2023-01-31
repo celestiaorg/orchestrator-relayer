@@ -57,7 +57,7 @@ func NewTestDHTNetwork(ctx context.Context, count int) *TestDHTNetwork {
 		}
 	}
 	// to give time for the DHT to update its peer table
-	time.Sleep(time.Millisecond)
+	time.Sleep(10 * time.Millisecond)
 	return &TestDHTNetwork{
 		Context: ctx,
 		Hosts:   hosts,
