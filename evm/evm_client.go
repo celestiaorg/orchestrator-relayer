@@ -61,7 +61,7 @@ type Client struct {
 
 // NewClient Creates a new EVM Client that can be used to deploy the QGB contract and
 // interact with it.
-// The Wrapper parameter can be nil when creating the client for contract deployment.
+// The wrapper parameter can be nil when creating the client for contract deployment.
 func NewClient(
 	logger tmlog.Logger,
 	wrapper *wrapper.QuantumGravityBridge,
