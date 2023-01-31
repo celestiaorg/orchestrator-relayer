@@ -21,6 +21,7 @@ import (
 
 const (
 	MockedSignerPower = 100
+	OrchAddress       = "celestia1hu6qt83qczjvq2wd2t0qg82jlrstv3s0jcmycz"
 )
 
 var _ I = &Orchestrator{}
@@ -57,11 +58,10 @@ func NewOrchestrator(
 ) (*Orchestrator, error) {
 	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
 
-	//orchAccAddr, err := signer.GetSignerInfo().GetAddress()
-	//if err != nil {
-	//	return nil, err
-	//}
-	orchAccAddr := ""
+	orchAccAddr, err := sdk.AccAddressFromBech32(OrchAddress)
+	if err != nil {
+		panic("orchestrator address generation should not fail")
+	}
 
 	return &Orchestrator{
 		Logger:         logger,

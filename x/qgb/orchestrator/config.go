@@ -71,7 +71,7 @@ func addOrchestratorRelayerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().Uint64P(evmChainIDFlag, "z", 5, "Specify the evm chain id")
 	cmd.Flags().StringP(evmRPCFlag, "e", "http://localhost:8545", "Specify the EVM rpc address")
 	cmd.Flags().StringP(contractAddressFlag, "a", "", "Specify the contract at which the qgb is deployed")
-	cmd.Flags().Uint64P(evmGasLimitFlag, "l", DEFAULTEVMGASLIMIT, "Specify the EVM gas limit")
+	cmd.Flags().Uint64P(evmGasLimitFlag, "g", DEFAULTEVMGASLIMIT, "Specify the EVM gas limit")
 
 	return cmd
 }
