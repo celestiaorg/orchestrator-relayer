@@ -1,13 +1,9 @@
 package types
 
 import (
-	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
-	"github.com/celestiaorg/orchestrator-relayer/evm"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"encoding/json"
+
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/pkg/errors"
 )
 
 var _ AttestationConfirm = &ValsetConfirm{}
@@ -22,10 +18,6 @@ var _ AttestationConfirm = &ValsetConfirm{}
 // messages with their signatures, it is then possible for anyone to query them from
 // the QGB P2P network and submit them to Ethereum to update the validator set.
 type ValsetConfirm struct {
-	// Universal nonce referencing the `ValSet`.
-	Nonce uint64
-	// Orchestrator `celes1` account address.
-	Orchestrator string
 	// Ethereum address, associated to the orchestrator, used to sign the `ValSet`
 	// message.
 	EthAddress string
@@ -35,54 +27,37 @@ type ValsetConfirm struct {
 
 // NewMsgValsetConfirm returns a new msgValSetConfirm.
 func NewMsgValsetConfirm(
-	nonce uint64,
 	ethAddress common.Address,
-	validator sdk.AccAddress,
 	signature string,
 ) *ValsetConfirm {
 	return &ValsetConfirm{
-		Nonce:        nonce,
-		Orchestrator: validator.String(),
-		EthAddress:   ethAddress.Hex(),
-		Signature:    signature,
+		EthAddress: ethAddress.Hex(),
+		Signature:  signature,
 	}
+}
+
+// MarshalValsetConfirm Encodes a valset confirm to Json bytes.
+func MarshalValsetConfirm(vs ValsetConfirm) ([]byte, error) {
+	encoded, err := json.Marshal(vs)
+	if err != nil {
+		return nil, err
+	}
+	return encoded, nil
+}
+
+// UnmarshalValsetConfirm Decodes a valset confirm from Json bytes.
+func UnmarshalValsetConfirm(encoded []byte) (ValsetConfirm, error) {
+	var valsetConfirm ValsetConfirm
+	err := json.Unmarshal(encoded, &valsetConfirm)
+	if err != nil {
+		return ValsetConfirm{}, err
+	}
+	return valsetConfirm, nil
 }
 
 // IsEmptyMsgValsetConfirm takes a msg valset confirm and checks if it is an empty one.
 func IsEmptyMsgValsetConfirm(vs ValsetConfirm) bool {
 	emptyVsConfirm := ValsetConfirm{}
-	return vs.Nonce == emptyVsConfirm.Nonce &&
-		vs.EthAddress == emptyVsConfirm.EthAddress &&
-		vs.Orchestrator == emptyVsConfirm.Orchestrator &&
+	return vs.EthAddress == emptyVsConfirm.EthAddress &&
 		vs.Signature == emptyVsConfirm.Signature
-}
-
-// Validate runs validation on the valset confirm to make sure it was well created.
-// For now, it only checks if the signature is correct. Can be improved afterwards.
-func (msg *ValsetConfirm) Validate(vs celestiatypes.Valset) error {
-	if _, err := sdk.AccAddressFromBech32(msg.Orchestrator); err != nil {
-		return errors.Wrap(sdkerrors.ErrInvalidAddress, msg.Orchestrator)
-	}
-	if !common.IsHexAddress(msg.EthAddress) {
-		return errors.Wrap(stakingtypes.ErrEVMAddressNotHex, "ethereum address")
-	}
-	signBytes, err := vs.SignBytes()
-	if err != nil {
-		return err
-	}
-	err = evm.ValidateEthereumSignature(signBytes.Bytes(), common.Hex2Bytes(msg.Signature), common.HexToAddress(msg.EthAddress))
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// GetSigners defines whose signature is required.
-func (msg *ValsetConfirm) GetSigners() []sdk.AccAddress {
-	acc, err := sdk.AccAddressFromBech32(msg.Orchestrator)
-	if err != nil {
-		panic(err)
-	}
-
-	return []sdk.AccAddress{acc}
 }

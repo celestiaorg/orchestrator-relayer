@@ -304,7 +304,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", resp.BeginBlock, "end_block", resp.EndBlock, "commitment", resp.Commitment, "signature", resp.Signature)
+			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", resp.Commitment, "signature", resp.Signature)
 			return nil
 		}
 		err = orch.ProcessDataCommitmentEvent(ctx, *dc)
@@ -330,16 +330,14 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 
 	// create and send the valset hash
 	msg := types.NewMsgValsetConfirm(
-		valset.Nonce,
 		orch.OrchEVMAddress,
-		orch.OrchAccAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
 	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
 	if err != nil {
 		return err
 	}
-	orch.Logger.Info("signed Valset", "nonce", msg.Nonce, "tx_hash", hash)
+	orch.Logger.Info("signed Valset", "nonce", valset.Nonce, "tx_hash", hash)
 	return nil
 }
 
@@ -361,20 +359,12 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 		return err
 	}
 
-	msg := types.NewMsgDataCommitmentConfirm(
-		commitment.String(),
-		ethcmn.Bytes2Hex(dcSig),
-		orch.OrchAccAddress,
-		orch.OrchEVMAddress,
-		dc.BeginBlock,
-		dc.EndBlock,
-		dc.Nonce,
-	)
+	msg := types.NewMsgDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
 	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
 	if err != nil {
 		return err
 	}
-	orch.Logger.Info("signed commitment", "nonce", msg.Nonce, "begin_block", msg.BeginBlock, "end_block", msg.EndBlock, "commitment", commitment, "tx_hash", hash)
+	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", commitment, "tx_hash", hash)
 	return nil
 }
 
