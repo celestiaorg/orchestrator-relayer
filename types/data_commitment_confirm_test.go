@@ -9,11 +9,10 @@ import (
 	"testing"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/stretchr/testify/require"
-
 	"github.com/celestiaorg/orchestrator-relayer/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDataCommitmentTupleRootSignBytes(t *testing.T) {
@@ -41,6 +40,32 @@ func TestDataCommitmentTupleRootSignBytes(t *testing.T) {
 	result := types.DataCommitmentTupleRootSignBytes(big.NewInt(nonce), commitment)
 
 	assert.Equal(t, expectedHash, result)
+}
+
+func TestMarshalDataCommitmentConfirm(t *testing.T) {
+	dataCommitmentConfirm := types.DataCommitmentConfirm{
+		Signature:  "signature",
+		EthAddress: "eth_address",
+		Commitment: "commitment",
+	}
+
+	jsonData, err := types.MarshalDataCommitmentConfirm(dataCommitmentConfirm)
+	assert.NoError(t, err)
+	expectedJSON := `{"Signature":"signature","EthAddress":"eth_address","Commitment":"commitment"}`
+	assert.Equal(t, expectedJSON, string(jsonData))
+}
+
+func TestUnmarshalDataCommitmentConfirm(t *testing.T) {
+	jsonData := []byte(`{"Signature":"signature","EthAddress":"eth_address","Commitment":"commitment"}`)
+	expectedDataCommitmentConfirm := types.DataCommitmentConfirm{
+		Signature:  "signature",
+		EthAddress: "eth_address",
+		Commitment: "commitment",
+	}
+
+	dataCommitmentConfirm, err := types.UnmarshalDataCommitmentConfirm(jsonData)
+	assert.NoError(t, err)
+	assert.Equal(t, dataCommitmentConfirm, expectedDataCommitmentConfirm)
 }
 
 // padBytes Pad bytes to a given length
