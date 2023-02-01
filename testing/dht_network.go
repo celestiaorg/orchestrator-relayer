@@ -2,13 +2,14 @@ package testing
 
 import (
 	"context"
+	"time"
+
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"time"
 )
 
 // TestDHTNetwork is a test DHT network that can be used for tests.
