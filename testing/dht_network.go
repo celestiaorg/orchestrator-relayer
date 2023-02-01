@@ -2,14 +2,13 @@ package testing
 
 import (
 	"context"
-	"time"
-
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
 	"github.com/libp2p/go-libp2p"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
+	"time"
 )
 
 // TestDHTNetwork is a test DHT network that can be used for tests.
@@ -56,13 +55,35 @@ func NewTestDHTNetwork(ctx context.Context, count int) *TestDHTNetwork {
 			}
 		}
 	}
-	// to give time for the DHT to update its peer table
-	time.Sleep(10 * time.Millisecond)
+	err := WaitForPeerTableToUpdate(ctx, dhts, time.Minute)
+	if err != nil {
+		panic(err)
+	}
 	return &TestDHTNetwork{
 		Context: ctx,
 		Hosts:   hosts,
 		Stores:  stores,
 		DHTs:    dhts,
+	}
+}
+
+// WaitForPeerTableToUpdate waits for nodes to have updated their peers list
+func WaitForPeerTableToUpdate(ctx context.Context, dhts []*p2p.QgbDHT, timeout time.Duration) error {
+	withTimeout, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	ticker := time.NewTicker(time.Millisecond)
+	for {
+		select {
+		case <-withTimeout.Done():
+			return ErrTimeout
+		case <-ticker.C:
+			for _, dht := range dhts {
+				if len(dht.RoutingTable().ListPeers()) == 0 {
+					continue
+				}
+				return nil
+			}
+		}
 	}
 }
 
