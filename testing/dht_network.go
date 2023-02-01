@@ -78,10 +78,15 @@ func WaitForPeerTableToUpdate(ctx context.Context, dhts []*p2p.QgbDHT, timeout t
 		case <-withTimeout.Done():
 			return ErrTimeout
 		case <-ticker.C:
-			for _, dht := range dhts {
-				if len(dht.RoutingTable().ListPeers()) == 0 {
-					continue
+			allPeersConnected := func() bool {
+				for _, dht := range dhts {
+					if len(dht.RoutingTable().ListPeers()) == 0 {
+						return false
+					}
 				}
+				return true
+			}
+			if allPeersConnected() {
 				return nil
 			}
 		}
