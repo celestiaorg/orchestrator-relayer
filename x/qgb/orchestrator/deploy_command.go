@@ -39,6 +39,7 @@ func DeployCmd() *cobra.Command {
 					"cannot initialize the QGB contract without having a valset request: %s",
 				)
 			}
+			vs.Members = []types.BridgeValidator{{Power: 100, EvmAddress: EVMAddress}}
 
 			evmClient := NewEvmClient(
 				tmlog.NewTMLogger(os.Stdout),

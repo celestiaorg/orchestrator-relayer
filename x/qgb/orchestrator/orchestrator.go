@@ -22,6 +22,7 @@ import (
 const (
 	MockedSignerPower = 100
 	OrchAddress       = "celestia1hu6qt83qczjvq2wd2t0qg82jlrstv3s0jcmycz"
+	EVMAddress        = "0xe4Db784a433F81572246fE85f5Fb0Fb9486816E3"
 )
 
 var _ I = &Orchestrator{}
