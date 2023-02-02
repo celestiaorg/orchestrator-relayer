@@ -44,6 +44,12 @@ func NewRelayer(
 }
 
 func (r *Relayer) Start(ctx context.Context) error {
+	ethClient, err := r.EVMClient.NewEthClient()
+	if err != nil {
+		r.logger.Error(err.Error())
+		return err
+	}
+	defer ethClient.Close()
 	for {
 		lastContractNonce, err := r.EVMClient.StateLastEventNonce(&bind.CallOpts{})
 		if err != nil {
@@ -90,19 +96,12 @@ func (r *Relayer) Start(ctx context.Context) error {
 		}
 
 		// wait for transaction to be mined
-		ethClient, err := r.EVMClient.NewEthClient()
-		if err != nil {
-			r.logger.Error(err.Error())
-			time.Sleep(2 * time.Second)
-			continue
-		}
 		_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx)
 		if err != nil {
 			r.logger.Error(err.Error())
 			time.Sleep(2 * time.Second)
 			continue
 		}
-		ethClient.Close()
 	}
 }
 
