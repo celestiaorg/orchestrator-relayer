@@ -61,7 +61,7 @@ func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
 	if err != nil {
 		panic(err)
 	}
-	return &TestDHTNetwork{
+	return &DHTNetwork{
 		Context: ctx,
 		Hosts:   hosts,
 		Stores:  stores,
