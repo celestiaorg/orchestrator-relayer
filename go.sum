@@ -99,8 +99,8 @@ github.com/btcsuite/btcd/btcec/v2 v2.3.2/go.mod h1:zYzJ8etWJQIv1Ogk7OzpWjowwOdXY
 github.com/btcsuite/btcd/chaincfg/chainhash v1.0.1 h1:q0rUy8C/TYNBQS1+CGKw68tLOFYSNEs0TFnxxnS9+4U=
 github.com/btcsuite/btcutil v1.0.3-0.20201208143702-a53e38424cce h1:YtWJF7RHm2pYCvA5t0RPmAaLUhREsKuKd+SLhxFbFeQ=
 github.com/buger/jsonparser v0.0.0-20181115193947-bf1c66bbce23/go.mod h1:bbYlZJ7hK1yFx9hf58LP0zeX7UjIGs20ufpu3evjr+s=
-github.com/celestiaorg/celestia-app v0.9.1-0.20230116112831-fb92a69971a4 h1:gEEX4vQ5uUz/ohBDLzYUgdiiYt7pGsJGGXTsnjcGe/E=
-github.com/celestiaorg/celestia-app v0.9.1-0.20230116112831-fb92a69971a4/go.mod h1:GzP7xDlpHAlH2k4ZjhAdMCZiFqc+TSfVTiB84JrWlKk=
+github.com/celestiaorg/celestia-app v0.12.0-rc6.0.20230206204520-a138c19a2215 h1:BSKEnpQcSVswZajJU0FpO2/nqr5jCAOobj00hyL43dU=
+github.com/celestiaorg/celestia-app v0.12.0-rc6.0.20230206204520-a138c19a2215/go.mod h1:60QSrI+bbGzL/m80ocWrYpdg/ECLxmVvVets6vPuG8k=
 github.com/celestiaorg/celestia-core v1.14.0-tm-v0.34.23 h1:8zE523TUe5W33/nheJ9umHF2d1q6iHQlqJfMXMTPe3k=
 github.com/celestiaorg/celestia-core v1.14.0-tm-v0.34.23/go.mod h1:fGDSg7aw2OH/Uze1zymop0x0y1kAPEO9OII2A2cb99Q=
 github.com/celestiaorg/cosmos-sdk v1.8.0-sdk-v0.46.7 h1:EADZy33ufskVIy6Rj6jbi3SOVCeYYo26zUi7iYx+QR0=
