@@ -56,13 +56,40 @@ func NewTestDHTNetwork(ctx context.Context, count int) *TestDHTNetwork {
 			}
 		}
 	}
-	// to give time for the DHT to update its peer table
-	time.Sleep(10 * time.Millisecond)
+	err := WaitForPeerTableToUpdate(ctx, dhts, time.Minute)
+	if err != nil {
+		panic(err)
+	}
 	return &TestDHTNetwork{
 		Context: ctx,
 		Hosts:   hosts,
 		Stores:  stores,
 		DHTs:    dhts,
+	}
+}
+
+// WaitForPeerTableToUpdate waits for nodes to have updated their peers list
+func WaitForPeerTableToUpdate(ctx context.Context, dhts []*p2p.QgbDHT, timeout time.Duration) error {
+	withTimeout, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	ticker := time.NewTicker(time.Millisecond)
+	for {
+		select {
+		case <-withTimeout.Done():
+			return ErrTimeout
+		case <-ticker.C:
+			allPeersConnected := func() bool {
+				for _, dht := range dhts {
+					if len(dht.RoutingTable().ListPeers()) == 0 {
+						return false
+					}
+				}
+				return true
+			}
+			if allPeersConnected() {
+				return nil
+			}
+		}
 	}
 }
 

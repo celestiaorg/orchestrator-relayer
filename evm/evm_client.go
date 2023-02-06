@@ -22,37 +22,41 @@ var _ ClientI = &Client{}
 
 type ClientI interface {
 	DeployQGBContract(
-		ctx context.Context,
+		opts *bind.TransactOpts,
+		backend bind.ContractBackend,
 		contractInitValset types.Valset,
 		contractInitNonce uint64,
-		chainID uint64,
-		waitToBeMined bool,
 		initBridge bool,
 	) (gethcommon.Address, *coregethtypes.Transaction, *wrapper.QuantumGravityBridge, error)
 	UpdateValidatorSet(
-		ctx context.Context,
+		opts *bind.TransactOpts,
 		newNonce, newThreshHold uint64,
 		currentValset, newValset types.Valset,
 		sigs []wrapper.Signature,
-		waitToBeMined bool,
-	) error
+	) (*coregethtypes.Transaction, error)
 	SubmitDataRootTupleRoot(
-		ctx context.Context,
+		opts *bind.TransactOpts,
 		tupleRoot gethcommon.Hash,
 		lastDataCommitmentNonce uint64,
 		currentValset types.Valset,
 		sigs []wrapper.Signature,
-		waitToBeMined bool,
-	) error
+	) (*coregethtypes.Transaction, error)
 	StateLastEventNonce(opts *bind.CallOpts) (uint64, error)
+	WaitForTransaction(
+		ctx context.Context,
+		backend bind.DeployBackend,
+		tx *coregethtypes.Transaction,
+	) (*coregethtypes.Receipt, error)
+	NewEthClient() (*ethclient.Client, error)
+	NewTransactionOpts(ctx context.Context) (*bind.TransactOpts, error)
 }
 
 type Client struct {
 	logger     tmlog.Logger
-	wrapper    *wrapper.QuantumGravityBridge
-	privateKey *ecdsa.PrivateKey
-	evmRPC     string
-	gasLimit   uint64
+	Wrapper    *wrapper.QuantumGravityBridge
+	PrivateKey *ecdsa.PrivateKey
+	EvmRPC     string
+	GasLimit   uint64
 }
 
 // NewClient Creates a new EVM Client that can be used to deploy the QGB contract and
@@ -67,11 +71,21 @@ func NewClient(
 ) *Client {
 	return &Client{
 		logger:     logger,
-		wrapper:    wrapper,
-		privateKey: privateKey,
-		evmRPC:     evmRPC,
-		gasLimit:   gasLimit,
+		Wrapper:    wrapper,
+		PrivateKey: privateKey,
+		EvmRPC:     evmRPC,
+		GasLimit:   gasLimit,
 	}
+}
+
+// NewEthClient creates a new Eth client using the existing EVM RPC address.
+// Should be closed after usage.
+func (ec *Client) NewEthClient() (*ethclient.Client, error) {
+	ethClient, err := ethclient.Dial(ec.EvmRPC)
+	if err != nil {
+		return nil, err
+	}
+	return ethClient, nil
 }
 
 // DeployQGBContract Deploys the QGB contract and initializes it with the provided valset.
@@ -80,24 +94,12 @@ func NewClient(
 // The initBridge, when set to true, will assign the newly deployed bridge to the wrapper. This
 // later can be used for further interactions with the new contract.
 func (ec *Client) DeployQGBContract(
-	ctx context.Context,
+	opts *bind.TransactOpts,
+	backend bind.ContractBackend,
 	contractInitValset types.Valset,
 	contractInitNonce uint64,
-	chainID uint64,
-	waitToBeMined bool,
 	initBridge bool,
 ) (gethcommon.Address, *coregethtypes.Transaction, *wrapper.QuantumGravityBridge, error) {
-	opts, err := bind.NewKeyedTransactorWithChainID(ec.privateKey, big.NewInt(int64(chainID)))
-	if err != nil {
-		return gethcommon.Address{}, nil, nil, err
-	}
-
-	ethClient, err := ethclient.Dial(ec.evmRPC)
-	if err != nil {
-		return gethcommon.Address{}, nil, nil, err
-	}
-	defer ethClient.Close()
-
 	ethVsHash, err := contractInitValset.Hash()
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -106,7 +108,7 @@ func (ec *Client) DeployQGBContract(
 	// deploy the QGB contract using the chain parameters
 	addr, tx, bridge, err := wrapper.DeployQuantumGravityBridge(
 		opts,
-		ethClient,
+		backend,
 		big.NewInt(int64(contractInitNonce)),
 		big.NewInt(int64(contractInitValset.TwoThirdsThreshold())),
 		ethVsHash,
@@ -114,46 +116,32 @@ func (ec *Client) DeployQGBContract(
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
-	if !waitToBeMined {
-		return addr, tx, bridge, nil
-	}
 
 	if initBridge {
 		// initializing the bridge
-		ec.wrapper = bridge
+		ec.Wrapper = bridge
 	}
 
-	receipt, err := ec.waitForTransaction(ctx, tx)
-	if err == nil && receipt != nil && receipt.Status == 1 {
-		ec.logger.Info("deployed QGB contract", "address", addr.Hex(), "hash", tx.Hash().String())
-		return addr, tx, bridge, nil
-	}
-	ec.logger.Error("failed to delpoy QGB contract", "hash", tx.Hash().String())
-	return addr, tx, bridge, err
+	return addr, tx, bridge, nil
 }
 
 func (ec *Client) UpdateValidatorSet(
-	ctx context.Context,
+	opts *bind.TransactOpts,
 	newNonce, newThreshHold uint64,
 	currentValset, newValset types.Valset,
 	sigs []wrapper.Signature,
-	waitToBeMined bool,
-) error {
+) (*coregethtypes.Transaction, error) {
 	// TODO in addition to the nonce, log more interesting information
 	ec.logger.Info("relaying valset", "nonce", newNonce)
-	opts, err := ec.NewTransactOpts(ctx, ec.gasLimit)
-	if err != nil {
-		return err
-	}
 
 	ethVals, err := ethValset(currentValset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	ethVsHash, err := newValset.Hash()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var currentNonce uint64
@@ -163,7 +151,7 @@ func (ec *Client) UpdateValidatorSet(
 		currentNonce = currentValset.Nonce
 	}
 
-	tx, err := ec.wrapper.UpdateValidatorSet(
+	tx, err := ec.Wrapper.UpdateValidatorSet(
 		opts,
 		big.NewInt(int64(newNonce)),
 		big.NewInt(int64(currentNonce)),
@@ -173,42 +161,25 @@ func (ec *Client) UpdateValidatorSet(
 		sigs,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if !waitToBeMined {
-		return nil
-	}
-
-	ec.logger.Debug("waiting for valset to be confirmed", "nonce", newNonce, "hash", tx.Hash().String())
-	receipt, err := ec.waitForTransaction(ctx, tx)
-	if err == nil && receipt != nil && receipt.Status == 1 {
-		ec.logger.Info("relayed valset", "nonce", newNonce, "hash", tx.Hash().String())
-		return nil
-	}
-	ec.logger.Error("failed to relay valset", "nonce", newNonce, "hash", tx.Hash().String())
-	return err
+	return tx, nil
 }
 
 func (ec *Client) SubmitDataRootTupleRoot(
-	ctx context.Context,
+	opts *bind.TransactOpts,
 	tupleRoot gethcommon.Hash,
 	newNonce uint64,
 	currentValset types.Valset,
 	sigs []wrapper.Signature,
-	waitToBeMined bool,
-) error {
-	opts, err := ec.NewTransactOpts(ctx, ec.gasLimit)
-	if err != nil {
-		return err
-	}
-
+) (*coregethtypes.Transaction, error) {
 	ethVals, err := ethValset(currentValset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	tx, err := ec.wrapper.SubmitDataRootTupleRoot(
+	tx, err := ec.Wrapper.SubmitDataRootTupleRoot(
 		opts,
 		big.NewInt(int64(newNonce)),
 		big.NewInt(int64(currentValset.Nonce)),
@@ -217,32 +188,21 @@ func (ec *Client) SubmitDataRootTupleRoot(
 		sigs,
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	if !waitToBeMined {
-		return nil
-	}
-
-	ec.logger.Debug("waiting for data commitment to be confirmed", "nonce", newNonce, "hash", tx.Hash().String())
-	receipt, err := ec.waitForTransaction(ctx, tx)
-	if err == nil && receipt != nil && receipt.Status == 1 {
-		ec.logger.Info("relayed data commitment", "nonce", newNonce, "hash", tx.Hash().String())
-		return nil
-	}
-	ec.logger.Error("failed to relay data commitment", "nonce", newNonce, "hash", tx.Hash().String())
-	return err
+	return tx, nil
 }
 
-func (ec *Client) NewTransactOpts(ctx context.Context, gasLim uint64) (*bind.TransactOpts, error) {
-	builder := newTransactOptsBuilder(ec.privateKey)
+// NewTransactionOpts creates a new transaction Opts to be used when submitting transactions.
+func (ec *Client) NewTransactionOpts(ctx context.Context) (*bind.TransactOpts, error) {
+	builder := newTransactOptsBuilder(ec.PrivateKey)
 
-	ethClient, err := ethclient.Dial(ec.evmRPC)
+	ethClient, err := ethclient.Dial(ec.EvmRPC)
 	if err != nil {
 		return nil, err
 	}
 
-	opts, err := builder(ctx, ethClient, gasLim)
+	opts, err := builder(ctx, ethClient, ec.GasLimit)
 	if err != nil {
 		return nil, err
 	}
@@ -250,24 +210,28 @@ func (ec *Client) NewTransactOpts(ctx context.Context, gasLim uint64) (*bind.Tra
 }
 
 func (ec *Client) StateLastEventNonce(opts *bind.CallOpts) (uint64, error) {
-	nonce, err := ec.wrapper.StateEventNonce(opts)
+	nonce, err := ec.Wrapper.StateEventNonce(opts)
 	if err != nil {
 		return 0, err
 	}
 	return nonce.Uint64(), nil
 }
 
-func (ec *Client) waitForTransaction(
+func (ec *Client) WaitForTransaction(
 	ctx context.Context,
+	backend bind.DeployBackend,
 	tx *coregethtypes.Transaction,
 ) (*coregethtypes.Receipt, error) {
-	ethClient, err := ethclient.Dial(ec.evmRPC)
-	if err != nil {
-		return nil, err
-	}
-	defer ethClient.Close()
+	ec.logger.Debug("waiting for transaction to be confirmed", "hash", tx.Hash().String())
 
-	return bind.WaitMined(ctx, ethClient, tx)
+	receipt, err := bind.WaitMined(ctx, backend, tx)
+	if err == nil && receipt != nil && receipt.Status == 1 {
+		ec.logger.Info("transaction confirmed", "hash", tx.Hash().String(), "block", receipt.BlockNumber.Uint64())
+		return receipt, nil
+	}
+	ec.logger.Error("transaction failed", "hash", tx.Hash().String())
+
+	return receipt, err
 }
 
 func ethValset(valset types.Valset) ([]wrapper.Validator, error) {
