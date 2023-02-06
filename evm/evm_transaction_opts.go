@@ -3,11 +3,9 @@ package evm
 import (
 	"context"
 	"crypto/ecdsa"
-	"errors"
 	"fmt"
 	"math/big"
 
-	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -53,23 +51,6 @@ func newTransactOptsBuilder(privKey *ecdsa.PrivateKey) transactOpsBuilder {
 
 		return auth, nil
 	}
-}
-
-type PersonalSignFn func(account ethcmn.Address, data []byte) (sig []byte, err error)
-
-func PrivateKeyPersonalSignFn(privKey *ecdsa.PrivateKey) (PersonalSignFn, error) {
-	keyAddress := ethcrypto.PubkeyToAddress(privKey.PublicKey)
-
-	signFn := func(from ethcmn.Address, data []byte) (sig []byte, err error) {
-		if from != keyAddress {
-			return nil, errors.New("from address mismatch")
-		}
-
-		protectedHash := accounts.TextHash(data)
-		return ethcrypto.Sign(protectedHash, privKey)
-	}
-
-	return signFn, nil
 }
 
 // SigToVRS breaks apart a signature into its components to make it compatible with the contracts
