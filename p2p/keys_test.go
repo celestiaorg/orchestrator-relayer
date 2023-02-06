@@ -9,20 +9,20 @@ import (
 
 func TestGetValsetConfirmKey(t *testing.T) {
 	nonce := uint64(10)
-	orchAddr := "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
+	evmAddr := "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"
 
-	expectedKey := "/vc/a:celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
-	actualKey := p2p.GetValsetConfirmKey(nonce, orchAddr)
+	expectedKey := "/vc/a:0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"
+	actualKey := p2p.GetValsetConfirmKey(nonce, evmAddr)
 
 	assert.Equal(t, expectedKey, actualKey)
 }
 
 func TestGetDataCommitmentConfirmKey(t *testing.T) {
 	nonce := uint64(10)
-	orchAddr := "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
+	evmAddr := "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"
 
-	expectedKey := "/dcc/a:celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5"
-	actualKey := p2p.GetDataCommitmentConfirmKey(nonce, orchAddr)
+	expectedKey := "/dcc/a:0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"
+	actualKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddr)
 
 	assert.Equal(t, expectedKey, actualKey)
 }
