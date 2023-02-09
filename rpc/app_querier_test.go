@@ -3,108 +3,89 @@ package rpc_test
 import (
 	"context"
 
-	"github.com/celestiaorg/celestia-app/app"
-	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 func (s *QuerierTestSuite) TestQueryAttestationByNonce() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	att, err := appQuerier.QueryAttestationByNonce(context.Background(), 1)
-	require.NoError(t, err)
-	assert.Equal(t, uint64(1), att.GetNonce())
+	s.NoError(err)
+	s.Equal(uint64(1), att.GetNonce())
 }
 
 func (s *QuerierTestSuite) TestQueryLatestAttestationNonce() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	nonce, err := appQuerier.QueryLatestAttestationNonce(context.Background())
-	require.NoError(t, err)
-	assert.Greater(t, nonce, uint64(1))
+	s.NoError(err)
+	s.Greater(nonce, uint64(1))
 }
 
 func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	dc, err := appQuerier.QueryDataCommitmentByNonce(context.Background(), 2)
-	require.NoError(t, err)
-	assert.Equal(t, uint64(2), dc.Nonce)
+	s.NoError(err)
+	s.Equal(uint64(2), dc.Nonce)
 }
 
 func (s *QuerierTestSuite) TestQueryValsetByNonce() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	vs, err := appQuerier.QueryValsetByNonce(context.Background(), 1)
-	require.NoError(t, err)
-	assert.Equal(t, uint64(1), vs.Nonce)
+	s.NoError(err)
+	s.Equal(uint64(1), vs.Nonce)
 }
 
 func (s *QuerierTestSuite) TestQueryLatestValset() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	vs, err := appQuerier.QueryLatestValset(context.Background())
-	require.NoError(t, err)
-	assert.Equal(t, uint64(1), vs.Nonce)
+	s.NoError(err)
+	s.Equal(uint64(1), vs.Nonce)
 }
 
 func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	vs, err := appQuerier.QueryLastValsetBeforeNonce(context.Background(), 2)
-	require.NoError(t, err)
-	assert.Equal(t, uint64(1), vs.Nonce)
+	s.NoError(err)
+	s.Equal(uint64(1), vs.Nonce)
 }
 
 func (s *QuerierTestSuite) TestQueryLastUnbondingHeight() {
-	t := s.T()
-
 	appQuerier := rpc.NewAppQuerier(
-		tmlog.NewNopLogger(),
+		s.Logger,
 		s.Network.GRPCClient,
-		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		s.EncConf,
 	)
 
 	unbondingHeight, err := appQuerier.QueryLastUnbondingHeight(context.Background())
-	require.NoError(t, err)
-	assert.Equal(t, int64(0), unbondingHeight)
+	s.NoError(err)
+	s.Equal(int64(0), unbondingHeight)
 }
