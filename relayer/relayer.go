@@ -22,7 +22,7 @@ import (
 type Relayer struct {
 	TmQuerier  rpc.TmQuerierI
 	AppQuerier rpc.AppQuerierI
-	P2PQuerier p2p.QuerierI
+	P2PQuerier *p2p.Querier
 	EVMClient  evm.ClientI
 	logger     tmlog.Logger
 }
@@ -30,7 +30,7 @@ type Relayer struct {
 func NewRelayer(
 	tmQuerier rpc.TmQuerierI,
 	appQuerier rpc.AppQuerierI,
-	p2pQuerier p2p.QuerierI,
+	p2pQuerier *p2p.Querier,
 	evmClient evm.ClientI,
 	logger tmlog.Logger,
 ) (*Relayer, error) {
@@ -135,13 +135,12 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if !ok {
 			return nil, ErrAttestationNotDataCommitmentRequest
 		}
-		// todo: make times configurable
-		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *dc)
+		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
 		if err != nil {
 			return nil, err
 		}
 
-		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *valset, dc.Nonce)
 		if err != nil {
 			return nil, err
 		}
@@ -215,9 +214,6 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 		return nil, err
 	}
 
-	// the confirm carries the correct nonce to be submitted
-	newDataCommitmentNonce := dataCommitment.Nonce
-
 	r.logger.Info(fmt.Sprintf(
 		"relaying data commitment %d-%d...",
 		dataCommitment.BeginBlock,
@@ -227,7 +223,7 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 	tx, err := r.EVMClient.SubmitDataRootTupleRoot(
 		opts,
 		ethcmn.HexToHash(commitment),
-		newDataCommitmentNonce,
+		dataCommitment.Nonce,
 		currentValset,
 		sigs,
 	)
