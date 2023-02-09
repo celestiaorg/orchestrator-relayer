@@ -140,7 +140,9 @@ func TestValidateEthereumSignature(t *testing.T) {
 			signature: func() []byte {
 				wrongSig := make([]byte, len(signature))
 				copy(wrongSig, signature)
-				wrongSig[10] = 10 // changing a single byte to make the signature different but still valid
+
+                                // changing a single byte to make the signature different but still valid
+				wrongSig[10] = 10 
 				return wrongSig
 			}(),
 			address:   address,
