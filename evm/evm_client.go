@@ -18,39 +18,6 @@ import (
 
 const DEFAULTEVMGASLIMIT = uint64(25000000)
 
-var _ ClientI = &Client{}
-
-type ClientI interface {
-	DeployQGBContract(
-		opts *bind.TransactOpts,
-		backend bind.ContractBackend,
-		contractInitValset types.Valset,
-		contractInitNonce uint64,
-		initBridge bool,
-	) (gethcommon.Address, *coregethtypes.Transaction, *wrapper.QuantumGravityBridge, error)
-	UpdateValidatorSet(
-		opts *bind.TransactOpts,
-		newNonce, newThreshHold uint64,
-		currentValset, newValset types.Valset,
-		sigs []wrapper.Signature,
-	) (*coregethtypes.Transaction, error)
-	SubmitDataRootTupleRoot(
-		opts *bind.TransactOpts,
-		tupleRoot gethcommon.Hash,
-		lastDataCommitmentNonce uint64,
-		currentValset types.Valset,
-		sigs []wrapper.Signature,
-	) (*coregethtypes.Transaction, error)
-	StateLastEventNonce(opts *bind.CallOpts) (uint64, error)
-	WaitForTransaction(
-		ctx context.Context,
-		backend bind.DeployBackend,
-		tx *coregethtypes.Transaction,
-	) (*coregethtypes.Receipt, error)
-	NewEthClient() (*ethclient.Client, error)
-	NewTransactionOpts(ctx context.Context) (*bind.TransactOpts, error)
-}
-
 type Client struct {
 	logger     tmlog.Logger
 	Wrapper    *wrapper.QuantumGravityBridge
@@ -93,6 +60,8 @@ func (ec *Client) NewEthClient() (*ethclient.Client, error) {
 // and log relevant information.
 // The initBridge, when set to true, will assign the newly deployed bridge to the wrapper. This
 // later can be used for further interactions with the new contract.
+// Multiple calls to DeployQGBContract with the initBridge flag set to true will overwrite everytime
+// the bridge contract.
 func (ec *Client) DeployQGBContract(
 	opts *bind.TransactOpts,
 	backend bind.ContractBackend,
