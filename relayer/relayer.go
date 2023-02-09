@@ -20,7 +20,7 @@ import (
 )
 
 type Relayer struct {
-	TmQuerier  rpc.TmQuerierI
+	TmQuerier  *rpc.TmQuerier
 	AppQuerier rpc.AppQuerierI
 	P2PQuerier p2p.QuerierI
 	EVMClient  evm.ClientI
@@ -28,7 +28,7 @@ type Relayer struct {
 }
 
 func NewRelayer(
-	tmQuerier rpc.TmQuerierI,
+	tmQuerier *rpc.TmQuerier,
 	appQuerier rpc.AppQuerierI,
 	p2pQuerier p2p.QuerierI,
 	evmClient evm.ClientI,
