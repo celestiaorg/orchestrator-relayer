@@ -13,6 +13,7 @@ import (
 )
 
 // EVMChain is a wrapped geth simulated backend which will be used to simulate an EVM chain.
+// The resulting chain always has chainID 1337.
 type EVMChain struct {
 	Auth         *bind.TransactOpts
 	GenesisAlloc core.GenesisAlloc
@@ -21,8 +22,8 @@ type EVMChain struct {
 	ChainID      uint64
 }
 
-func NewEVMChain(key *ecdsa.PrivateKey, chainID uint64) *EVMChain {
-	auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(int64(chainID)))
+func NewEVMChain(key *ecdsa.PrivateKey) *EVMChain {
+	auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(1337))
 	if err != nil {
 		panic(err)
 	}
@@ -42,7 +43,7 @@ func NewEVMChain(key *ecdsa.PrivateKey, chainID uint64) *EVMChain {
 		GenesisAlloc: gAlloc,
 		Backend:      backend,
 		Key:          key,
-		ChainID:      chainID,
+		ChainID:      1337,
 	}
 }
 
@@ -66,6 +67,7 @@ func (e *EVMChain) PeriodicCommit(ctx context.Context, delay time.Duration) {
 	}
 }
 
+// Close stops the EVM chain backend.
 func (e *EVMChain) Close() {
 	err := e.Backend.Close()
 	if err != nil {
