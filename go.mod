@@ -3,7 +3,7 @@ module github.com/celestiaorg/orchestrator-relayer
 go 1.19
 
 require (
-	github.com/celestiaorg/celestia-app v0.12.0-rc6.0.20230206204520-a138c19a2215
+	github.com/celestiaorg/celestia-app v0.12.0-rc6.0.20230209025456-f4eb8c116abb
 	github.com/celestiaorg/nmt v0.14.0 // indirect
 	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
 	github.com/ethereum/go-ethereum v1.10.26
