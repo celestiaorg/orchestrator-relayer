@@ -135,5 +135,5 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 	// try to get the non-existent ValsetConfirm
 	actualConfirm, err := network.DHTs[8].GetValsetConfirm(context.Background(), testKey)
 	assert.Error(t, err)
-	assert.True(t, types.IsEmptyMsgValsetConfirm(actualConfirm))
+	assert.True(t, types.IsEmptyValsetConfirm(actualConfirm))
 }
