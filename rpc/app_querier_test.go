@@ -13,8 +13,6 @@ import (
 
 func (s *QuerierTestSuite) TestQueryAttestationByNonce() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(2)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
@@ -29,8 +27,6 @@ func (s *QuerierTestSuite) TestQueryAttestationByNonce() {
 
 func (s *QuerierTestSuite) TestQueryLatestAttestationNonce() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(2)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
@@ -45,8 +41,6 @@ func (s *QuerierTestSuite) TestQueryLatestAttestationNonce() {
 
 func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(500)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
@@ -61,8 +55,6 @@ func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
 
 func (s *QuerierTestSuite) TestQueryValsetByNonce() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(2)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
@@ -77,8 +69,6 @@ func (s *QuerierTestSuite) TestQueryValsetByNonce() {
 
 func (s *QuerierTestSuite) TestQueryLatestValset() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(2)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
@@ -93,8 +83,6 @@ func (s *QuerierTestSuite) TestQueryLatestValset() {
 
 func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(500)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
@@ -109,8 +97,6 @@ func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
 
 func (s *QuerierTestSuite) TestQueryLastUnbondingHeight() {
 	t := s.T()
-	_, err := s.Network.WaitForHeight(2)
-	require.NoError(t, err)
 
 	appQuerier := rpc.NewAppQuerier(
 		tmlog.NewNopLogger(),
