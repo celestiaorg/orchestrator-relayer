@@ -6,8 +6,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
-var _ AttestationConfirm = &ValsetConfirm{}
-
 // ValsetConfirm
 // this is the message sent by the validators when they wish to submit their
 // signatures over the validator set at a given block height. A validators sign the validator set,

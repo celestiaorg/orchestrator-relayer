@@ -27,27 +27,19 @@ type DHTNetwork struct {
 // The `count` parameter specifies the number of nodes that the network will run.
 // This function doesn't return any errors, and panics in case any unexpected happened.
 func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
-	if count <= 0 {
-		panic("can't create a test network with a negative nodes count")
+	if count <= 1 {
+		panic("can't create a test network with a negative nodes count or only 1 DHT node")
 	}
 	hosts := make([]host.Host, count)
 	stores := make([]ds.Batching, count)
 	dhts := make([]*p2p.QgbDHT, count)
 	for i := 0; i < count; i++ {
-		h, err := libp2p.New()
-		if err != nil {
-			panic(err)
-		}
+		h, store, dht := NewTestDHT(ctx)
 		hosts[i] = h
-		store := dssync.MutexWrap(ds.NewMapDatastore())
 		stores[i] = store
-		dht, err := p2p.NewQgbDHT(ctx, h, store)
-		if err != nil {
-			panic(err)
-		}
 		dhts[i] = dht
 		if i != 0 {
-			err = h.Connect(ctx, peer.AddrInfo{
+			err := h.Connect(ctx, peer.AddrInfo{
 				ID:    hosts[0].ID(),
 				Addrs: hosts[0].Addrs(),
 			})
@@ -67,6 +59,20 @@ func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
 		Stores:  stores,
 		DHTs:    dhts,
 	}
+}
+
+// NewTestDHT creates a test DHT not connected to any peers.
+func NewTestDHT(ctx context.Context) (host.Host, ds.Batching, *p2p.QgbDHT) {
+	h, err := libp2p.New()
+	if err != nil {
+		panic(err)
+	}
+	dataStore := dssync.MutexWrap(ds.NewMapDatastore())
+	dht, err := p2p.NewQgbDHT(ctx, h, dataStore)
+	if err != nil {
+		panic(err)
+	}
+	return h, dataStore, dht
 }
 
 // WaitForPeerTableToUpdate waits for nodes to have updated their peers list
