@@ -2,11 +2,12 @@ package main
 
 import (
 	"context"
+	"os"
+
 	"github.com/celestiaorg/celestia-app/x/qgb/client"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/deploy"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/relayer"
-	"os"
 
 	"github.com/spf13/cobra"
 )
