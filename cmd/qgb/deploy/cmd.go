@@ -2,6 +2,9 @@ package deploy
 
 import (
 	"context"
+	"os"
+	"strconv"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
@@ -12,8 +15,6 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"os"
-	"strconv"
 )
 
 func Command() *cobra.Command {
@@ -70,8 +71,7 @@ func Command() *cobra.Command {
 			}
 			defer backend.Close()
 
-			// the deploy QGB contract will handle the logging of the address
-			_, _, _, err = evmClient.DeployQGBContract(
+			address, tx, _, err := evmClient.DeployQGBContract(
 				txOpts,
 				backend,
 				*vs,
@@ -79,7 +79,13 @@ func Command() *cobra.Command {
 				false,
 			)
 			if err != nil {
+				logger.Error("failed to delpoy QGB contract", "hash", tx.Hash().String())
 				return err
+			}
+
+			receipt, err := evmClient.WaitForTransaction(cmd.Context(), backend, tx)
+			if err == nil && receipt != nil && receipt.Status == 1 {
+				logger.Info("deployed QGB contract", "address", address.Hex(), "hash", tx.Hash().String())
 			}
 
 			return nil
