@@ -4,29 +4,24 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
-
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/cobra"
 )
 
 const (
-	celestiaChainIDFlag = "celes-chain-id"
-	privateKeyFlag      = "eth-priv-key"
-	evmChainIDFlag      = "evm-chain-id"
-	celesGRPCFlag       = "celes-grpc"
-	tendermintRPCFlag   = "celes-http-rpc"
-	evmRPCFlag          = "evm-rpc"
-	startingNonceFlag   = "starting-nonce"
-	evmGasLimitFlag     = "evm-gas-limit"
+	privateKeyFlag    = "evm-priv-key"
+	evmChainIDFlag    = "evm-chain-id"
+	celesGRPCFlag     = "celes-grpc"
+	evmRPCFlag        = "evm-rpc"
+	startingNonceFlag = "starting-nonce"
+	evmGasLimitFlag   = "evm-gas-limit"
 )
 
 func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(privateKeyFlag, "d", "", "Provide the private key used to sign the deploy transaction")
-	cmd.Flags().StringP(celestiaChainIDFlag, "x", "user", "Specify the celestia chain id")
 	cmd.Flags().Uint64P(evmChainIDFlag, "z", 5, "Specify the evm chain id")
 	cmd.Flags().StringP(celesGRPCFlag, "c", "localhost:9090", "Specify the grpc address")
-	cmd.Flags().StringP(tendermintRPCFlag, "t", "http://localhost:26657", "Specify the rest rpc address")
 	cmd.Flags().StringP(evmRPCFlag, "e", "http://localhost:8545", "Specify the ethereum rpc address")
 	cmd.Flags().StringP(
 		startingNonceFlag,
