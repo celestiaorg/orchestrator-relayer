@@ -10,8 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var _ AttestationConfirm = &DataCommitmentConfirm{}
-
 // DataCommitmentConfirm describes a data commitment for a set of blocks.
 type DataCommitmentConfirm struct {
 	// Signature over the commitment, the range of blocks, the validator address
@@ -25,8 +23,8 @@ type DataCommitmentConfirm struct {
 	Commitment string
 }
 
-// NewMsgDataCommitmentConfirm creates a new NewMsgDataCommitmentConfirm.
-func NewMsgDataCommitmentConfirm(
+// NewDataCommitmentConfirm creates a new NewDataCommitmentConfirm.
+func NewDataCommitmentConfirm(
 	commitment string,
 	signature string,
 	ethAddress ethcmn.Address,
