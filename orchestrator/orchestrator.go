@@ -43,7 +43,7 @@ type Orchestrator struct {
 	OrchEVMAddress ethcmn.Address
 	OrchAccAddress sdk.AccAddress
 
-	AppQuerier  rpc.AppQuerierI
+	AppQuerier  *rpc.AppQuerier
 	TmQuerier   rpc.TmQuerierI
 	P2PQuerier  p2p.QuerierI
 	Broadcaster BroadcasterI
@@ -52,7 +52,7 @@ type Orchestrator struct {
 
 func New(
 	logger tmlog.Logger,
-	appQuerier rpc.AppQuerierI,
+	appQuerier *rpc.AppQuerier,
 	tmQuerier rpc.TmQuerierI,
 	p2pQuerier p2p.QuerierI,
 	broadcaster BroadcasterI,
@@ -329,7 +329,7 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 	}
 
 	// create and send the valset hash
-	msg := types.NewMsgValsetConfirm(
+	msg := types.NewValsetConfirm(
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
@@ -359,7 +359,7 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 		return err
 	}
 
-	msg := types.NewMsgDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
+	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
 	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
 	if err != nil {
 		return err
