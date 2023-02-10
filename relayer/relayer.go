@@ -23,7 +23,7 @@ type Relayer struct {
 	TmQuerier  rpc.TmQuerierI
 	AppQuerier rpc.AppQuerierI
 	P2PQuerier *p2p.Querier
-	EVMClient  evm.ClientI
+	EVMClient  *evm.Client
 	logger     tmlog.Logger
 }
 
@@ -31,7 +31,7 @@ func NewRelayer(
 	tmQuerier rpc.TmQuerierI,
 	appQuerier rpc.AppQuerierI,
 	p2pQuerier *p2p.Querier,
-	evmClient evm.ClientI,
+	evmClient *evm.Client,
 	logger tmlog.Logger,
 ) (*Relayer, error) {
 	return &Relayer{

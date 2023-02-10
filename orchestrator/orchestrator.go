@@ -329,7 +329,7 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 	}
 
 	// create and send the valset hash
-	msg := types.NewMsgValsetConfirm(
+	msg := types.NewValsetConfirm(
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
@@ -359,7 +359,7 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 		return err
 	}
 
-	msg := types.NewMsgDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
+	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
 	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
 	if err != nil {
 		return err
