@@ -95,7 +95,7 @@ func Command() *cobra.Command {
 }
 
 // getStartingValset get the valset that will be used to init the bridge contract.
-func getStartingValset(ctx context.Context, querier rpc.AppQuerierI, startingNonce string) (*types.Valset, error) {
+func getStartingValset(ctx context.Context, querier *rpc.AppQuerier, startingNonce string) (*types.Valset, error) {
 	switch startingNonce {
 	case "latest":
 		return querier.QueryLatestValset(ctx)
