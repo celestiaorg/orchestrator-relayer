@@ -43,7 +43,7 @@ type Orchestrator struct {
 	OrchEVMAddress ethcmn.Address
 	OrchAccAddress sdk.AccAddress
 
-	AppQuerier  rpc.AppQuerierI
+	AppQuerier  *rpc.AppQuerier
 	TmQuerier   rpc.TmQuerierI
 	P2PQuerier  *p2p.Querier
 	Broadcaster BroadcasterI
@@ -52,7 +52,7 @@ type Orchestrator struct {
 
 func New(
 	logger tmlog.Logger,
-	appQuerier rpc.AppQuerierI,
+	appQuerier *rpc.AppQuerier,
 	tmQuerier rpc.TmQuerierI,
 	p2pQuerier *p2p.Querier,
 	broadcaster BroadcasterI,
