@@ -45,7 +45,7 @@ type Orchestrator struct {
 
 	AppQuerier  *rpc.AppQuerier
 	TmQuerier   rpc.TmQuerierI
-	P2PQuerier  p2p.QuerierI
+	P2PQuerier  *p2p.Querier
 	Broadcaster BroadcasterI
 	Retrier     RetrierI
 }
@@ -54,7 +54,7 @@ func New(
 	logger tmlog.Logger,
 	appQuerier *rpc.AppQuerier,
 	tmQuerier rpc.TmQuerierI,
-	p2pQuerier p2p.QuerierI,
+	p2pQuerier *p2p.Querier,
 	broadcaster BroadcasterI,
 	retrier RetrierI,
 	signer *blobtypes.KeyringSigner,
@@ -276,7 +276,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
 		}
-		resp, err := orch.P2PQuerier.QueryValsetConfirmByOrchestratorAddress(ctx, nonce, orch.OrchAccAddress.String())
+		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.OrchEVMAddress.Hex())
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
@@ -295,10 +295,10 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
 		}
-		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByOrchestratorAddress(
+		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByEVMAddress(
 			ctx,
 			dc.Nonce,
-			orch.OrchAccAddress.String(),
+			orch.OrchEVMAddress.Hex(),
 		)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
