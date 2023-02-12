@@ -12,11 +12,11 @@ import (
 // TmQuerier queries tendermint for commitments and events.
 type TmQuerier struct {
 	logger        tmlog.Logger
-	TendermintRPC client.Client
+	tendermintRPC client.Client
 }
 
 func (tq TmQuerier) Stop() error {
-	err := tq.TendermintRPC.Stop()
+	err := tq.tendermintRPC.Stop()
 	if err != nil {
 		return err
 	}
@@ -29,12 +29,12 @@ func NewTmQuerier(
 ) *TmQuerier {
 	return &TmQuerier{
 		logger:        logger,
-		TendermintRPC: tendermintRPC,
+		tendermintRPC: tendermintRPC,
 	}
 }
 
 func (tq TmQuerier) QueryCommitment(ctx context.Context, beginBlock uint64, endBlock uint64) (bytes.HexBytes, error) {
-	dcResp, err := tq.TendermintRPC.DataCommitment(ctx, beginBlock, endBlock)
+	dcResp, err := tq.tendermintRPC.DataCommitment(ctx, beginBlock, endBlock)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (tq TmQuerier) QueryCommitment(ctx context.Context, beginBlock uint64, endB
 
 func (tq TmQuerier) SubscribeEvents(ctx context.Context, subscriptionName string, query string) (<-chan coretypes.ResultEvent, error) {
 	// This doesn't seem to complain when the node is down
-	results, err := tq.TendermintRPC.Subscribe(
+	results, err := tq.tendermintRPC.Subscribe(
 		ctx,
 		subscriptionName,
 		query,
