@@ -43,18 +43,18 @@ type Orchestrator struct {
 	OrchEVMAddress ethcmn.Address
 	OrchAccAddress sdk.AccAddress
 
-	AppQuerier  rpc.AppQuerierI
+	AppQuerier  *rpc.AppQuerier
 	TmQuerier   rpc.TmQuerierI
-	P2PQuerier  p2p.QuerierI
+	P2PQuerier  *p2p.Querier
 	Broadcaster *Broadcaster
 	Retrier     RetrierI
 }
 
 func New(
 	logger tmlog.Logger,
-	appQuerier rpc.AppQuerierI,
+	appQuerier *rpc.AppQuerier,
 	tmQuerier rpc.TmQuerierI,
-	p2pQuerier p2p.QuerierI,
+	p2pQuerier *p2p.Querier,
 	broadcaster *Broadcaster,
 	retrier RetrierI,
 	signer *blobtypes.KeyringSigner,
@@ -276,7 +276,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
 		}
-		resp, err := orch.P2PQuerier.QueryValsetConfirmByOrchestratorAddress(ctx, nonce, orch.OrchAccAddress.String())
+		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.OrchEVMAddress.Hex())
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
@@ -295,10 +295,10 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
 		}
-		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByOrchestratorAddress(
+		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByEVMAddress(
 			ctx,
 			dc.Nonce,
-			orch.OrchAccAddress.String(),
+			orch.OrchEVMAddress.Hex(),
 		)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
@@ -329,7 +329,7 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 	}
 
 	// create and send the valset hash
-	msg := types.NewMsgValsetConfirm(
+	msg := types.NewValsetConfirm(
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
@@ -359,7 +359,7 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 		return err
 	}
 
-	msg := types.NewMsgDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
+	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
 	err = orch.Broadcaster.BroadcastDataCommitmentConfirm(ctx, dc.Nonce, *msg)
 	if err != nil {
 		return err

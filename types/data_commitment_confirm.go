@@ -23,8 +23,8 @@ type DataCommitmentConfirm struct {
 	Commitment string
 }
 
-// NewMsgDataCommitmentConfirm creates a new NewMsgDataCommitmentConfirm.
-func NewMsgDataCommitmentConfirm(
+// NewDataCommitmentConfirm creates a new NewDataCommitmentConfirm.
+func NewDataCommitmentConfirm(
 	commitment string,
 	signature string,
 	ethAddress ethcmn.Address,

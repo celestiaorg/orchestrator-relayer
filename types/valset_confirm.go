@@ -23,8 +23,8 @@ type ValsetConfirm struct {
 	Signature string
 }
 
-// NewMsgValsetConfirm returns a new msgValSetConfirm.
-func NewMsgValsetConfirm(
+// NewValsetConfirm returns a new msgValSetConfirm.
+func NewValsetConfirm(
 	ethAddress common.Address,
 	signature string,
 ) *ValsetConfirm {
@@ -53,8 +53,8 @@ func UnmarshalValsetConfirm(encoded []byte) (ValsetConfirm, error) {
 	return valsetConfirm, nil
 }
 
-// IsEmptyMsgValsetConfirm takes a msg valset confirm and checks if it is an empty one.
-func IsEmptyMsgValsetConfirm(vs ValsetConfirm) bool {
+// IsEmptyValsetConfirm takes a msg valset confirm and checks if it is an empty one.
+func IsEmptyValsetConfirm(vs ValsetConfirm) bool {
 	emptyVsConfirm := ValsetConfirm{}
 	return vs.EthAddress == emptyVsConfirm.EthAddress &&
 		vs.Signature == emptyVsConfirm.Signature
