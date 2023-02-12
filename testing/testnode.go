@@ -32,6 +32,5 @@ func NewTestNode(ctx context.Context, t *testing.T) *TestNode {
 
 func (tn TestNode) Close() {
 	tn.DHTNetwork.Stop()
-	tn.CelestiaNetwork.Stop()
 	tn.EVMChain.Close()
 }
