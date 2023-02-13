@@ -7,6 +7,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
+// Retrier handles orchestrator retries of failed nonces.
 type Retrier struct {
 	logger        tmlog.Logger
 	retriesNumber int
