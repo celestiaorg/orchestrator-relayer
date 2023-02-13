@@ -22,7 +22,7 @@ import (
 const (
 	MockedSignerPower = 100
 	OrchAddress       = "celestia1hu6qt83qczjvq2wd2t0qg82jlrstv3s0jcmycz"
-	EVMAddress        = "0xe4Db784a433F81572246fE85f5Fb0Fb9486816E3"
+	EVMAddress        = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 )
 
 var _ I = &Orchestrator{}
@@ -61,7 +61,7 @@ func NewOrchestrator(
 
 	orchAccAddr, err := sdk.AccAddressFromBech32(OrchAddress)
 	if err != nil {
-		panic("orchestrator address generation should not fail")
+		panic(fmt.Errorf("orchestrator address generation should not fail: %s", err))
 	}
 
 	return &Orchestrator{
