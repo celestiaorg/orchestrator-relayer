@@ -365,7 +365,15 @@ func (q querier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint64) (
 		&types.QueryLastValsetRequestBeforeNonceRequest{Nonce: nonce},
 	)
 	if err != nil {
-		return nil, err
+		resp, err2 := q.QueryHeight(ctx)
+		if err2 != nil {
+			return nil, err
+		}
+		return &types.Valset{
+			Nonce:   nonce,
+			Members: nil,
+			Height:  resp,
+		}, nil
 	}
 
 	return resp.Valset, nil
