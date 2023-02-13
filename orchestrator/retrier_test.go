@@ -11,7 +11,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-func TestRetryErr(t *testing.T) {
+func TestRetry(t *testing.T) {
 	ret := orchestrator.NewRetrier(tmlog.NewNopLogger(), 10, time.Millisecond)
 	var count int
 	tests := []struct {
