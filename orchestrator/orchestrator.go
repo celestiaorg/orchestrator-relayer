@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"sync"
 
-	blobtypes "github.com/celestiaorg/celestia-app/x/blob/types"
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
@@ -39,7 +38,6 @@ type Orchestrator struct {
 	Logger tmlog.Logger // maybe use a more general interface
 
 	EvmPrivateKey  ecdsa.PrivateKey
-	Signer         *blobtypes.KeyringSigner
 	OrchEVMAddress ethcmn.Address
 	OrchAccAddress sdk.AccAddress
 
@@ -57,19 +55,12 @@ func New(
 	p2pQuerier *p2p.Querier,
 	broadcaster *Broadcaster,
 	retrier *Retrier,
-	signer *blobtypes.KeyringSigner,
 	evmPrivateKey ecdsa.PrivateKey,
 ) (*Orchestrator, error) {
 	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
 
-	orchAccAddr, err := signer.GetSignerInfo().GetAddress()
-	if err != nil {
-		return nil, err
-	}
-
 	return &Orchestrator{
 		Logger:         logger,
-		Signer:         signer,
 		EvmPrivateKey:  evmPrivateKey,
 		OrchEVMAddress: orchEVMAddr,
 		AppQuerier:     appQuerier,
@@ -77,7 +68,6 @@ func New(
 		P2PQuerier:     p2pQuerier,
 		Broadcaster:    broadcaster,
 		Retrier:        retrier,
-		OrchAccAddress: orchAccAddr,
 	}, nil
 }
 
