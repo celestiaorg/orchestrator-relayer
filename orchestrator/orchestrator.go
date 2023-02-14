@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"sync"
 
-	blobtypes "github.com/celestiaorg/celestia-app/x/blob/types"
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
@@ -39,14 +38,13 @@ type Orchestrator struct {
 	Logger tmlog.Logger // maybe use a more general interface
 
 	EvmPrivateKey  ecdsa.PrivateKey
-	Signer         *blobtypes.KeyringSigner
 	OrchEVMAddress ethcmn.Address
 	OrchAccAddress sdk.AccAddress
 
 	AppQuerier  *rpc.AppQuerier
 	TmQuerier   *rpc.TmQuerier
 	P2PQuerier  *p2p.Querier
-	Broadcaster BroadcasterI
+	Broadcaster *Broadcaster
 	Retrier     *Retrier
 }
 
@@ -55,21 +53,14 @@ func New(
 	appQuerier *rpc.AppQuerier,
 	tmQuerier *rpc.TmQuerier,
 	p2pQuerier *p2p.Querier,
-	broadcaster BroadcasterI,
+	broadcaster *Broadcaster,
 	retrier *Retrier,
-	signer *blobtypes.KeyringSigner,
 	evmPrivateKey ecdsa.PrivateKey,
 ) (*Orchestrator, error) {
 	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
 
-	orchAccAddr, err := signer.GetSignerInfo().GetAddress()
-	if err != nil {
-		return nil, err
-	}
-
 	return &Orchestrator{
 		Logger:         logger,
-		Signer:         signer,
 		EvmPrivateKey:  evmPrivateKey,
 		OrchEVMAddress: orchEVMAddr,
 		AppQuerier:     appQuerier,
@@ -77,7 +68,6 @@ func New(
 		P2PQuerier:     p2pQuerier,
 		Broadcaster:    broadcaster,
 		Retrier:        retrier,
-		OrchAccAddress: orchAccAddr,
 	}, nil
 }
 
@@ -333,11 +323,11 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
-	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
+	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg)
 	if err != nil {
 		return err
 	}
-	orch.Logger.Info("signed Valset", "nonce", valset.Nonce, "tx_hash", hash)
+	orch.Logger.Info("signed Valset", "nonce", valset.Nonce)
 	return nil
 }
 
@@ -360,11 +350,11 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 	}
 
 	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
-	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
+	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg)
 	if err != nil {
 		return err
 	}
-	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", commitment, "tx_hash", hash)
+	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", commitment)
 	return nil
 }
 
