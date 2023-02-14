@@ -44,19 +44,19 @@ type Orchestrator struct {
 	OrchAccAddress sdk.AccAddress
 
 	AppQuerier  *rpc.AppQuerier
-	TmQuerier   rpc.TmQuerierI
+	TmQuerier   *rpc.TmQuerier
 	P2PQuerier  *p2p.Querier
 	Broadcaster *Broadcaster
-	Retrier     RetrierI
+	Retrier     *Retrier
 }
 
 func New(
 	logger tmlog.Logger,
 	appQuerier *rpc.AppQuerier,
-	tmQuerier rpc.TmQuerierI,
+	tmQuerier *rpc.TmQuerier,
 	p2pQuerier *p2p.Querier,
 	broadcaster *Broadcaster,
-	retrier RetrierI,
+	retrier *Retrier,
 	signer *blobtypes.KeyringSigner,
 	evmPrivateKey ecdsa.PrivateKey,
 ) (*Orchestrator, error) {
