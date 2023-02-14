@@ -7,14 +7,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-var _ RetrierI = &Retrier{}
-
-// RetrierI handles orchestrator retries of failed nonces.
-type RetrierI interface {
-	Retry(ctx context.Context, nonce uint64, retryMethod func(context.Context, uint64) error) error
-	RetryThenFail(ctx context.Context, nonce uint64, retryMethod func(context.Context, uint64) error)
-}
-
+// Retrier handles orchestrator retries of failed nonces.
 type Retrier struct {
 	logger        tmlog.Logger
 	retriesNumber int

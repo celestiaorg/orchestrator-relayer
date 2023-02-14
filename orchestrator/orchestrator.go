@@ -47,7 +47,7 @@ type Orchestrator struct {
 	TmQuerier   *rpc.TmQuerier
 	P2PQuerier  *p2p.Querier
 	Broadcaster BroadcasterI
-	Retrier     RetrierI
+	Retrier     *Retrier
 }
 
 func New(
@@ -56,7 +56,7 @@ func New(
 	tmQuerier *rpc.TmQuerier,
 	p2pQuerier *p2p.Querier,
 	broadcaster BroadcasterI,
-	retrier RetrierI,
+	retrier *Retrier,
 	signer *blobtypes.KeyringSigner,
 	evmPrivateKey ecdsa.PrivateKey,
 ) (*Orchestrator, error) {
