@@ -52,7 +52,7 @@ func NewEVMChain(key *ecdsa.PrivateKey) *EVMChain {
 
 // DefaultPeriodicCommitDelay the default delay to running the commit function on the
 // simulated network.
-const DefaultPeriodicCommitDelay = time.Nanosecond
+const DefaultPeriodicCommitDelay = time.Millisecond
 
 // PeriodicCommit periodically run `commit()` on the simulated network to mine
 // the hanging blocks.
