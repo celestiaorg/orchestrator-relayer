@@ -57,8 +57,16 @@ const DefaultPeriodicCommitDelay = time.Nanosecond
 // PeriodicCommit periodically run `commit()` on the simulated network to mine
 // the hanging blocks.
 // If there are no hanging transactions, the chain will not advance.
-// Make sure to cancel the context to stop the periodic commit.
 func (e *EVMChain) PeriodicCommit(ctx context.Context, delay time.Duration) {
+	defer func() {
+		if r := recover(); r != nil {
+			// we want to exit when the simulated blockchain has stopped instead of panic.
+			err, ok := r.(error)
+			if !ok || err.Error() != "blockchain is stopped" {
+				panic(r)
+			}
+		}
+	}()
 	ticker := time.NewTicker(delay)
 	for {
 		select {
