@@ -29,7 +29,7 @@ func TestBroadcastDataCommitmentConfirm(t *testing.T) {
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
-	err := broadcaster.BroadcastDataCommitmentConfirm(context.Background(), 10, expectedConfirm)
+	err := broadcaster.ProvideDataCommitmentConfirm(context.Background(), 10, expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the confirm from another peer
@@ -55,7 +55,7 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
-	err := broadcaster.BroadcastValsetConfirm(context.Background(), 10, expectedConfirm)
+	err := broadcaster.ProvideValsetConfirm(context.Background(), 10, expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the confirm from another peer
@@ -86,7 +86,7 @@ func TestEmptyPeersTable(t *testing.T) {
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(dht)
-	err := broadcaster.BroadcastDataCommitmentConfirm(context.Background(), 10, dcConfirm)
+	err := broadcaster.ProvideDataCommitmentConfirm(context.Background(), 10, dcConfirm)
 
 	// check if the correct error is returned
 	assert.Error(t, err)
@@ -99,7 +99,7 @@ func TestEmptyPeersTable(t *testing.T) {
 	}
 
 	// Broadcast the confirm
-	err = broadcaster.BroadcastValsetConfirm(context.Background(), 10, vsConfirm)
+	err = broadcaster.ProvideValsetConfirm(context.Background(), 10, vsConfirm)
 
 	// check if the correct error is returned
 	assert.Error(t, err)

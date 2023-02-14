@@ -333,7 +333,7 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
-	err = orch.Broadcaster.BroadcastValsetConfirm(ctx, valset.Nonce, *msg)
+	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg)
 	if err != nil {
 		return err
 	}
@@ -360,7 +360,7 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 	}
 
 	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
-	err = orch.Broadcaster.BroadcastDataCommitmentConfirm(ctx, dc.Nonce, *msg)
+	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg)
 	if err != nil {
 		return err
 	}
