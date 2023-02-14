@@ -39,8 +39,8 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 		2,
 		10,
 		[]*celestiatypes.InternalBridgeValidator{{
-			10,
-			s.Orchestrator.OrchEVMAddress,
+			Power:      10,
+			EVMAddress: s.Orchestrator.OrchEVMAddress,
 		}},
 	)
 	require.NoError(t, err)
