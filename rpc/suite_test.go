@@ -38,10 +38,6 @@ func (s *QuerierTestSuite) SetupSuite() {
 	require.NoError(t, err)
 }
 
-func (s *QuerierTestSuite) TearDownSuite() {
-	s.Network.Stop()
-}
-
 func TestQueriers(t *testing.T) {
 	suite.Run(t, new(QuerierTestSuite))
 }

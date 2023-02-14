@@ -12,8 +12,11 @@ import (
 	"github.com/ethereum/go-ethereum/core"
 )
 
-// EVMChain is a wrapped geth simulated backend which will be used to simulate an EVM chain.
-// The resulting chain always has chainID 1337.
+// EVMTestNetworkChainID the test EVM network chain ID.
+const EVMTestNetworkChainID = 1337
+
+// EVMChain is a wrapped Geth simulated backend which will be used to simulate an EVM chain.
+// The resulting test chain has always 1337 as a chain ID.
 type EVMChain struct {
 	Auth         *bind.TransactOpts
 	GenesisAlloc core.GenesisAlloc
@@ -23,7 +26,7 @@ type EVMChain struct {
 }
 
 func NewEVMChain(key *ecdsa.PrivateKey) *EVMChain {
-	auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(1337))
+	auth, err := bind.NewKeyedTransactorWithChainID(key, big.NewInt(EVMTestNetworkChainID))
 	if err != nil {
 		panic(err)
 	}
@@ -43,19 +46,27 @@ func NewEVMChain(key *ecdsa.PrivateKey) *EVMChain {
 		GenesisAlloc: gAlloc,
 		Backend:      backend,
 		Key:          key,
-		ChainID:      1337,
+		ChainID:      EVMTestNetworkChainID,
 	}
 }
 
 // DefaultPeriodicCommitDelay the default delay to running the commit function on the
 // simulated network.
-const DefaultPeriodicCommitDelay = time.Nanosecond
+const DefaultPeriodicCommitDelay = time.Millisecond
 
 // PeriodicCommit periodically run `commit()` on the simulated network to mine
 // the hanging blocks.
 // If there are no hanging transactions, the chain will not advance.
-// Make sure to cancel the context to stop the periodic commit.
 func (e *EVMChain) PeriodicCommit(ctx context.Context, delay time.Duration) {
+	defer func() {
+		if r := recover(); r != nil {
+			// we want to exit when the simulated blockchain has stopped instead of panic.
+			err, ok := r.(error)
+			if !ok || err.Error() != "blockchain is stopped" {
+				panic(r)
+			}
+		}
+	}()
 	ticker := time.NewTicker(delay)
 	for {
 		select {
