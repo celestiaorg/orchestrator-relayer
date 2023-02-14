@@ -19,13 +19,13 @@ func TestBroadcastDataCommitmentConfirm(t *testing.T) {
 
 	// create a test DataCommitmentConfirm
 	expectedConfirm := types.DataCommitmentConfirm{
-		EthAddress: "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5",
+		EthAddress: "0x7c2B12b5a07FC6D719Ed7646e5041A7E85758329",
 		Commitment: "test commitment",
 		Signature:  "test signature",
 	}
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
+	testKey := p2p.GetDataCommitmentConfirmKey(10, "0x7c2B12b5a07FC6D719Ed7646e5041A7E85758329")
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
@@ -46,12 +46,12 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 
 	// create a test DataCommitmentConfirm
 	expectedConfirm := types.ValsetConfirm{
-		EthAddress: "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5",
+		EthAddress: "0x7c2B12b5a07FC6D719Ed7646e5041A7E85758329",
 		Signature:  "test signature",
 	}
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetValsetConfirmKey(10, "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5")
+	testKey := p2p.GetValsetConfirmKey(10, "0x7c2B12b5a07FC6D719Ed7646e5041A7E85758329")
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
@@ -79,7 +79,7 @@ func TestEmptyPeersTable(t *testing.T) {
 
 	// create a test DataCommitmentConfirm
 	dcConfirm := types.DataCommitmentConfirm{
-		EthAddress: "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5",
+		EthAddress: "0x7c2B12b5a07FC6D719Ed7646e5041A7E85758329",
 		Commitment: "test commitment",
 		Signature:  "test signature",
 	}
@@ -94,7 +94,7 @@ func TestEmptyPeersTable(t *testing.T) {
 
 	// try with a valset confirm
 	vsConfirm := types.ValsetConfirm{
-		EthAddress: "celes1qktu8009djs6uym9uwj84ead24exkezsaqrmn5",
+		EthAddress: "0x7c2B12b5a07FC6D719Ed7646e5041A7E85758329",
 		Signature:  "test signature",
 	}
 
