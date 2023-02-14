@@ -27,7 +27,7 @@ func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Re
 
 func (r Retrier) Retry(ctx context.Context, nonce uint64, retryMethod func(context.Context, uint64) error) error {
 	var err error
-	for i := 0; i <= r.retriesNumber; i++ {
+	for i := 0; i < r.retriesNumber; i++ {
 		// We can implement some exponential backoff in here
 		select {
 		case <-ctx.Done():
