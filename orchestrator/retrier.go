@@ -18,12 +18,17 @@ type RetrierI interface {
 type Retrier struct {
 	logger        tmlog.Logger
 	retriesNumber int
+	delay         time.Duration
 }
 
-func NewRetrier(logger tmlog.Logger, retriesNumber int) *Retrier {
+// DefaultRetrierDelay default retrier delay
+const DefaultRetrierDelay = 10 * time.Second
+
+func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Retrier {
 	return &Retrier{
 		logger:        logger,
 		retriesNumber: retriesNumber,
+		delay:         delay,
 	}
 }
 
@@ -35,7 +40,7 @@ func (r Retrier) Retry(ctx context.Context, nonce uint64, retryMethod func(conte
 		case <-ctx.Done():
 			return nil
 		default:
-			time.Sleep(10 * time.Second)
+			time.Sleep(r.delay)
 			r.logger.Info("retrying", "nonce", nonce, "retry_number", i, "retries_left", r.retriesNumber-i)
 			err = retryMethod(ctx, nonce)
 			if err == nil {
