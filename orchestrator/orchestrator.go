@@ -46,7 +46,7 @@ type Orchestrator struct {
 	AppQuerier  *rpc.AppQuerier
 	TmQuerier   *rpc.TmQuerier
 	P2PQuerier  *p2p.Querier
-	Broadcaster BroadcasterI
+	Broadcaster *Broadcaster
 	Retrier     *Retrier
 }
 
@@ -55,7 +55,7 @@ func New(
 	appQuerier *rpc.AppQuerier,
 	tmQuerier *rpc.TmQuerier,
 	p2pQuerier *p2p.Querier,
-	broadcaster BroadcasterI,
+	broadcaster *Broadcaster,
 	retrier *Retrier,
 	signer *blobtypes.KeyringSigner,
 	evmPrivateKey ecdsa.PrivateKey,
@@ -333,11 +333,11 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
 	)
-	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
+	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg)
 	if err != nil {
 		return err
 	}
-	orch.Logger.Info("signed Valset", "nonce", valset.Nonce, "tx_hash", hash)
+	orch.Logger.Info("signed Valset", "nonce", valset.Nonce)
 	return nil
 }
 
@@ -360,11 +360,11 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 	}
 
 	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
-	hash, err := orch.Broadcaster.BroadcastConfirm(ctx, msg)
+	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg)
 	if err != nil {
 		return err
 	}
-	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", commitment, "tx_hash", hash)
+	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", commitment)
 	return nil
 }
 
