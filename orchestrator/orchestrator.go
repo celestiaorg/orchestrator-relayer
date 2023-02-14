@@ -23,18 +23,6 @@ import (
 	coretypes "github.com/tendermint/tendermint/types"
 )
 
-var _ I = &Orchestrator{}
-
-type I interface {
-	Start(ctx context.Context)
-	StartNewEventsListener(ctx context.Context, queue chan<- uint64, signalChan <-chan struct{}) error
-	EnqueueMissingEvents(ctx context.Context, queue chan<- uint64, signalChan <-chan struct{}) error
-	ProcessNonces(ctx context.Context, noncesQueue <-chan uint64, signalChan chan<- struct{}) error
-	Process(ctx context.Context, nonce uint64) error
-	ProcessValsetEvent(ctx context.Context, valset celestiatypes.Valset) error
-	ProcessDataCommitmentEvent(ctx context.Context, dc celestiatypes.DataCommitment) error
-}
-
 type Orchestrator struct {
 	Logger tmlog.Logger // maybe use a more general interface
 
