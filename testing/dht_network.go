@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	tmlog "github.com/tendermint/tendermint/libs/log"
+
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
@@ -68,7 +70,7 @@ func NewTestDHT(ctx context.Context) (host.Host, ds.Batching, *p2p.QgbDHT) {
 		panic(err)
 	}
 	dataStore := dssync.MutexWrap(ds.NewMapDatastore())
-	dht, err := p2p.NewQgbDHT(ctx, h, dataStore)
+	dht, err := p2p.NewQgbDHT(ctx, h, dataStore, tmlog.NewNopLogger())
 	if err != nil {
 		panic(err)
 	}
