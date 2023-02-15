@@ -61,7 +61,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query two thirds of confirms. should time-out.
-	confirms, err := querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 10*time.Second, previousValset, dcNonce)
+	confirms, err := querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 10*time.Second, time.Millisecond, previousValset, dcNonce)
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
@@ -79,7 +79,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 20*time.Second, previousValset, dcNonce)
+	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 20*time.Second, time.Millisecond, previousValset, dcNonce)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *dc1)
 	assert.Contains(t, confirms, *dc2)
@@ -98,7 +98,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 20*time.Second, previousValset, dcNonce)
+	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 20*time.Second, time.Millisecond, previousValset, dcNonce)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *dc1)
 	assert.Contains(t, confirms, *dc2)
@@ -149,7 +149,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query two thirds of confirms. should time-out.
-	confirms, err := querier.QueryTwoThirdsValsetConfirms(ctx, 10*time.Second, valset)
+	confirms, err := querier.QueryTwoThirdsValsetConfirms(ctx, 10*time.Second, time.Millisecond, valset)
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
@@ -166,7 +166,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, valset)
+	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, valset)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
@@ -184,7 +184,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, valset)
+	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, valset)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
