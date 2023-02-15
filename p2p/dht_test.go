@@ -146,6 +146,7 @@ func TestWaitForPeers(t *testing.T) {
 	ctx := context.Background()
 	// create first dht
 	h1, _, dht1 := qgbtesting.NewTestDHT(ctx)
+	defer dht1.Close()
 
 	// wait for peers
 	err := dht1.WaitForPeers(ctx, 10*time.Millisecond, time.Millisecond, 1)
@@ -153,7 +154,8 @@ func TestWaitForPeers(t *testing.T) {
 	assert.Error(t, err)
 
 	// create second dht
-	h2, _, _ := qgbtesting.NewTestDHT(ctx)
+	h2, _, dht2 := qgbtesting.NewTestDHT(ctx)
+	defer dht2.Close()
 	// connect to first dht
 	err = h2.Connect(ctx, peer.AddrInfo{
 		ID:    h1.ID(),
