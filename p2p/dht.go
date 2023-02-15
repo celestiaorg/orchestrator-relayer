@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/libp2p/go-libp2p/core/peer"
+
 	"github.com/celestiaorg/orchestrator-relayer/types"
 
 	ds "github.com/ipfs/go-datastore"
@@ -24,7 +26,8 @@ type QgbDHT struct {
 }
 
 // NewQgbDHT create a new IPFS DHT using a suitable configuration for the QGB.
-func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching) (*QgbDHT, error) {
+// If nil is passed for bootstrappers, the DHT will not try to connect to any existing peer.
+func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo) (*QgbDHT, error) {
 	router, err := dht.New(
 		ctx,
 		h,
@@ -34,6 +37,7 @@ func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching) (*QgbDHT, er
 		dht.RoutingTableRefreshPeriod(time.Nanosecond), // TODO investigate which values to use
 		dht.NamespacedValidator(DataCommitmentConfirmNamespace, DataCommitmentConfirmValidator{}),
 		dht.NamespacedValidator(ValsetConfirmNamespace, ValsetConfirmValidator{}),
+		dht.BootstrapPeers(bootstrappers...),
 	)
 	if err != nil {
 		return nil, err
