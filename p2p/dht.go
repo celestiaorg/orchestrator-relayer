@@ -31,7 +31,7 @@ func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching) (*QgbDHT, er
 		dht.Datastore(store),
 		dht.Mode(dht.ModeServer),
 		dht.ProtocolPrefix(ProtocolPrefix),
-		dht.RoutingTableRefreshPeriod(time.Nanosecond), // TODO investigate which values to use
+		dht.RoutingTableRefreshPeriod(time.Minute),
 		dht.NamespacedValidator(DataCommitmentConfirmNamespace, DataCommitmentConfirmValidator{}),
 		dht.NamespacedValidator(ValsetConfirmNamespace, ValsetConfirmValidator{}),
 	)
