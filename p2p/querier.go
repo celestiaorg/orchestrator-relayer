@@ -31,10 +31,14 @@ func NewQuerier(qgbDht *QgbDHT, logger tmlog.Logger) *Querier {
 // P2P network. The method will not return unless it finds more than two thirds, or it times out.
 // No validation is required to be done at this level because the P2P validators defined at
 // `p2p/validators.go` will make sure that the values queried from the DHT are valid.
+// The `timeout` parameter represents the amount of time to wait for confirms before returning, if their number
+// is less than 2/3rds.
+// The `rate` parameter represents the rate at which the requests for confirms are sent to the P2P network.
 // Should return an empty slice and no error if it couldn't find enough signatures.
 func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 	ctx context.Context,
 	timeout time.Duration,
+	rate time.Duration,
 	previousValset celestiatypes.Valset,
 	nonce uint64,
 ) ([]types.DataCommitmentConfirm, error) {
@@ -47,6 +51,8 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 	majThreshHold := previousValset.TwoThirdsThreshold()
 
 	t := time.After(timeout)
+	ticker := time.NewTicker(rate)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
@@ -56,7 +62,7 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 				ErrNotEnoughDataCommitmentConfirms,
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
-		default:
+		case <-ticker.C:
 			confirms, err := q.QueryDataCommitmentConfirms(ctx, previousValset, nonce)
 			if err != nil {
 				return nil, err
@@ -95,9 +101,6 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 				len(previousValset.Members)-len(confirms),
 			)
 		}
-		// TODO: make the sleep configurable
-		// TODO make it as a parameter and use ticker
-		time.Sleep(10 * time.Second)
 	}
 }
 
@@ -105,12 +108,16 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 // P2P network. The method will not return unless it finds more than two thirds, or it times out.
 // No validation is required to be done at this level because the P2P validators defined at
 // `p2p/validators.go` will make sure that the values queried from the DHT are valid.
+// The `timeout` parameter represents the amount of time to wait for confirms before returning, if their number
+// is less than 2/3rds.
+// The `rate` parameter represents the rate at which the requests for confirms are sent to the P2P network.
 // Should return an empty slice and no error if it couldn't find enough signatures.
 // For valsets, generally the first valset, whose nonce is 1, is never signed by the network.
-// Thus, the call to this method for the genesis valset will only timeout.
+// Thus, the call to this method for the genesis valset will only time out.
 func (q Querier) QueryTwoThirdsValsetConfirms(
 	ctx context.Context,
 	timeout time.Duration,
+	rate time.Duration,
 	valset celestiatypes.Valset,
 ) ([]types.ValsetConfirm, error) {
 	// create a map to easily search for power
@@ -121,6 +128,8 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 
 	majThreshHold := valset.TwoThirdsThreshold()
 	t := time.After(timeout)
+	ticker := time.NewTicker(rate)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
@@ -131,7 +140,7 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 				ErrNotEnoughValsetConfirms,
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
-		default:
+		case <-ticker.C:
 			confirms, err := q.QueryValsetConfirms(ctx, valset)
 			if err != nil {
 				return nil, err
@@ -173,8 +182,6 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 				len(valset.Members)-len(confirms),
 			)
 		}
-		// TODO: make the timeout configurable
-		time.Sleep(10 * time.Second)
 	}
 }
 
