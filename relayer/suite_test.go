@@ -22,6 +22,9 @@ type RelayerTestSuite struct {
 
 func (s *RelayerTestSuite) SetupSuite() {
 	t := s.T()
+	if testing.Short() {
+		t.Skip("skipping relayer tests in short mode.")
+	}
 	ctx := context.Background()
 	s.Node = qgbtesting.NewTestNode(ctx, t)
 	_, err := s.Node.CelestiaNetwork.WaitForHeight(2)
