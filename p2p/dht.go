@@ -4,10 +4,9 @@ import (
 	"context"
 	"time"
 
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	"github.com/libp2p/go-libp2p/core/peer"
-
 	"github.com/celestiaorg/orchestrator-relayer/types"
-
 	ds "github.com/ipfs/go-datastore"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
@@ -23,18 +22,19 @@ const (
 // Used to add helper methods to easily handle the DHT.
 type QgbDHT struct {
 	*dht.IpfsDHT
+	logger tmlog.Logger
 }
 
 // NewQgbDHT create a new IPFS DHT using a suitable configuration for the QGB.
 // If nil is passed for bootstrappers, the DHT will not try to connect to any existing peer.
-func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo) (*QgbDHT, error) {
+func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo, logger tmlog.Logger) (*QgbDHT, error) {
 	router, err := dht.New(
 		ctx,
 		h,
 		dht.Datastore(store),
 		dht.Mode(dht.ModeServer),
 		dht.ProtocolPrefix(ProtocolPrefix),
-		dht.RoutingTableRefreshPeriod(time.Nanosecond), // TODO investigate which values to use
+		dht.RoutingTableRefreshPeriod(time.Minute),
 		dht.NamespacedValidator(DataCommitmentConfirmNamespace, DataCommitmentConfirmValidator{}),
 		dht.NamespacedValidator(ValsetConfirmNamespace, ValsetConfirmValidator{}),
 		dht.BootstrapPeers(bootstrappers...),
@@ -43,7 +43,42 @@ func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrapper
 		return nil, err
 	}
 
-	return &QgbDHT{router}, nil
+	return &QgbDHT{
+		IpfsDHT: router,
+		logger:  logger,
+	}, nil
+}
+
+// WaitForPeers waits for peers to be connected to the DHT.
+// Returns nil if the context is done or the peers list has more peers than the specified peersThreshold.
+// Returns error if it times out.
+func (q QgbDHT) WaitForPeers(ctx context.Context, timeout time.Duration, rate time.Duration, peersThreshold int) error {
+	if peersThreshold < 1 {
+		return ErrPeersThresholdCannotBeNegative
+	}
+
+	t := time.After(timeout)
+	ticker := time.NewTicker(rate)
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-t:
+			return ErrPeersTimeout
+		case <-ticker.C:
+			peersLen := len(q.RoutingTable().ListPeers())
+			if peersLen >= peersThreshold {
+				return nil
+			}
+			q.logger.Info(
+				"waiting for routing table to populate",
+				"target number of peers",
+				peersThreshold,
+				"current number",
+				peersLen,
+			)
+		}
+	}
 }
 
 // Note: The Get and Put methods do not run any validations on the data commitment confirms
