@@ -11,7 +11,7 @@ import (
 
 func (s *RelayerTestSuite) TestProcessAttestation() {
 	t := s.T()
-	_, err := s.Node.CelestiaNetwork.WaitForHeight(500)
+	_, err := s.Node.CelestiaNetwork.WaitForHeight(100)
 	require.NoError(t, err)
 
 	att := types.NewDataCommitment(2, 10, 100)

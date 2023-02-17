@@ -3,6 +3,7 @@ package relayer_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 
@@ -25,8 +26,9 @@ func (s *RelayerTestSuite) SetupSuite() {
 	s.Node = qgbtesting.NewTestNode(ctx, t)
 	_, err := s.Node.CelestiaNetwork.WaitForHeight(2)
 	require.NoError(t, err)
-	s.Relayer = qgbtesting.NewRelayer(s.Node)
 	s.Orchestrator = qgbtesting.NewOrchestrator(s.Node)
+	s.Relayer = qgbtesting.NewRelayer(s.Node)
+	go s.Node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
 	initVs, err := s.Relayer.AppQuerier.QueryValsetByNonce(s.Node.Context, 1)
 	require.NoError(t, err)
 	_, _, _, err = s.Relayer.EVMClient.DeployQGBContract(s.Node.EVMChain.Auth, s.Node.EVMChain.Backend, *initVs, 1, true)

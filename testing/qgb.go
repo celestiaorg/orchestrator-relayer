@@ -9,11 +9,6 @@ import (
 	celestiatestnode "github.com/celestiaorg/celestia-app/testutil/testnode"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
-	"github.com/celestiaorg/orchestrator-relayer/rpc"
-
-	"github.com/celestiaorg/celestia-app/app"
-	"github.com/celestiaorg/celestia-app/app/encoding"
-	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/relayer"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 
