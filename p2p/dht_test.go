@@ -3,6 +3,10 @@ package p2p_test
 import (
 	"context"
 	"testing"
+	"time"
+
+	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/stretchr/testify/require"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
@@ -136,4 +140,30 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 	actualConfirm, err := network.DHTs[8].GetValsetConfirm(context.Background(), testKey)
 	assert.Error(t, err)
 	assert.True(t, types.IsEmptyValsetConfirm(actualConfirm))
+}
+
+func TestWaitForPeers(t *testing.T) {
+	ctx := context.Background()
+	// create first dht
+	h1, _, dht1 := qgbtesting.NewTestDHT(ctx)
+	defer dht1.Close()
+
+	// wait for peers
+	err := dht1.WaitForPeers(ctx, 10*time.Millisecond, time.Millisecond, 1)
+	// should error because no peer is connected to this dht
+	assert.Error(t, err)
+
+	// create second dht
+	h2, _, dht2 := qgbtesting.NewTestDHT(ctx)
+	defer dht2.Close()
+	// connect to first dht
+	err = h2.Connect(ctx, peer.AddrInfo{
+		ID:    h1.ID(),
+		Addrs: h1.Addrs(),
+	})
+	require.NoError(t, err)
+
+	// wait for peers
+	err = dht1.WaitForPeers(ctx, 10*time.Millisecond, time.Millisecond, 1)
+	assert.NoError(t, err)
 }
