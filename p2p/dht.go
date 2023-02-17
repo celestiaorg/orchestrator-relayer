@@ -4,12 +4,12 @@ import (
 	"context"
 	"time"
 
-	tmlog "github.com/tendermint/tendermint/libs/log"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	ds "github.com/ipfs/go-datastore"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 const (

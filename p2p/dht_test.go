@@ -5,14 +5,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/stretchr/testify/require"
-
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDHTBootstrappers(t *testing.T) {
@@ -171,7 +169,7 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 func TestWaitForPeers(t *testing.T) {
 	ctx := context.Background()
 	// create first dht
-	h1, _, dht1 := qgbtesting.NewTestDHT(ctx)
+	h1, _, dht1 := qgbtesting.NewTestDHT(ctx, nil)
 	defer dht1.Close()
 
 	// wait for peers
@@ -180,7 +178,7 @@ func TestWaitForPeers(t *testing.T) {
 	assert.Error(t, err)
 
 	// create second dht
-	h2, _, dht2 := qgbtesting.NewTestDHT(ctx)
+	h2, _, dht2 := qgbtesting.NewTestDHT(ctx, nil)
 	defer dht2.Close()
 	// connect to first dht
 	err = h2.Connect(ctx, peer.AddrInfo{
