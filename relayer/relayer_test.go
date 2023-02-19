@@ -2,6 +2,7 @@ package relayer_test
 
 import (
 	"context"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -11,7 +12,7 @@ import (
 
 func (s *RelayerTestSuite) TestProcessAttestation() {
 	t := s.T()
-	_, err := s.Node.CelestiaNetwork.WaitForHeight(500)
+	_, err := s.Node.CelestiaNetwork.WaitForHeightWithTimeout(400, 30*time.Second)
 	require.NoError(t, err)
 
 	att := types.NewDataCommitment(2, 10, 100)
