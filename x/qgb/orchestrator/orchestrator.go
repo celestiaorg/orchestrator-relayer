@@ -297,19 +297,6 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			EndBlock:   dcApp.EndBlock,
 		}
 
-		resp, err := orch.Querier.QueryDataCommitmentConfirm(
-			ctx,
-			dc.EndBlock,
-			dc.BeginBlock,
-			orch.OrchAccAddress.String(),
-		)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
-		}
-		if resp != nil {
-			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", resp.BeginBlock, "end_block", resp.EndBlock, "commitment", resp.Commitment, "signature", resp.Signature)
-			return nil
-		}
 		err = orch.ProcessDataCommitmentEvent(ctx, *dc, *previousValset)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
