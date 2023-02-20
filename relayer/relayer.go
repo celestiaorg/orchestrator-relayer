@@ -120,7 +120,7 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if !ok {
 			return nil, ErrAttestationNotValsetRequest
 		}
-		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, time.Minute*30, *vs)
+		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, *vs)
 		if err != nil {
 			return nil, err
 		}
@@ -140,7 +140,7 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 			return nil, err
 		}
 
-		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *valset, dc.Nonce)
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, dc.Nonce)
 		if err != nil {
 			return nil, err
 		}
