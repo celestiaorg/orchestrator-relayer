@@ -14,6 +14,7 @@ const (
 	celestiaGRPCFlag    = "celes-grpc"
 	evmPrivateKeyFlag   = "evm-priv-key"
 	tendermintRPCFlag   = "celes-http-rpc"
+	bootstrappersFlag   = "bootstrappers"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -26,12 +27,14 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 		"",
 		"Specify the ECDSA private key used to sign orchestrator commitments in hex",
 	)
+	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	return cmd
 }
 
 type Config struct {
 	celestiaChainID, celesGRPC, tendermintRPC string
 	privateKey                                *ecdsa.PrivateKey
+	bootstrappers                             string
 }
 
 func parseOrchestratorFlags(cmd *cobra.Command) (Config, error) {
@@ -58,11 +61,16 @@ func parseOrchestratorFlags(cmd *cobra.Command) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	bootstrappers, err := cmd.Flags().GetString(bootstrappersFlag)
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
 		privateKey:      evmPrivKey,
 		celestiaChainID: chainID,
 		celesGRPC:       celesGRPC,
 		tendermintRPC:   tendermintRPC,
+		bootstrappers:   bootstrappers,
 	}, nil
 }
