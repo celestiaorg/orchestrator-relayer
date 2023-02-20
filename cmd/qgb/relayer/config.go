@@ -13,7 +13,6 @@ import (
 )
 
 const (
-	// celestiaChainIDFlag = "celes-chain-id"
 	privateKeyFlag      = "eth-priv-key"
 	evmChainIDFlag      = "evm-chain-id"
 	celesGRPCFlag       = "celes-grpc"
