@@ -120,7 +120,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			// creating thee p2p querier
+			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
 
 			broadcaster := orchestrator.NewBroadcaster(dht)
