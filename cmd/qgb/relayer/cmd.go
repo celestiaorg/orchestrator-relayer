@@ -3,7 +3,6 @@ package relayer
 import (
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -150,29 +149,19 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			wg := &sync.WaitGroup{}
-
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				for {
-					select {
-					case <-cmd.Context().Done():
-						return
-					default:
-						err = relay.Start(cmd.Context())
-						if err != nil {
-							logger.Error(err.Error())
-							time.Sleep(time.Second * 30)
-							continue
-						}
-						return
+			for {
+				select {
+				case <-cmd.Context().Done():
+					return nil
+				default:
+					err = relay.Start(cmd.Context())
+					if err == nil {
+						return nil
 					}
+					logger.Error(err.Error())
+					time.Sleep(time.Second * 30)
 				}
-			}()
-			wg.Wait()
-
-			return nil
+			}
 		},
 	}
 	return addRelayerFlags(command)
