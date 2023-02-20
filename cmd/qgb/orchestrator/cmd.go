@@ -109,7 +109,7 @@ func Command() *cobra.Command {
 			}
 
 			// creating the dht
-			dht, err := p2p.NewQgbDHT(cmd.Context(), h, dataStore, logger, bootstrappers)
+			dht, err := p2p.NewQgbDHT(cmd.Context(), h, dataStore, bootstrappers, logger)
 			if err != nil {
 				return err
 			}
