@@ -29,7 +29,8 @@ func TestDHTBootstrappers(t *testing.T) {
 	)
 
 	// give some time for the routing table to be updated
-	time.Sleep(time.Second)
+	err := dht1.WaitForPeers(ctx, 5*time.Second, time.Millisecond, 1)
+	require.NoError(t, err)
 
 	// check if connected
 	assert.Equal(t, dht2.RoutingTable().ListPeers()[0].String(), h1.ID().String())
