@@ -19,7 +19,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
-	"github.com/libp2p/go-libp2p"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/http"
@@ -92,7 +91,10 @@ func Command() *cobra.Command {
 			appQuerier := rpc.NewAppQuerier(logger, qgbGRPC, encCfg)
 
 			// creating the host
-			h, err := libp2p.New()
+			h, err := p2p.CreateHost(config.p2pListenAddr, config.p2pIdentity)
+			if err != nil {
+				return err
+			}
 			if err != nil {
 				return err
 			}
@@ -140,7 +142,7 @@ func Command() *cobra.Command {
 				evm.NewClient(
 					logger,
 					qgbWrapper,
-					config.privateKey,
+					config.evmPrivateKey,
 					config.evmRPC,
 					config.evmGasLimit,
 				),
