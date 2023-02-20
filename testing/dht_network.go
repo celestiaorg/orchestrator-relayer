@@ -36,18 +36,13 @@ func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
 	stores := make([]ds.Batching, count)
 	dhts := make([]*p2p.QgbDHT, count)
 	for i := 0; i < count; i++ {
-		h, store, dht := NewTestDHT(ctx)
-		hosts[i] = h
-		stores[i] = store
-		dhts[i] = dht
-		if i != 0 {
-			err := h.Connect(ctx, peer.AddrInfo{
+		if i == 0 {
+			hosts[i], stores[i], dhts[i] = NewTestDHT(ctx, nil)
+		} else {
+			hosts[i], stores[i], dhts[i] = NewTestDHT(ctx, []peer.AddrInfo{{
 				ID:    hosts[0].ID(),
 				Addrs: hosts[0].Addrs(),
-			})
-			if err != nil {
-				panic(err)
-			}
+			}})
 		}
 	}
 	// to give time for the DHT to update its peer table
@@ -64,13 +59,13 @@ func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
 }
 
 // NewTestDHT creates a test DHT not connected to any peers.
-func NewTestDHT(ctx context.Context) (host.Host, ds.Batching, *p2p.QgbDHT) {
+func NewTestDHT(ctx context.Context, bootstrappers []peer.AddrInfo) (host.Host, ds.Batching, *p2p.QgbDHT) {
 	h, err := libp2p.New()
 	if err != nil {
 		panic(err)
 	}
 	dataStore := dssync.MutexWrap(ds.NewMapDatastore())
-	dht, err := p2p.NewQgbDHT(ctx, h, dataStore, tmlog.NewNopLogger())
+	dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, tmlog.NewNopLogger())
 	if err != nil {
 		panic(err)
 	}

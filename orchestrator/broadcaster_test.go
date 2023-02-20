@@ -69,7 +69,7 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 // TestEmptyPeersTable tests that values are not broadcasted if the DHT peers
 // table is empty.
 func TestEmptyPeersTable(t *testing.T) {
-	_, _, dht := qgbtesting.NewTestDHT(context.Background())
+	_, _, dht := qgbtesting.NewTestDHT(context.Background(), nil)
 	defer func(dht *p2p.QgbDHT) {
 		err := dht.Close()
 		if err != nil {

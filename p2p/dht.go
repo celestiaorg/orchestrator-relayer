@@ -4,13 +4,12 @@ import (
 	"context"
 	"time"
 
-	tmlog "github.com/tendermint/tendermint/libs/log"
-
 	"github.com/celestiaorg/orchestrator-relayer/types"
-
 	ds "github.com/ipfs/go-datastore"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
+	"github.com/libp2p/go-libp2p/core/peer"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 const (
@@ -27,7 +26,8 @@ type QgbDHT struct {
 }
 
 // NewQgbDHT create a new IPFS DHT using a suitable configuration for the QGB.
-func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, logger tmlog.Logger) (*QgbDHT, error) {
+// If nil is passed for bootstrappers, the DHT will not try to connect to any existing peer.
+func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo, logger tmlog.Logger) (*QgbDHT, error) {
 	router, err := dht.New(
 		ctx,
 		h,
@@ -37,6 +37,7 @@ func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, logger tmlog
 		dht.RoutingTableRefreshPeriod(time.Minute),
 		dht.NamespacedValidator(DataCommitmentConfirmNamespace, DataCommitmentConfirmValidator{}),
 		dht.NamespacedValidator(ValsetConfirmNamespace, ValsetConfirmValidator{}),
+		dht.BootstrapPeers(bootstrappers...),
 	)
 	if err != nil {
 		return nil, err
