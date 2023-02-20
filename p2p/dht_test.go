@@ -3,12 +3,40 @@ package p2p_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/celestiaorg/orchestrator-relayer/types"
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestDHTBootstrappers(t *testing.T) {
+	ctx := context.Background()
+	// create first dht
+	h1, _, dht1 := qgbtesting.NewTestDHT(ctx, nil)
+	defer dht1.Close()
+
+	// create second dht with dht1 being a bootstrapper
+	h2, _, dht2 := qgbtesting.NewTestDHT(
+		ctx,
+		[]peer.AddrInfo{{
+			ID:    h1.ID(),
+			Addrs: h1.Addrs(),
+		}},
+	)
+
+	// give some time for the routing table to be updated
+	time.Sleep(time.Second)
+
+	// check if connected
+	assert.Equal(t, dht2.RoutingTable().ListPeers()[0].String(), h1.ID().String())
+	assert.NotEmpty(t, dht2.RoutingTable().ListPeers())
+	assert.Equal(t, dht1.RoutingTable().ListPeers()[0].String(), h2.ID().String())
+	assert.NotEmpty(t, dht1.RoutingTable().ListPeers())
+}
 
 func TestPutDataCommitmentConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
@@ -136,4 +164,30 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 	actualConfirm, err := network.DHTs[8].GetValsetConfirm(context.Background(), testKey)
 	assert.Error(t, err)
 	assert.True(t, types.IsEmptyValsetConfirm(actualConfirm))
+}
+
+func TestWaitForPeers(t *testing.T) {
+	ctx := context.Background()
+	// create first dht
+	h1, _, dht1 := qgbtesting.NewTestDHT(ctx, nil)
+	defer dht1.Close()
+
+	// wait for peers
+	err := dht1.WaitForPeers(ctx, 10*time.Millisecond, time.Millisecond, 1)
+	// should error because no peer is connected to this dht
+	assert.Error(t, err)
+
+	// create second dht
+	h2, _, dht2 := qgbtesting.NewTestDHT(ctx, nil)
+	defer dht2.Close()
+	// connect to first dht
+	err = h2.Connect(ctx, peer.AddrInfo{
+		ID:    h1.ID(),
+		Addrs: h1.Addrs(),
+	})
+	require.NoError(t, err)
+
+	// wait for peers
+	err = dht1.WaitForPeers(ctx, 10*time.Millisecond, time.Millisecond, 1)
+	assert.NoError(t, err)
 }

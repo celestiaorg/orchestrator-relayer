@@ -18,7 +18,7 @@ type TestNode struct {
 
 func NewTestNode(ctx context.Context, t *testing.T) *TestNode {
 	celestiaNetwork := NewCelestiaNetwork(t, time.Millisecond)
-	dhtNetwork := NewDHTNetwork(ctx, 1)
+	dhtNetwork := NewDHTNetwork(ctx, 2)
 
 	evmChain := NewEVMChain(celestiatestnode.NodeEVMPrivateKey)
 
