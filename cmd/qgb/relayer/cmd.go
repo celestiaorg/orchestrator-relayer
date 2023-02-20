@@ -150,21 +150,12 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			for {
-				logger.Debug("initializing orchestrator")
-
-				select {
-				case <-cmd.Context().Done():
-					return nil
-				default:
-					err = relay.Start(cmd.Context())
-					if err == nil {
-						return nil
-					}
-					logger.Error(err.Error())
-					time.Sleep(time.Second * 30)
-				}
+			err = relay.Start(cmd.Context())
+			if err != nil {
+				logger.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 	}
 	return addRelayerFlags(command)
