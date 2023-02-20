@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	appTypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/x/qgb/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcmn "github.com/ethereum/go-ethereum/common"
@@ -266,23 +267,36 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		},
 	}
 	switch att.Type() {
-	case types.ValsetRequestType:
-		vs, ok := att.(*types.Valset)
+	case appTypes.ValsetRequestType:
+		vs, ok := att.(*appTypes.Valset)
 		if !ok {
+			panic("here1")
 			return errors.Wrap(types.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
 		}
-		vs.Members = previousValset.Members
-		err = orch.ProcessValsetEvent(ctx, *vs)
+
+		vsNew := types.Valset{
+			Nonce:   vs.Nonce,
+			Members: []types.BridgeValidator{{Power: MockedSignerPower, EvmAddress: EVMAddress}},
+			Height:  vs.Height,
+		}
+		err = orch.ProcessValsetEvent(ctx, vsNew)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
 		return nil
 
-	case types.DataCommitmentRequestType:
-		dc, ok := att.(*types.DataCommitment)
+	case appTypes.DataCommitmentRequestType:
+		dcApp, ok := att.(*appTypes.DataCommitment)
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
 		}
+
+		dc := &types.DataCommitment{
+			Nonce:      dcApp.Nonce,
+			BeginBlock: dcApp.BeginBlock,
+			EndBlock:   dcApp.EndBlock,
+		}
+
 		resp, err := orch.Querier.QueryDataCommitmentConfirm(
 			ctx,
 			dc.EndBlock,

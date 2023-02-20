@@ -1,6 +1,8 @@
 package types
 
-var _ AttestationRequestI = &DataCommitment{}
+import appTypes "github.com/celestiaorg/celestia-app/x/qgb/types"
+
+var _ appTypes.AttestationRequestI = &DataCommitment{}
 
 // NewDataCommitment creates a new DataCommitment.
 func NewDataCommitment(
@@ -15,6 +17,6 @@ func NewDataCommitment(
 	}
 }
 
-func (m *DataCommitment) Type() AttestationType {
-	return DataCommitmentRequestType
+func (m *DataCommitment) Type() appTypes.AttestationType {
+	return appTypes.DataCommitmentRequestType
 }

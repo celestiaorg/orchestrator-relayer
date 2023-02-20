@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/celestiaorg/celestia-app/app/encoding"
+	appTypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/x/qgb/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,7 +28,7 @@ type Querier interface {
 
 	// QueryAttestationByNonce Queries the attestation with nonce `nonce.
 	// Returns nil if not found.
-	QueryAttestationByNonce(ctx context.Context, nonce uint64) (types.AttestationRequestI, error)
+	QueryAttestationByNonce(ctx context.Context, nonce uint64) (appTypes.AttestationRequestI, error)
 	QueryLatestAttestationNonce(ctx context.Context) (uint64, error)
 
 	// data commitment queries
@@ -465,22 +466,28 @@ func (q querier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint64) (
 		return nil, types.ErrAttestationNotFound
 	}
 
-	if attestation.Type() != types.DataCommitmentRequestType {
+	if attestation.Type() != appTypes.DataCommitmentRequestType {
 		return nil, types.ErrAttestationNotDataCommitmentRequest
 	}
 
-	dcc, ok := attestation.(*types.DataCommitment)
+	dcc, ok := attestation.(*appTypes.DataCommitment)
 	if !ok {
 		return nil, types.ErrAttestationNotDataCommitmentRequest
 	}
 
-	return dcc, nil
+	newDcc := types.DataCommitment{
+		Nonce:      dcc.Nonce,
+		BeginBlock: dcc.BeginBlock,
+		EndBlock:   dcc.EndBlock,
+	}
+
+	return &newDcc, nil
 }
 
 func (q querier) QueryAttestationByNonce(
 	ctx context.Context,
 	nonce uint64,
-) (types.AttestationRequestI, error) { // FIXME is it alright to return interface?
+) (appTypes.AttestationRequestI, error) { // FIXME is it alright to return interface?
 	queryClient := types.NewQueryClient(q.qgbRPC)
 	atResp, err := queryClient.AttestationRequestByNonce(
 		ctx,
@@ -510,16 +517,22 @@ func (q querier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*types.V
 		return nil, types.ErrAttestationNotFound
 	}
 
-	if attestation.Type() != types.ValsetRequestType {
+	if attestation.Type() != appTypes.ValsetRequestType {
 		return nil, types.ErrAttestationNotValsetRequest
 	}
 
-	value, ok := attestation.(*types.Valset)
+	value, ok := attestation.(*appTypes.Valset)
 	if !ok {
 		return nil, ErrUnmarshallValset
 	}
 
-	return value, nil
+	retVal := types.Valset{
+		Nonce:   value.Nonce,
+		Members: []types.BridgeValidator{{Power: MockedSignerPower, EvmAddress: EVMAddress}},
+		Height:  value.Height,
+	}
+
+	return &retVal, nil
 }
 
 func (q querier) QueryLatestValset(ctx context.Context) (*types.Valset, error) {
@@ -576,8 +589,8 @@ func (q querier) SubscribeEvents(ctx context.Context, subscriptionName string, e
 	return results, err
 }
 
-func (q querier) unmarshallAttestation(attestation *cdctypes.Any) (types.AttestationRequestI, error) {
-	var unmarshalledAttestation types.AttestationRequestI
+func (q querier) unmarshallAttestation(attestation *cdctypes.Any) (appTypes.AttestationRequestI, error) {
+	var unmarshalledAttestation appTypes.AttestationRequestI
 	err := q.encCfg.InterfaceRegistry.UnpackAny(attestation, &unmarshalledAttestation)
 	if err != nil {
 		return nil, err

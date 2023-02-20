@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"math/big"
 
+	appTypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var _ AttestationRequestI = &Valset{}
+var _ appTypes.AttestationRequestI = &Valset{}
 
 // NewValset returns a new valset.
 func NewValset(nonce, height uint64, members InternalBridgeValidators) (*Valset, error) {
@@ -85,6 +86,6 @@ func (v *Valset) TwoThirdsThreshold() uint64 {
 	return 2 * oneThird
 }
 
-func (v Valset) Type() AttestationType {
-	return ValsetRequestType
+func (v Valset) Type() appTypes.AttestationType {
+	return appTypes.ValsetRequestType
 }

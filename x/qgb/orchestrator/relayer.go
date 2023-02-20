@@ -3,13 +3,10 @@ package orchestrator
 import (
 	"context"
 	"fmt"
-	"time"
-
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
 	"github.com/celestiaorg/orchestrator-relayer/x/qgb/types"
 	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 )
 
@@ -27,74 +24,6 @@ func NewRelayer(querier Querier, evmClient EVMClient, logger tmlog.Logger) (*Rel
 		evmClient: evmClient,
 		logger:    logger,
 	}, nil
-}
-
-func (r *Relayer) processEvents(ctx context.Context) error {
-	for {
-		lastContractNonce, err := r.evmClient.StateLastEventNonce(&bind.CallOpts{})
-		if err != nil {
-			r.logger.Error(err.Error())
-			continue
-		}
-
-		latestNonce, err := r.querier.QueryLatestAttestationNonce(ctx)
-		if err != nil {
-			r.logger.Error(err.Error())
-			continue
-		}
-
-		// If the contract has already the last version, no need to relay anything
-		if lastContractNonce >= latestNonce {
-			time.Sleep(10 * time.Second)
-			continue
-		}
-
-		att, err := r.querier.QueryAttestationByNonce(ctx, lastContractNonce+1)
-		if err != nil {
-			r.logger.Error(err.Error())
-			continue
-		}
-		if att == nil {
-			r.logger.Error(types.ErrAttestationNotFound.Error())
-			continue
-		}
-		if att.Type() == types.ValsetRequestType {
-			vs, ok := att.(*types.Valset)
-			if !ok {
-				return types.ErrAttestationNotValsetRequest
-			}
-			confirms, err := r.querier.QueryTwoThirdsValsetConfirms(ctx, time.Minute*30, *vs)
-			if err != nil {
-				return err
-			}
-
-			// FIXME: arguments to be verified
-			err = r.updateValidatorSet(ctx, *vs, vs.TwoThirdsThreshold(), confirms)
-			if err != nil {
-				return err
-			}
-		} else {
-			dc, ok := att.(*types.DataCommitment)
-			if !ok {
-				return types.ErrAttestationNotDataCommitmentRequest
-			}
-			// todo: make times configurable
-			confirms, err := r.querier.QueryTwoThirdsDataCommitmentConfirms(ctx, time.Minute*30, *dc)
-			if err != nil {
-				return err
-			}
-
-			valset, err := r.querier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
-			if err != nil {
-				return err
-			}
-
-			err = r.submitDataRootTupleRoot(ctx, *valset, confirms[0].Commitment, confirms)
-			if err != nil {
-				return err
-			}
-		}
-	}
 }
 
 func (r *Relayer) updateValidatorSet(

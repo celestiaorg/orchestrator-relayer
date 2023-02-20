@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"os"
@@ -41,6 +42,7 @@ func OrchRelayerCmd() *cobra.Command {
 			}
 
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
+			fmt.Println(encCfg.InterfaceRegistry.ListAllInterfaces())
 
 			querier, err := NewQuerier(config.celesGRPC, config.tendermintRPC, logger, encCfg)
 			if err != nil {

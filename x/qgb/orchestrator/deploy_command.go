@@ -7,6 +7,7 @@ import (
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
+	appTypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/x/qgb/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/spf13/cobra"
@@ -87,7 +88,7 @@ func getStartingValset(ctx context.Context, q *querier, snonce string) (*types.V
 		if attestation == nil {
 			return nil, types.ErrNilAttestation
 		}
-		if attestation.Type() == types.ValsetRequestType {
+		if attestation.Type() == appTypes.ValsetRequestType {
 			value, ok := attestation.(*types.Valset)
 			if !ok {
 				return nil, ErrUnmarshallValset

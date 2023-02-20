@@ -1,6 +1,7 @@
 package types
 
 import (
+	appTypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +22,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 
 	registry.RegisterInterface(
 		"AttestationRequestI",
-		(*AttestationRequestI)(nil),
+		(*appTypes.AttestationRequestI)(nil),
 		&DataCommitment{},
 		&Valset{},
 	)
