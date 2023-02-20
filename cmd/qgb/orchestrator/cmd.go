@@ -35,8 +35,8 @@ func Command() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			logger := tmlog.NewTMLogger(os.Stdout)
 
+			logger := tmlog.NewTMLogger(os.Stdout)
 			logger.Debug("initializing orchestrator")
 
 			ctx, cancel := context.WithCancel(cmd.Context())
