@@ -39,6 +39,7 @@ func Command() *cobra.Command {
 
 			// creating the logger
 			logger := tmlog.NewTMLogger(os.Stdout)
+			logger.Debug("initializing relayer")
 
 			// connecting to a QGB contract
 			ethClient, err := ethclient.Dial(config.evmRPC)
@@ -150,6 +151,8 @@ func Command() *cobra.Command {
 			}
 
 			for {
+				logger.Debug("initializing orchestrator")
+
 				select {
 				case <-cmd.Context().Done():
 					return nil
