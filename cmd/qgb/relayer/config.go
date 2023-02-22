@@ -2,8 +2,11 @@ package relayer
 
 import (
 	"crypto/ecdsa"
+	"encoding/hex"
 	"errors"
 	"fmt"
+
+	"github.com/libp2p/go-libp2p/core/crypto"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/spf13/cobra"
@@ -13,14 +16,16 @@ import (
 )
 
 const (
-	privateKeyFlag      = "eth-priv-key"
-	evmChainIDFlag      = "evm-chain-id"
-	celesGRPCFlag       = "celes-grpc"
-	tendermintRPCFlag   = "celes-http-rpc"
-	evmRPCFlag          = "evm-rpc"
-	contractAddressFlag = "contract-address"
-	evmGasLimitFlag     = "evm-gas-limit"
-	bootstrappersFlag   = "bootstrappers"
+	privateKeyFlag       = "eth-priv-key"
+	evmChainIDFlag       = "evm-chain-id"
+	celesGRPCFlag        = "celes-grpc"
+	tendermintRPCFlag    = "celes-http-rpc"
+	evmRPCFlag           = "evm-rpc"
+	contractAddressFlag  = "contract-address"
+	evmGasLimitFlag      = "evm-gas-limit"
+	bootstrappersFlag    = "bootstrappers"
+	p2pListenAddressFlag = "p2p-listen-addr"
+	p2pIdentityFlag      = "p2p-priv-key"
 )
 
 func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
@@ -32,6 +37,8 @@ func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(contractAddressFlag, "a", "", "Specify the contract at which the qgb is deployed")
 	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DEFAULTEVMGASLIMIT, "Specify the evm gas limit")
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
+	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Will create a new one if none is specified")
+	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
 
 	return cmd
 }
@@ -39,10 +46,11 @@ func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
 type Config struct {
 	evmChainID                       uint64
 	evmRPC, celesGRPC, tendermintRPC string
-	privateKey                       *ecdsa.PrivateKey
+	evmPrivateKey                    *ecdsa.PrivateKey
 	contractAddr                     ethcmn.Address
 	evmGasLimit                      uint64
-	bootstrappers                    string
+	bootstrappers, p2pListenAddr     string
+	p2pIdentity                      crypto.PrivKey
 }
 
 func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
@@ -92,9 +100,25 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	p2pListenAddress, err := cmd.Flags().GetString(p2pListenAddressFlag)
+	if err != nil {
+		return Config{}, err
+	}
+	hexIdentity, err := cmd.Flags().GetString(p2pIdentityFlag)
+	if err != nil {
+		return Config{}, err
+	}
+	bIdentity, err := hex.DecodeString(hexIdentity)
+	if err != nil {
+		return Config{}, err
+	}
+	identity, err := crypto.UnmarshalEd25519PrivateKey(bIdentity)
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
-		privateKey:    ethPrivKey,
+		evmPrivateKey: ethPrivKey,
 		evmChainID:    evmChainID,
 		celesGRPC:     celesGRPC,
 		tendermintRPC: tendermintRPC,
@@ -102,5 +126,7 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 		evmRPC:        ethRPC,
 		evmGasLimit:   evmGasLimit,
 		bootstrappers: bootstrappers,
+		p2pListenAddr: p2pListenAddress,
+		p2pIdentity:   identity,
 	}, nil
 }
