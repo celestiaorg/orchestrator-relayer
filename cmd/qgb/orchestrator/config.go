@@ -32,7 +32,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 		"Specify the ECDSA private key used to sign orchestrator commitments in hex",
 	)
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
-	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Will create a new one if none is specified")
+	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use generate command to generate a new one")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	return cmd
 }
