@@ -37,7 +37,7 @@ func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(contractAddressFlag, "a", "", "Specify the contract at which the qgb is deployed")
 	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DEFAULTEVMGASLIMIT, "Specify the evm gas limit")
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
-	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use generate command to generate a new one")
+	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
 
 	return cmd
