@@ -37,8 +37,6 @@ do
   sleep 5s
 done
 
-#sleep 500s
-
 if [[ -z "${P2P_BOOTSTRAPPERS}" ]]
 then
   /bin/qgb orchestrator \
@@ -50,6 +48,8 @@ then
     -p="${P2P_IDENTITY}" \
     -q="${P2P_LISTEN}"
 else
+  # to give time for the bootstrappers to be up
+  sleep 5s
   /bin/qgb orchestrator \
     -p=/opt \
     -x=qgb-e2e \

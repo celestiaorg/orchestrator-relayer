@@ -40,8 +40,8 @@ fi
 # get the address from the `qgb_address.txt` file
 QGB_CONTRACT=$(cat /opt/qgb_address.txt)
 
-#sleep 500
-
+# to give time for the bootstrappers to be up
+sleep 5s
 /bin/qgb relayer \
   -d=${PRIVATE_KEY} \
   -t=${TENDERMINT_RPC} \

@@ -26,17 +26,6 @@ fi
 # install needed dependencies
 apk add curl
 
-# speed up time so blocks don't take the whole 10s to be created
-
-{
-  while true
-  do
-
-    # sleep 1ms
-    sleep 0.001
-  done
-}&
-
 {
   # wait for the node to get up and running
   while true
