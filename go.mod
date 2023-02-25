@@ -27,6 +27,7 @@ require (
 require (
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/ipfs/go-datastore v0.6.0
+	github.com/ipfs/go-ipfs-util v0.0.2
 	github.com/libp2p/go-libp2p v0.25.1
 	github.com/libp2p/go-libp2p-kad-dht v0.21.0
 	github.com/multiformats/go-multiaddr v0.8.0
@@ -145,7 +146,6 @@ require (
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/ipfs/go-cid v0.3.2 // indirect
-	github.com/ipfs/go-ipfs-util v0.0.2 // indirect
 	github.com/ipfs/go-ipns v0.2.0 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect
