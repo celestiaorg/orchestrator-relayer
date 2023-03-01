@@ -79,7 +79,7 @@ func Command() *cobra.Command {
 				false,
 			)
 			if err != nil {
-				logger.Error("failed to delpoy QGB contract", "hash", tx.Hash().String())
+				logger.Error("failed to delpoy QGB contract")
 				return err
 			}
 
