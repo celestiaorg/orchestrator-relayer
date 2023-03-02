@@ -42,6 +42,18 @@ func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
 	s.Equal(uint64(2), dc.Nonce)
 }
 
+func (s *QuerierTestSuite) TestQueryDataCommitmentForHeight() {
+	appQuerier := rpc.NewAppQuerier(
+		s.Logger,
+		s.Network.GRPCClient,
+		s.EncConf,
+	)
+
+	dc, err := appQuerier.QueryDataCommitmentForHeight(context.Background(), 10)
+	s.NoError(err)
+	s.Equal(uint64(2), dc.Nonce)
+}
+
 func (s *QuerierTestSuite) TestQueryValsetByNonce() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,

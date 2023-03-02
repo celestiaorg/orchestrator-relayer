@@ -83,6 +83,20 @@ func (aq AppQuerier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint6
 	return dcc, nil
 }
 
+// QueryDataCommitmentForHeight query a data commitment by one of the heights that it commits to.
+func (aq AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height uint64) (*celestiatypes.DataCommitment, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.QgbRPC)
+	resp, err := queryClient.DataCommitmentRangeForHeight(ctx, &celestiatypes.QueryDataCommitmentRangeForHeightRequest{Height: height})
+	if err != nil {
+		return nil, err
+	}
+	dcc, err := aq.QueryDataCommitmentByNonce(ctx, resp.Nonce)
+	if err != nil {
+		return nil, err
+	}
+	return dcc, nil
+}
+
 // QueryValsetByNonce query a valset by nonce.
 func (aq AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
 	attestation, err := aq.QueryAttestationByNonce(ctx, nonce)
