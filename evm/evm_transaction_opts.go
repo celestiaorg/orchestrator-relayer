@@ -57,7 +57,7 @@ func newTransactOptsBuilder(privKey *ecdsa.PrivateKey) transactOpsBuilder {
 
 const (
 	MalleabilityThreshold = "0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"
-	ZeroSignature         = "0x0000000000000000000000000000000000000000000000000000000000000000"
+	ZeroSValue            = "0x0000000000000000000000000000000000000000000000000000000000000000"
 )
 
 // SigToVRS breaks apart a signature into its components to make it compatible with the contracts
@@ -89,7 +89,7 @@ func SigToVRS(sigHex string) (v uint8, r, s ethcmn.Hash, err error) {
 	s = ethcmn.BytesToHash(signatureBytes[32:64])
 
 	// sValue shouldn't be malleable
-	if MalleabilityThreshold <= s.String() || s.String() == ZeroSignature {
+	if MalleabilityThreshold <= s.String() || s.String() == ZeroSValue {
 		err = errors.Wrap(ErrInvalid, "signature s. Should be 0 < s < secp256k1n ÷ 2 + 1")
 		return
 	}
