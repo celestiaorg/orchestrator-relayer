@@ -2,10 +2,11 @@ package e2e
 
 import (
 	"context"
-	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/evm"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/assert"
