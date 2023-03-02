@@ -39,7 +39,6 @@ func TestDeployer(t *testing.T) {
 	bridge, err := network.GetLatestDeployedQGBContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
-	// FIXME should we use the evm client here or go for raw queries?
 	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DEFAULTEVMGASLIMIT)
 
 	eventNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
