@@ -5,6 +5,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"math/big"
+	"strings"
 
 	"github.com/pkg/errors"
 
@@ -56,13 +57,13 @@ func newTransactOptsBuilder(privKey *ecdsa.PrivateKey) transactOpsBuilder {
 }
 
 const (
-	MalleabilityThreshold = "0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"
+	MalleabilityThreshold = "0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0"
 	ZeroSValue            = "0x0000000000000000000000000000000000000000000000000000000000000000"
 )
 
 // SigToVRS breaks apart a signature into its components to make it compatible with the contracts
 func SigToVRS(sigHex string) (v uint8, r, s ethcmn.Hash, err error) {
-	signatureBytes := ethcmn.FromHex(sigHex)
+	signatureBytes := ethcmn.FromHex(strings.ToLower(sigHex))
 
 	// signature length should be 65: 32 bytes + vParam
 	if len(signatureBytes) != 65 {
