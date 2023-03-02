@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/pkg/errors"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -53,19 +55,44 @@ func newTransactOptsBuilder(privKey *ecdsa.PrivateKey) transactOpsBuilder {
 	}
 }
 
+const (
+	MalleabilityThreshold = "0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0"
+	ZeroSignature         = "0x0000000000000000000000000000000000000000000000000000000000000000"
+)
+
 // SigToVRS breaks apart a signature into its components to make it compatible with the contracts
-func SigToVRS(sigHex string) (v uint8, r, s ethcmn.Hash) {
+func SigToVRS(sigHex string) (v uint8, r, s ethcmn.Hash, err error) {
 	signatureBytes := ethcmn.FromHex(sigHex)
+
+	// signature length should be 65: 32 bytes + vParam
+	if len(signatureBytes) != 65 {
+		err = errors.Wrap(ErrInvalid, "signature length")
+		return
+	}
+
+	// vParam should be 0, 1, 27 or 28
 	vParam := signatureBytes[64]
-	if vParam == byte(0) {
+	switch vParam {
+	case byte(0):
 		vParam = byte(27)
-	} else if vParam == byte(1) {
+	case byte(1):
 		vParam = byte(28)
+	case byte(27):
+	case byte(28):
+	default:
+		err = errors.Wrap(ErrInvalid, "signature vParam. Should be 0, 1, 27 or 28")
+		return
 	}
 
 	v = vParam
 	r = ethcmn.BytesToHash(signatureBytes[0:32])
 	s = ethcmn.BytesToHash(signatureBytes[32:64])
+
+	// sValue shouldn't be malleable
+	if MalleabilityThreshold <= s.String() || s.String() == ZeroSignature {
+		err = errors.Wrap(ErrInvalid, "signature s. Should be 0 < s < secp256k1n ÷ 2 + 1")
+		return
+	}
 
 	return
 }

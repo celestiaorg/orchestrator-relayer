@@ -35,7 +35,8 @@ func (s *EVMTestSuite) TestSubmitDataCommitment() {
 	}
 
 	hexSig := ethcmn.Bytes2Hex(signature)
-	v, r, ss := evm.SigToVRS(hexSig)
+	v, r, ss, err := evm.SigToVRS(hexSig)
+	s.NoError(err)
 	tx, err := s.Client.SubmitDataRootTupleRoot(
 		s.Chain.Auth,
 		commitment,
@@ -99,7 +100,8 @@ func (s *EVMTestSuite) TestUpdateValset() {
 
 	thresh := updatedValset.TwoThirdsThreshold()
 
-	v, r, ss := evm.SigToVRS(hexSig)
+	v, r, ss, err := evm.SigToVRS(hexSig)
+	s.NoError(err)
 
 	tx, err := s.Client.UpdateValidatorSet(
 		s.Chain.Auth,

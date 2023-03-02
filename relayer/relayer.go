@@ -248,7 +248,10 @@ func matchAttestationConfirmSigs(
 		if !has {
 			continue
 		}
-		v, r, s := evm.SigToVRS(sig)
+		v, r, s, err := evm.SigToVRS(sig)
+		if err != nil {
+			return nil, err
+		}
 
 		sigs[i] = wrapper.Signature{
 			V: v,
