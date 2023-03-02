@@ -1,0 +1,297 @@
+version: '3'
+
+services:
+  core0:
+    container_name: core0
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    ports:
+      - "9090:9090"
+      - "26657:26657"
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_core0.sh"
+    ]
+    # EVM Address: 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488
+    # key: da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9
+    volumes:
+      - ${PWD}/celestia-app/core0/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/celestia-app/core0/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/celestia-app/core0/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+      - ${PWD}/scripts/start_core0.sh:/opt/start_core0.sh:ro
+
+  core0-orch:
+    container_name: core0-orch
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core0
+    ports:
+      - "30000:30000"
+    environment:
+      - MONIKER=core0
+      # evm address: 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488
+      - PRIVATE_KEY=da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9
+      - TENDERMINT_RPC=tcp://core0:26657
+      - CELESTIA_GRPC=core0:9090
+      # the other peers will consider core0 as a bootstrapper. So, it doesn't need to connect to any need during startup
+      - P2P_BOOTSTRAPPERS=
+      - P2P_IDENTITY=f7fd2be6b2abaa8519b0570d3a12e684a397456b0cc721198ebdd7e343cdd8f41813ef8aa857426c4e909c4fe19120a0f3f8c505286ca9d9249b5681475ec459
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_orchestrator_after_validator_created.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core0/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_orchestrator_after_validator_created.sh:/opt/start_orchestrator_after_validator_created.sh:ro
+
+  core1:
+    container_name: core1
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core0
+    environment:
+      - MONIKER=core1
+      - CELESTIA_HOME=/opt
+      # key: 002ad18ca3def673345897b063bfa98d829a4d812dbd07f1938676828a82c4f9
+      - EVM_ADDRESS=0x91DEd26b5f38B065FC0204c7929Da1b2A21877Ad
+      - AMOUNT=100000000000000000000000utia
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_node_and_create_validator.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core1/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/celestia-app/core1/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/celestia-app/core1/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
+      - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+
+  core1-orch:
+    container_name: core1-orch
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core1
+    ports:
+      - "30001:30000"
+    environment:
+      - MONIKER=core1
+      # evm address: 0x91DEd26b5f38B065FC0204c7929Da1b2A21877Ad
+      - PRIVATE_KEY=002ad18ca3def673345897b063bfa98d829a4d812dbd07f1938676828a82c4f9
+      - TENDERMINT_RPC=tcp://core1:26657
+      - CELESTIA_GRPC=core1:9090
+      - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
+      - P2P_IDENTITY=59502b238724468db87db4db7b60f9597df24f97c979ab3fc5ca68a9a14bcf2e12b58932bcdbaed5e62d1ff8122e48060f7ceeead4340ba0d313e8822d7d7f5f
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_orchestrator_after_validator_created.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core1/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_orchestrator_after_validator_created.sh:/opt/start_orchestrator_after_validator_created.sh:ro
+
+  core2:
+    container_name: core2
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core0
+    environment:
+      - MONIKER=core2
+      - CELESTIA_HOME=/opt
+      # key: 6adac8b5de0ba702ec8feab6d386a0c7334c6720b9174c02333700d431057af8
+      - EVM_ADDRESS=0x3d22f0C38251ebdBE92e14BBF1bd2067F1C3b7D7
+      - AMOUNT=100000000000000000000000utia
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_node_and_create_validator.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core2/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/celestia-app/core2/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/celestia-app/core2/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
+      - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+
+  core2-orch:
+    container_name: core2-orch
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core2
+    ports:
+      - "30002:30000"
+    environment:
+      - MONIKER=core2
+      # evm address: 0x3d22f0C38251ebdBE92e14BBF1bd2067F1C3b7D7
+      - PRIVATE_KEY=6adac8b5de0ba702ec8feab6d386a0c7334c6720b9174c02333700d431057af8
+      - TENDERMINT_RPC=tcp://core2:26657
+      - CELESTIA_GRPC=core2:9090
+      - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
+      - P2P_IDENTITY=b2d4503afe57d8311096a749161ad13eae407c0ef54b5cfe381949df7a80c8d463f11e56c2fd0fd388cebd9fed8eeb10d90a13c00afb9a4ca31e1f256be42ff7
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_orchestrator_after_validator_created.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core2/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_orchestrator_after_validator_created.sh:/opt/start_orchestrator_after_validator_created.sh:ro
+
+  core3:
+    container_name: core3
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core0
+    environment:
+      - MONIKER=core3
+      - CELESTIA_HOME=/opt
+      # key: 2f7f6763500dfb48b710a4c5c6c6a487b8aa6c7bc8b8a9b637a23f651f1c9b51
+      - EVM_ADDRESS=0x3EE99606625E740D8b29C8570d855Eb387F3c790
+      - AMOUNT=100000000000000000000000utia
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_node_and_create_validator.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core3/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/celestia-app/core3/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/celestia-app/core3/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
+      - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+
+  core3-orch:
+    container_name: core3-orch
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - core3
+    ports:
+      - "30003:30000"
+    environment:
+      - MONIKER=core3
+      # evm address: 0x3EE99606625E740D8b29C8570d855Eb387F3c790
+      - PRIVATE_KEY=2f7f6763500dfb48b710a4c5c6c6a487b8aa6c7bc8b8a9b637a23f651f1c9b51
+      - TENDERMINT_RPC=tcp://core3:26657
+      - CELESTIA_GRPC=core3:9090
+      - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
+      - P2P_IDENTITY=02f11413424260d45059887485959150218f35f5f07cd3060ad32ef4b4477ce67bb69c740bffe6082ab1a8289fd51737d571c49f2724aaff0f812589ab7f0da7
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_orchestrator_after_validator_created.sh"
+    ]
+    volumes:
+      - ${PWD}/celestia-app/core3/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_orchestrator_after_validator_created.sh:/opt/start_orchestrator_after_validator_created.sh:ro
+
+  ganache:
+    image: trufflesuite/ganache-cli
+    command: [
+      "--port=8545",
+      "--verbose",
+      "--host=0.0.0.0",
+      "--networkId=1234",
+      "--chainId=1234",
+      "--gasLimit=30000000",
+      "--account=\"0x0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401,0x90000000000000000000000\""
+    ]
+    ports:
+      - "8545:8545"
+
+  deployer:
+    container_name: deployer
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - ganache
+      - core0
+    environment:
+#      By default, we don't want to run the deploy on each run.
+      - DEPLOY_NEW_CONTRACT=false
+      - EVM_CHAIN_ID=qgb-e2e
+      # EVM Address: 0x95359c3348e189ef7781546e6E13c80230fC9fB5
+      - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
+      - TENDERMINT_RPC=tcp://core0:26657
+      - CELESTIA_GRPC=core0:9090
+      - EVM_CHAIN_ID=1234
+      - EVM_ENDPOINT=http://ganache:8545
+      - STARTING_NONCE=earliest
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/deploy_qgb_contract.sh"
+    ]
+    volumes:
+      - ${PWD}/scripts/deploy_qgb_contract.sh:/opt/deploy_qgb_contract.sh:ro
+
+  relayer:
+    container_name: relayer
+    build:
+      context: ..
+      dockerfile: e2e/Dockerfile_e2e
+    depends_on:
+      - ganache
+      - core0
+    ports:
+      - "30004:30000"
+    environment:
+      - EVM_CHAIN_ID=qgb-e2e
+      # EVM Address: 0x95359c3348e189ef7781546e6E13c80230fC9fB5
+      - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
+      - TENDERMINT_RPC=tcp://core0:26657
+      - CELESTIA_GRPC=core0:9090
+      - EVM_CHAIN_ID=1234
+      - EVM_ENDPOINT=http://ganache:8545
+      - STARTING_NONCE=earliest
+      - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
+      - P2P_IDENTITY=b4cc2c01ed9d1413e3bee3366f8f95bceb39e6c6bb25db3e4cba64179913f32cd8c5063b96df7b85a7235ec80888b8dd0690e94d5d4d8afda5dd7a4068d80739
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+#      set the following environment variable to some value
+#      if you want to relay to an existing QGB contract
+#      - QGB_CONTRACT=0x123
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_relayer.sh"
+    ]
+    volumes:
+      - ${PWD}/scripts/start_relayer.sh:/opt/start_relayer.sh:ro
+      - ${PWD}/scripts/deploy_qgb_contract.sh:/opt/deploy_qgb_contract.sh:ro
