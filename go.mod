@@ -3,18 +3,18 @@ module github.com/celestiaorg/orchestrator-relayer
 go 1.19
 
 require (
-	github.com/celestiaorg/celestia-app v0.12.0-rc7.0.20230222212857-ff13026aa3f5
+	github.com/celestiaorg/celestia-app v0.12.0-rc7.0.20230210200105-ff69444e0b2c
 	github.com/celestiaorg/nmt v0.14.0 // indirect
 	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
 	github.com/ethereum/go-ethereum v1.11.2
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.6.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.1
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	golang.org/x/crypto v0.4.0 // indirect
 	golang.org/x/net v0.5.0 // indirect
@@ -29,9 +29,10 @@ require (
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/ipfs/go-ipfs-util v0.0.2
 	github.com/libp2p/go-libp2p v0.25.1
-	github.com/libp2p/go-libp2p-kad-dht v0.21.1
+	github.com/libp2p/go-libp2p-kad-dht v0.21.0
 	github.com/multiformats/go-multiaddr v0.8.0
 	github.com/tendermint/tendermint v0.34.24
+	github.com/testcontainers/testcontainers-go v0.13.0
 )
 
 require (
@@ -45,8 +46,11 @@ require (
 	filippo.io/edwards25519 v1.0.0-rc.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/DataDog/zstd v1.5.2 // indirect
+	github.com/Microsoft/go-winio v0.6.0 // indirect
+	github.com/Microsoft/hcsshim v0.9.6 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.6.0 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
@@ -60,7 +64,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 // indirect
 	github.com/celestiaorg/rsmt2d v0.8.0 // indirect
-	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
+	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.0 // indirect
@@ -72,6 +76,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/containerd/cgroups v1.0.4 // indirect
+	github.com/containerd/containerd v1.6.17 // indirect
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
@@ -91,6 +96,9 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/docker v20.10.19+incompatible // indirect
+	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
@@ -173,7 +181,7 @@ require (
 	github.com/libp2p/go-netroute v0.2.1 // indirect
 	github.com/libp2p/go-reuseport v0.2.0 // indirect
 	github.com/libp2p/go-yamux/v4 v4.0.0 // indirect
-	github.com/magiconair/properties v1.8.6 // indirect
+	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/marten-seemann/tcp v0.0.0-20210406111302-dfbc87cc63fd // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -189,6 +197,10 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-testing-interface v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/moby/sys/mount v0.2.0 // indirect
+	github.com/moby/sys/mountinfo v0.5.0 // indirect
+	github.com/moby/term v0.0.0-20221128092401-c43b287e0e0f // indirect
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -202,7 +214,10 @@ require (
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/onsi/ginkgo/v2 v2.5.1 // indirect
-	github.com/opencontainers/runtime-spec v1.0.2 // indirect
+	github.com/opencontainers/go-digest v1.0.0 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
+	github.com/opencontainers/runc v1.1.3 // indirect
+	github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -231,6 +246,7 @@ require (
 	github.com/rs/zerolog v1.27.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
 	github.com/shirou/gopsutil v3.21.6+incompatible // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
