@@ -118,15 +118,16 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 	ctx context.Context,
 	timeout time.Duration,
 	rate time.Duration,
-	valset celestiatypes.Valset,
+	valsetNonce uint64,
+	previousValset celestiatypes.Valset,
 ) ([]types.ValsetConfirm, error) {
 	// create a map to easily search for power
 	vals := make(map[string]celestiatypes.BridgeValidator)
-	for _, val := range valset.Members {
+	for _, val := range previousValset.Members {
 		vals[val.GetEvmAddress()] = val
 	}
 
-	majThreshHold := valset.TwoThirdsThreshold()
+	majThreshHold := previousValset.TwoThirdsThreshold()
 	t := time.After(timeout)
 	ticker := time.NewTicker(rate)
 	defer ticker.Stop()
@@ -141,7 +142,7 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
 		case <-ticker.C:
-			confirms, err := q.QueryValsetConfirms(ctx, valset)
+			confirms, err := q.QueryValsetConfirms(ctx, valsetNonce, previousValset)
 			if err != nil {
 				return nil, err
 			}
@@ -154,7 +155,7 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 						fmt.Sprintf(
 							"valSetConfirm signer not found in stored validator set: address %s nonce %d",
 							val.EvmAddress,
-							valset.Nonce,
+							previousValset.Nonce,
 						))
 					continue
 				}
@@ -173,13 +174,13 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 			q.logger.Debug(
 				"found ValsetConfirms",
 				"nonce",
-				valset.Nonce,
+				valsetNonce,
 				"total_power",
 				currThreshold,
 				"number_of_confirms",
 				len(confirms),
 				"missing_confirms",
-				len(valset.Members)-len(confirms),
+				len(previousValset.Members)-len(confirms),
 			)
 		}
 	}
@@ -246,13 +247,14 @@ func (q Querier) QueryDataCommitmentConfirms(ctx context.Context, valset celesti
 }
 
 // QueryValsetConfirms get all the valset confirms in store for a certain nonce.
-// It goes over the valset members and looks if they submitted any confirms.
-func (q Querier) QueryValsetConfirms(ctx context.Context, valset celestiatypes.Valset) ([]types.ValsetConfirm, error) {
+// It goes over the specified valset members and looks if they submitted any confirms
+// for the provided nonce.
+func (q Querier) QueryValsetConfirms(ctx context.Context, nonce uint64, valset celestiatypes.Valset) ([]types.ValsetConfirm, error) {
 	confirms := make([]types.ValsetConfirm, 0)
 	for _, member := range valset.Members {
 		confirm, err := q.QgbDHT.GetValsetConfirm(
 			ctx,
-			GetValsetConfirmKey(valset.Nonce, member.EvmAddress),
+			GetValsetConfirmKey(nonce, member.EvmAddress),
 		)
 		if err == nil {
 			confirms = append(confirms, confirm)

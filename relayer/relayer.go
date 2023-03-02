@@ -120,7 +120,11 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if !ok {
 			return nil, ErrAttestationNotValsetRequest
 		}
-		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, *vs)
+		previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, vs.Nonce)
+		if err != nil {
+			return nil, err
+		}
+		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, vs.Nonce, *previousValset)
 		if err != nil {
 			return nil, err
 		}
