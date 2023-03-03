@@ -62,6 +62,7 @@ const (
 )
 
 // SigToVRS breaks apart a signature into its components to make it compatible with the contracts
+// The validation done in here is defined under https://github.com/celestiaorg/orchestrator-relayer/issues/105
 func SigToVRS(sigHex string) (v uint8, r, s ethcmn.Hash, err error) {
 	signatureBytes := ethcmn.FromHex(strings.ToLower(sigHex))
 
