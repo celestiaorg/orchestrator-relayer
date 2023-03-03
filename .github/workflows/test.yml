@@ -197,3 +197,21 @@ jobs:
       - name: Generate test report (go test -race)
         run: cat ./*-race-output.txt | ~/go/bin/tparse
         if: env.GIT_DIFF
+
+  test-qgb-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
+      - uses: technote-space/get-diff-action@v6.0.1
+        with:
+          PATTERNS: |
+            **/**.go
+            go.mod
+            go.sum
+      - name: Test
+        run: go test -test.timeout 60m -failfast -v github.com/celestiaorg/orchestrator-relayer/e2e # yamllint disable-line rule:line-length
+        env:
+          QGB_INTEGRATION_TEST: true
