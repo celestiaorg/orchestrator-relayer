@@ -115,8 +115,8 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	ethAddr2 := common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c")
 	ethAddr3 := common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622d")
 
-	valset := celestiatypes.Valset{
-		Nonce: vsNonce,
+	previousValset := celestiatypes.Valset{
+		Nonce: vsNonce - 1,
 		Members: []celestiatypes.BridgeValidator{
 			{
 				Power:      10,
@@ -149,7 +149,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query two thirds of confirms. should time-out.
-	confirms, err := querier.QueryTwoThirdsValsetConfirms(ctx, 10*time.Second, time.Millisecond, valset)
+	confirms, err := querier.QueryTwoThirdsValsetConfirms(ctx, 10*time.Second, time.Millisecond, vsNonce, previousValset)
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
@@ -166,7 +166,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, valset)
+	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, vsNonce, previousValset)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
@@ -184,7 +184,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, valset)
+	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, vsNonce, previousValset)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
@@ -324,7 +324,7 @@ func TestQueryValsetConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query the confirms
-	confirms, err := querier.QueryValsetConfirms(ctx, valset)
+	confirms, err := querier.QueryValsetConfirms(ctx, valset.Nonce, valset)
 	require.NoError(t, err)
 	require.NotNil(t, confirms)
 	assert.Contains(t, confirms, *vs1)
