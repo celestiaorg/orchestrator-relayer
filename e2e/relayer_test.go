@@ -41,7 +41,7 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	bridge, err := network.GetLatestDeployedQGBContract(ctx)
@@ -91,10 +91,10 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
@@ -138,16 +138,16 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE2ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE2EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE3ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE3EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
