@@ -1,0 +1,10 @@
+build/
+e2e/
+.vscode/
+.idea/
+tmp/
+*.md
+*.txt
+profile.out
+*.yml
+*.yaml
