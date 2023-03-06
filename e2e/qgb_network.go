@@ -774,6 +774,31 @@ func (network QGBNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *wr
 	}
 }
 
+func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *wrapper.QuantumGravityBridge, n uint64) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	for {
+		select {
+		case <-network.stopChan:
+			cancel()
+			return ErrNetworkStopped
+		case <-ctx.Done():
+			cancel()
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return fmt.Errorf("couldn't reach wanted nonce")
+			}
+			return ctx.Err()
+		default:
+			nonce, err := bridge.StateEventNonce(&bind.CallOpts{Context: ctx})
+			if err == nil && nonce != nil && nonce.Int64() >= int64(n) {
+				cancel()
+				return nil
+			}
+			fmt.Printf("waiting for nonce %d current noce %d\n", n, nonce)
+			time.Sleep(5 * time.Second)
+		}
+	}
+}
+
 func (network QGBNetwork) PrintLogs() {
 	_ = network.Instance.
 		WithCommand([]string{"logs"}).

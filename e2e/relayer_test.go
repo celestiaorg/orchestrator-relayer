@@ -41,7 +41,7 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	bridge, err := network.GetLatestDeployedQGBContract(ctx)
@@ -52,9 +52,12 @@ func TestRelayerWithOneValidator(t *testing.T) {
 
 	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DEFAULTEVMGASLIMIT)
 
+	n := uint64(2)
+	err = network.WaitForEventNonce(ctx, bridge, n)
+	HandleNetworkError(t, network, err, false)
 	vsNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
 	assert.NoError(t, err)
-	assert.GreaterOrEqual(t, vsNonce, uint64(2))
+	assert.GreaterOrEqual(t, vsNonce, n)
 }
 
 func TestRelayerWithTwoValidators(t *testing.T) {
@@ -91,10 +94,10 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
@@ -108,9 +111,12 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 
 	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DEFAULTEVMGASLIMIT)
 
+	n := uint64(2)
+	err = network.WaitForEventNonce(ctx, bridge, n)
+	HandleNetworkError(t, network, err, false)
 	dcNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
 	assert.NoError(t, err)
-	assert.GreaterOrEqual(t, dcNonce, uint64(2))
+	assert.GreaterOrEqual(t, dcNonce, n)
 }
 
 func TestRelayerWithMultipleValidators(t *testing.T) {
@@ -138,16 +144,16 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE2ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE2EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE3ACCOUNTADDRESS)
+	err = network.WaitForOrchestratorToStart(ctx, dht, CORE3EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
@@ -172,7 +178,10 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 
 	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DEFAULTEVMGASLIMIT)
 
+	n := uint64(2)
+	err = network.WaitForEventNonce(ctx, bridge, n)
+	HandleNetworkError(t, network, err, false)
 	dcNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
 	assert.NoError(t, err)
-	assert.GreaterOrEqual(t, dcNonce, uint64(2))
+	assert.GreaterOrEqual(t, dcNonce, n)
 }
