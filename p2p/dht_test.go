@@ -2,8 +2,13 @@ package p2p_test
 
 import (
 	"context"
+	"encoding/hex"
+	"math/big"
 	"testing"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/evm"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
@@ -11,6 +16,11 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	evmAddress    = "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
+	privateKey, _ = ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
 )
 
 func TestDHTBootstrappers(t *testing.T) {
@@ -33,6 +43,8 @@ func TestDHTBootstrappers(t *testing.T) {
 	require.NoError(t, err)
 
 	// check if connected
+	require.NotEmpty(t, dht1.RoutingTable().ListPeers())
+	require.NotEmpty(t, dht2.RoutingTable().ListPeers())
 	assert.Equal(t, dht2.RoutingTable().ListPeers()[0].String(), h1.ID().String())
 	assert.NotEmpty(t, dht2.RoutingTable().ListPeers())
 	assert.Equal(t, dht1.RoutingTable().ListPeers()[0].String(), h2.ID().String())
@@ -43,18 +55,25 @@ func TestPutDataCommitmentConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
+	nonce := uint64(10)
+	commitment := "1234"
+	bCommitment, _ := hex.DecodeString(commitment)
+	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey)
+	require.NoError(t, err)
+
 	// create a test DataCommitmentConfirm
 	expectedConfirm := types.DataCommitmentConfirm{
-		EthAddress: "test address",
-		Commitment: "test commitment",
-		Signature:  "test signature",
+		EthAddress: evmAddress,
+		Commitment: commitment,
+		Signature:  hex.EncodeToString(signature),
 	}
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b")
+	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress)
 
 	// put the test DataCommitmentConfirm in the DHT
-	err := network.DHTs[0].PutDataCommitmentConfirm(context.Background(), testKey, expectedConfirm)
+	err = network.DHTs[0].PutDataCommitmentConfirm(context.Background(), testKey, expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the confirm from the same peer
@@ -69,18 +88,25 @@ func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
+	nonce := uint64(10)
+	commitment := "1234"
+	bCommitment, _ := hex.DecodeString(commitment)
+	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey)
+	require.NoError(t, err)
+
 	// create a test DataCommitmentConfirm
 	expectedConfirm := types.DataCommitmentConfirm{
-		EthAddress: "test address",
-		Commitment: "test commitment",
-		Signature:  "test signature",
+		EthAddress: evmAddress,
+		Commitment: commitment,
+		Signature:  hex.EncodeToString(signature),
 	}
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b")
+	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress)
 
 	// put the test DataCommitmentConfirm in the DHT
-	err := network.DHTs[2].PutDataCommitmentConfirm(context.Background(), testKey, expectedConfirm)
+	err = network.DHTs[2].PutDataCommitmentConfirm(context.Background(), testKey, expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the DataCommitmentConfirm from another peer
@@ -96,7 +122,7 @@ func TestNetworkGetNonExistentDataCommitmentConfirm(t *testing.T) {
 	defer network.Stop()
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b")
+	testKey := p2p.GetDataCommitmentConfirmKey(10, evmAddress)
 
 	// try to get the non-existent DataCommitmentConfirm
 	actualConfirm, err := network.DHTs[8].GetDataCommitmentConfirm(context.Background(), testKey)
@@ -110,12 +136,12 @@ func TestPutValsetConfirm(t *testing.T) {
 
 	// create a test ValsetConfirm
 	expectedConfirm := types.ValsetConfirm{
-		EthAddress: "test address",
-		Signature:  "test signature",
+		EthAddress: evmAddress,
+		Signature:  "0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
 	}
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetValsetConfirmKey(10, "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b")
+	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
 
 	// put the test ValsetConfirm in the DHT
 	err := network.DHTs[0].PutValsetConfirm(context.Background(), testKey, expectedConfirm)
@@ -135,12 +161,12 @@ func TestNetworkPutValsetConfirm(t *testing.T) {
 
 	// create a test ValsetConfirm
 	expectedConfirm := types.ValsetConfirm{
-		EthAddress: "test address",
-		Signature:  "test signature",
+		EthAddress: evmAddress,
+		Signature:  "0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
 	}
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetValsetConfirmKey(10, "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b")
+	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
 
 	// put the test DataCommitmentConfirm in the DHT
 	err := network.DHTs[2].PutValsetConfirm(context.Background(), testKey, expectedConfirm)
@@ -159,7 +185,7 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 	defer network.Stop()
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, "0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b")
+	testKey := p2p.GetDataCommitmentConfirmKey(10, evmAddress)
 
 	// try to get the non-existent ValsetConfirm
 	actualConfirm, err := network.DHTs[8].GetValsetConfirm(context.Background(), testKey)
