@@ -151,12 +151,19 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 		Height: 10,
 	}
 
+	signBytes, err := previousValset.SignBytes()
+	require.NoError(t, err)
+
+	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
+	require.NoError(t, err)
+
 	// put a single confirm
 	vs1 := types.NewValsetConfirm(
 		ethAddr1,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature1),
+		signBytes,
 	)
-	err := network.DHTs[0].PutValsetConfirm(
+	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
 		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String()),
 		*vs1,
@@ -170,10 +177,14 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
+	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey2)
+	require.NoError(t, err)
+
 	// put the second confirm.
 	vs2 := types.NewValsetConfirm(
 		ethAddr2,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature2),
+		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
@@ -188,10 +199,14 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
 
+	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey3)
+	require.NoError(t, err)
+
 	// put the third confirm.
 	vs3 := types.NewValsetConfirm(
 		ethAddr3,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature3),
+		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
@@ -222,10 +237,15 @@ func TestQueryValsetConfirmByEVMAddress(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, confirm)
 
+	signBytes := common.HexToHash("1234")
+	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
+	require.NoError(t, err)
+
 	// put a single confirm
 	vs := types.NewValsetConfirm(
 		ethAddr1,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature1),
+		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
@@ -307,20 +327,28 @@ func TestQueryValsetConfirms(t *testing.T) {
 		Height: 10,
 	}
 
+	signBytes, _ := valset.SignBytes()
+	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
+	require.NoError(t, err)
+
 	// put the confirms
 	vs1 := types.NewValsetConfirm(
 		ethAddr1,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature1),
+		signBytes,
 	)
-	err := network.DHTs[0].PutValsetConfirm(
+	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
 		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String()),
 		*vs1,
 	)
 	require.NoError(t, err)
+	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey2)
+	require.NoError(t, err)
 	vs2 := types.NewValsetConfirm(
 		ethAddr2,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature2),
+		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
@@ -328,9 +356,12 @@ func TestQueryValsetConfirms(t *testing.T) {
 		*vs2,
 	)
 	require.NoError(t, err)
+	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey3)
+	require.NoError(t, err)
 	vs3 := types.NewValsetConfirm(
 		ethAddr3,
-		"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+		hex.EncodeToString(signature3),
+		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
