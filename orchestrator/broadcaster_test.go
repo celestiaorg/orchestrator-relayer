@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
@@ -61,18 +63,24 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 4)
 	defer network.Stop()
 
+	nonce := uint64(10)
+	signBytes := common.HexToHash("1234")
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+	require.NoError(t, err)
+
 	// create a test DataCommitmentConfirm
-	expectedConfirm := types.ValsetConfirm{
-		EthAddress: evmAddress,
-		Signature:  "0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
-	}
+	expectedConfirm := types.NewValsetConfirm(
+		common.HexToAddress(evmAddress),
+		hex.EncodeToString(signature),
+		signBytes,
+	)
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
+	testKey := p2p.GetValsetConfirmKey(nonce, evmAddress)
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
-	err := broadcaster.ProvideValsetConfirm(context.Background(), 10, expectedConfirm)
+	err = broadcaster.ProvideValsetConfirm(context.Background(), nonce, *expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the confirm from another peer
@@ -80,7 +88,7 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, actualConfirm)
 
-	assert.Equal(t, expectedConfirm, actualConfirm)
+	assert.Equal(t, *expectedConfirm, actualConfirm)
 }
 
 // TestEmptyPeersTable tests that values are not broadcasted if the DHT peers

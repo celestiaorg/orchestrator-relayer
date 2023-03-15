@@ -15,6 +15,10 @@ import (
 
 func TestValsetConfirmValidate(t *testing.T) {
 	validator := ValsetConfirmValidator{}
+	signBytes := common.HexToHash("1234")
+
+	evmAddress := "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
+	privateKey, _ := ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
 
 	tests := []struct {
 		name    string
@@ -24,11 +28,14 @@ func TestValsetConfirmValidate(t *testing.T) {
 	}{
 		{
 			name: "valid valset confirm",
-			key:  "/vc/b:0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b",
+			key:  "/vc/b:" + evmAddress,
 			value: func() []byte {
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				require.NoError(t, err)
 				vsc, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
-					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"),
-					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					common.HexToAddress(evmAddress),
+					hex.EncodeToString(signature),
+					signBytes,
 				))
 				return vsc
 			}(),
@@ -59,6 +66,7 @@ func TestValsetConfirmValidate(t *testing.T) {
 				vsc, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				return vsc
 			}(),
@@ -71,6 +79,7 @@ func TestValsetConfirmValidate(t *testing.T) {
 				vsc, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031",
+					signBytes,
 				))
 				return vsc
 			}(),
@@ -91,6 +100,9 @@ func TestValsetConfirmValidate(t *testing.T) {
 
 func TestValsetConfirmSelect(t *testing.T) {
 	validator := ValsetConfirmValidator{}
+	signBytes := common.HexToHash("1234")
+	evmAddress := "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
+	privateKey, _ := ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
 
 	tests := []struct {
 		name          string
@@ -101,19 +113,24 @@ func TestValsetConfirmSelect(t *testing.T) {
 	}{
 		{
 			name: "first valset confirm is valid",
-			key:  "/vc/b:0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b",
+			key:  "/vc/b:" + evmAddress,
 			values: func() [][]byte {
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				require.NoError(t, err)
 				vc1, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
-					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"),
-					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					common.HexToAddress(evmAddress),
+					hex.EncodeToString(signature),
+					signBytes,
 				))
 				vc2, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				vc3, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622d"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				return [][]byte{vc1, vc2, vc3}
 			}(),
@@ -122,19 +139,24 @@ func TestValsetConfirmSelect(t *testing.T) {
 		},
 		{
 			name: "second valset confirm is valid",
-			key:  "/vc/b:0xFa906E15C9eaF338C4110f0e21983C6B3b2D622c",
+			key:  "/vc/b:" + evmAddress,
 			values: func() [][]byte {
 				vc1, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				require.NoError(t, err)
 				vc2, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
-					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
-					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					common.HexToAddress(evmAddress),
+					hex.EncodeToString(signature),
+					signBytes,
 				))
 				vc3, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622d"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				return [][]byte{vc1, vc2, vc3}
 			}(),
@@ -143,19 +165,24 @@ func TestValsetConfirmSelect(t *testing.T) {
 		},
 		{
 			name: "first and second valset confirms are valid",
-			key:  "/vc/b:0xFa906E15C9eaF338C4110f0e21983C6B3b2D622c",
+			key:  "/vc/b:" + evmAddress,
 			values: func() [][]byte {
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				require.NoError(t, err)
 				vc1, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
-					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
-					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					common.HexToAddress(evmAddress),
+					hex.EncodeToString(signature),
+					signBytes,
 				))
 				vc2, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
-					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
-					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					common.HexToAddress(evmAddress),
+					hex.EncodeToString(signature),
+					signBytes,
 				))
 				vc3, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622d"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				return [][]byte{vc1, vc2, vc3}
 			}(),
@@ -169,14 +196,17 @@ func TestValsetConfirmSelect(t *testing.T) {
 				vc1, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				vc2, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622c"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				vc3, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622d"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
+					signBytes,
 				))
 				return [][]byte{vc1, vc2, vc3}
 			}(),

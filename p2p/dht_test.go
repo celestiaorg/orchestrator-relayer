@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
@@ -134,17 +136,22 @@ func TestPutValsetConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
+	signBytes := common.HexToHash("1234")
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+	require.NoError(t, err)
+
 	// create a test ValsetConfirm
-	expectedConfirm := types.ValsetConfirm{
-		EthAddress: evmAddress,
-		Signature:  "0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
-	}
+	expectedConfirm := types.NewValsetConfirm(
+		common.HexToAddress(evmAddress),
+		hex.EncodeToString(signature),
+		signBytes,
+	)
 
 	// generate a test key for the ValsetConfirm
 	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
 
 	// put the test ValsetConfirm in the DHT
-	err := network.DHTs[0].PutValsetConfirm(context.Background(), testKey, expectedConfirm)
+	err = network.DHTs[0].PutValsetConfirm(context.Background(), testKey, *expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the ValsetConfirm from the same peer
@@ -152,24 +159,29 @@ func TestPutValsetConfirm(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, actualConfirm)
 
-	assert.Equal(t, expectedConfirm, actualConfirm)
+	assert.Equal(t, *expectedConfirm, actualConfirm)
 }
 
 func TestNetworkPutValsetConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
+	signBytes := common.HexToHash("1234")
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+	require.NoError(t, err)
+
 	// create a test ValsetConfirm
-	expectedConfirm := types.ValsetConfirm{
-		EthAddress: evmAddress,
-		Signature:  "0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
-	}
+	expectedConfirm := types.NewValsetConfirm(
+		common.HexToAddress(evmAddress),
+		hex.EncodeToString(signature),
+		signBytes,
+	)
 
 	// generate a test key for the DataCommitmentConfirm
 	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
 
 	// put the test DataCommitmentConfirm in the DHT
-	err := network.DHTs[2].PutValsetConfirm(context.Background(), testKey, expectedConfirm)
+	err = network.DHTs[2].PutValsetConfirm(context.Background(), testKey, *expectedConfirm)
 	assert.NoError(t, err)
 
 	// try to get the DataCommitmentConfirm from another peer
@@ -177,7 +189,7 @@ func TestNetworkPutValsetConfirm(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, actualConfirm)
 
-	assert.Equal(t, expectedConfirm, actualConfirm)
+	assert.Equal(t, *expectedConfirm, actualConfirm)
 }
 
 func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {

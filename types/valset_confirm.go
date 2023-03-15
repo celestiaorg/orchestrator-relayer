@@ -21,16 +21,20 @@ type ValsetConfirm struct {
 	EthAddress string
 	// The `ValSet` message signature.
 	Signature string
+	// The digest that was signed using the private key.
+	SignBytes string
 }
 
 // NewValsetConfirm returns a new msgValSetConfirm.
 func NewValsetConfirm(
 	ethAddress common.Address,
 	signature string,
+	signBytes common.Hash,
 ) *ValsetConfirm {
 	return &ValsetConfirm{
 		EthAddress: ethAddress.Hex(),
 		Signature:  signature,
+		SignBytes:  signBytes.Hex(),
 	}
 }
 
@@ -57,5 +61,6 @@ func UnmarshalValsetConfirm(encoded []byte) (ValsetConfirm, error) {
 func IsEmptyValsetConfirm(vs ValsetConfirm) bool {
 	emptyVsConfirm := ValsetConfirm{}
 	return vs.EthAddress == emptyVsConfirm.EthAddress &&
-		vs.Signature == emptyVsConfirm.Signature
+		vs.Signature == emptyVsConfirm.Signature &&
+		vs.SignBytes == emptyVsConfirm.SignBytes
 }

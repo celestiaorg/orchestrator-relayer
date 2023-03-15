@@ -14,8 +14,6 @@ import (
 type ValsetConfirmValidator struct{}
 
 // Validate runs stateless checks on the provided confirm key and value.
-// Note: doesn't verify that the signature was created by the provided evm address
-// because we can't create the valset sign bytes at this level.
 func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 	namespace, _, evmAddr, err := ParseKey(key)
 	if err != nil {
@@ -42,11 +40,32 @@ func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 		return ErrNotTheSameEVMAddress
 	}
 
-	// check if the signature is a valid signature.
-	// uses SigToVRS because it also does validation on the signature before returning the result.
-	// it would be better to check if the signature corresponds to the address. However, we don't
-	// have access to the digest that was signed in this level.
-	_, _, _, err = evm.SigToVRS(vsc.Signature)
+	// strip the 0x from the signBytes, if exists, to create its corresponding byte slice
+	signBytes := vsc.SignBytes
+	// we want to make sure that len(signBytes) > 2 to avoid slice bounds out of range
+	// however, we don't care at this level if the signBytes is invalid as it will be checked below.
+	if len(signBytes) > 2 && signBytes[:2] == "0x" {
+		signBytes = signBytes[2:]
+	}
+	bSignBytes, err := hex.DecodeString(signBytes)
+	if err != nil {
+		return err
+	}
+
+	// strip the 0x from the signature, if exists, to create its corresponding byte slice
+	signature := vsc.Signature
+	// we want to make sure that len(signature) > 2 to avoid slice bounds out of range
+	// however, we don't care at this level if the signature is invalid as it will be checked below.
+	if len(signature) > 2 && signature[:2] == "0x" {
+		signature = signature[2:]
+	}
+	bSignature, err := hex.DecodeString(signature)
+	if err != nil {
+		return err
+	}
+
+	// check that the provided signature was created by the provided evm address
+	err = evm.ValidateEthereumSignature(bSignBytes, bSignature, common.HexToAddress(evmAddr))
 	if err != nil {
 		return err
 	}
@@ -100,8 +119,10 @@ func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) err
 	}
 
 	// strip the 0x from the commitment, if exists, to create its corresponding byte slice
+	// we want to make sure that len(commitment) > 2 to avoid slice bounds out of range
+	// however, we don't care at this level if the commitment is invalid as it will be checked below.
 	commitment := dcc.Commitment
-	if commitment[:2] == "0x" {
+	if len(commitment) > 2 && commitment[:2] == "0x" {
 		commitment = commitment[2:]
 	}
 	bCommitment, err := hex.DecodeString(commitment)
@@ -111,7 +132,9 @@ func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) err
 
 	// strip the 0x from the signature, if exists, to create its corresponding byte slice
 	signature := dcc.Signature
-	if signature[:2] == "0x" {
+	// we want to make sure that len(signature) > 2 to avoid slice bounds out of range
+	// however, we don't care at this level if the signature is invalid as it will be checked below.
+	if len(signature) > 2 && signature[:2] == "0x" {
 		signature = signature[2:]
 	}
 	bSignature, err := hex.DecodeString(signature)

@@ -310,6 +310,7 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 	msg := types.NewValsetConfirm(
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
+		signBytes,
 	)
 	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg)
 	if err != nil {
