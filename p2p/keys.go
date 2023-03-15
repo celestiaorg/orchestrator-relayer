@@ -27,7 +27,7 @@ func GetValsetConfirmKey(nonce uint64, evmAddr string) string {
 }
 
 // ParseKey parses a key and returns its fields.
-// Will return an error if the key is invalid, is missing some fields, or some fields are empty.
+// Will return an error if the key is missing some fields, some fields are empty, or otherwise invalid.
 func ParseKey(key string) (namespace string, nonce uint64, evmAddr string, err error) {
 	parts := strings.Split(key, "/")
 	if len(parts) != 3 {
