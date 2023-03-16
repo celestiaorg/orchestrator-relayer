@@ -785,11 +785,12 @@ func (network QGBNetwork) WasAttestationSigned(
 				if err != nil {
 					continue
 				}
+				dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
 				resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(
 					ctx,
 					dc.Nonce,
 					evmAddress,
-					commitment.String(),
+					dataRootTupleRoot.Hex(),
 				)
 				if err == nil && resp != nil {
 					cancel()
