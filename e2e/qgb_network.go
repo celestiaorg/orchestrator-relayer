@@ -421,6 +421,23 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 	defer qgbGRPC.Close()
 	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
 
+	// creating an RPC connection to tendermint
+	trpc, err := http.New(network.TendermintRPC, "/websocket")
+	if err != nil {
+		return err
+	}
+	err = trpc.Start()
+	if err != nil {
+		return err
+	}
+	defer func(trpc *http.HTTP) {
+		err := trpc.Stop()
+		if err != nil {
+			network.Logger.Error(err.Error())
+		}
+	}(trpc)
+	tmQuerier := rpc.NewTmQuerier(trpc, network.Logger)
+
 	ctx, cancel := context.WithTimeout(_ctx, 5*time.Minute)
 	for {
 		select {
@@ -441,15 +458,40 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 				continue
 			}
 			for i := uint64(0); i < lastNonce; i++ {
-				vsConfirm, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, lastNonce-i, evmAddr)
-				if err == nil && vsConfirm != nil {
-					cancel()
-					return nil
+				att, err := appQuerier.QueryAttestationByNonce(ctx, lastNonce-i)
+				if err != nil {
+					continue
 				}
-				dcConfirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, lastNonce-i, evmAddr)
-				if err == nil && dcConfirm != nil {
-					cancel()
-					return nil
+				switch att.Type() {
+				case types.ValsetRequestType:
+					vs, ok := att.(*types.Valset)
+					if !ok {
+						continue
+					}
+					signBytes, err := vs.SignBytes()
+					if err != nil {
+						continue
+					}
+					vsConfirm, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, lastNonce-i, evmAddr, signBytes.Hex())
+					if err == nil && vsConfirm != nil {
+						cancel()
+						return nil
+					}
+				case types.DataCommitmentRequestType:
+					dc, ok := att.(*types.DataCommitment)
+					if !ok {
+						continue
+					}
+					commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+					if err != nil {
+						continue
+					}
+					dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+					dcConfirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, lastNonce-i, evmAddr, dataRootTupleRoot.Hex())
+					if err == nil && dcConfirm != nil {
+						cancel()
+						return nil
+					}
 				}
 			}
 			time.Sleep(5 * time.Second)
@@ -509,6 +551,13 @@ func (network QGBNetwork) GetValsetConfirm(
 	evmAddr string,
 ) (*qgbtypes.ValsetConfirm, error) {
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
+	// create app querier
+	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer qgbGRPC.Close()
+	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
@@ -523,7 +572,19 @@ func (network QGBNetwork) GetValsetConfirm(
 			}
 			return nil, ctx.Err()
 		default:
-			resp, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, evmAddr)
+			vs, err := appQuerier.QueryValsetByNonce(ctx, nonce)
+			if err != nil {
+				fmt.Printf("waiting for confirm for nonce=%d\n", nonce)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			signBytes, err := vs.SignBytes()
+			if err != nil {
+				fmt.Printf("waiting for confirm for nonce=%d\n", nonce)
+				time.Sleep(5 * time.Second)
+				continue
+			}
+			resp, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, evmAddr, signBytes.Hex())
 			if err == nil && resp != nil {
 				cancel()
 				return resp, nil
@@ -545,6 +606,31 @@ func (network QGBNetwork) GetDataCommitmentConfirm(
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
+	// creating an RPC connection to tendermint
+	trpc, err := http.New(network.TendermintRPC, "/websocket")
+	if err != nil {
+		return nil, err
+	}
+	err = trpc.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer func(trpc *http.HTTP) {
+		err := trpc.Stop()
+		if err != nil {
+			network.Logger.Error(err.Error())
+		}
+	}(trpc)
+	tmQuerier := rpc.NewTmQuerier(trpc, network.Logger)
+
+	// create app querier
+	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, err
+	}
+	defer qgbGRPC.Close()
+	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
 		select {
@@ -558,7 +644,16 @@ func (network QGBNetwork) GetDataCommitmentConfirm(
 			}
 			return nil, ctx.Err()
 		default:
-			resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, nonce, evmAddr)
+			dc, err := appQuerier.QueryDataCommitmentByNonce(ctx, nonce)
+			if err != nil {
+				continue
+			}
+			commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+			if err != nil {
+				continue
+			}
+			dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), commitment)
+			resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, nonce, evmAddr, dataRootTupleRoot.Hex())
 			if err == nil && resp != nil {
 				cancel()
 				return resp, nil
@@ -631,6 +726,23 @@ func (network QGBNetwork) WasAttestationSigned(
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
+	// creating an RPC connection to tendermint
+	trpc, err := http.New(network.TendermintRPC, "/websocket")
+	if err != nil {
+		return false, err
+	}
+	err = trpc.Start()
+	if err != nil {
+		return false, err
+	}
+	defer func(trpc *http.HTTP) {
+		err := trpc.Stop()
+		if err != nil {
+			network.Logger.Error(err.Error())
+		}
+	}(trpc)
+	tmQuerier := rpc.NewTmQuerier(trpc, network.Logger)
+
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
 		select {
@@ -650,11 +762,15 @@ func (network QGBNetwork) WasAttestationSigned(
 			}
 			switch att.Type() {
 			case types.ValsetRequestType:
-				_, ok := att.(*types.Valset)
+				vs, ok := att.(*types.Valset)
 				if !ok {
 					continue
 				}
-				resp, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, evmAddress)
+				signBytes, err := vs.SignBytes()
+				if err != nil {
+					continue
+				}
+				resp, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, evmAddress, signBytes.Hex())
 				if err == nil && resp != nil {
 					cancel()
 					return true, nil
@@ -665,10 +781,15 @@ func (network QGBNetwork) WasAttestationSigned(
 				if !ok {
 					continue
 				}
+				commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+				if err != nil {
+					continue
+				}
 				resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(
 					ctx,
 					dc.Nonce,
 					evmAddress,
+					commitment.String(),
 				)
 				if err == nil && resp != nil {
 					cancel()

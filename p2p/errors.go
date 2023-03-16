@@ -16,4 +16,5 @@ var (
 	ErrNoValidValueFound               = errors.New("no valid dht confirm value found")
 	ErrEmptyNamespace                  = errors.New("empty namespace")
 	ErrEmptyEVMAddr                    = errors.New("empty evm address")
+	ErrEmptyDigest                     = errors.New("empty digest")
 )

@@ -67,12 +67,11 @@ func TestPutDataCommitmentConfirm(t *testing.T) {
 	// create a test DataCommitmentConfirm
 	expectedConfirm := types.DataCommitmentConfirm{
 		EthAddress: evmAddress,
-		Commitment: commitment,
 		Signature:  hex.EncodeToString(signature),
 	}
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress)
+	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress, dataRootHash.Hex())
 
 	// put the test DataCommitmentConfirm in the DHT
 	err = network.DHTs[0].PutDataCommitmentConfirm(context.Background(), testKey, expectedConfirm)
@@ -100,12 +99,11 @@ func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
 	// create a test DataCommitmentConfirm
 	expectedConfirm := types.DataCommitmentConfirm{
 		EthAddress: evmAddress,
-		Commitment: commitment,
 		Signature:  hex.EncodeToString(signature),
 	}
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress)
+	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress, dataRootHash.Hex())
 
 	// put the test DataCommitmentConfirm in the DHT
 	err = network.DHTs[2].PutDataCommitmentConfirm(context.Background(), testKey, expectedConfirm)
@@ -124,7 +122,7 @@ func TestNetworkGetNonExistentDataCommitmentConfirm(t *testing.T) {
 	defer network.Stop()
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, evmAddress)
+	testKey := p2p.GetDataCommitmentConfirmKey(10, evmAddress, "0x1234")
 
 	// try to get the non-existent DataCommitmentConfirm
 	actualConfirm, err := network.DHTs[8].GetDataCommitmentConfirm(context.Background(), testKey)
@@ -144,11 +142,10 @@ func TestPutValsetConfirm(t *testing.T) {
 	expectedConfirm := types.NewValsetConfirm(
 		common.HexToAddress(evmAddress),
 		hex.EncodeToString(signature),
-		signBytes,
 	)
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
+	testKey := p2p.GetValsetConfirmKey(10, evmAddress, signBytes.Hex())
 
 	// put the test ValsetConfirm in the DHT
 	err = network.DHTs[0].PutValsetConfirm(context.Background(), testKey, *expectedConfirm)
@@ -174,11 +171,10 @@ func TestNetworkPutValsetConfirm(t *testing.T) {
 	expectedConfirm := types.NewValsetConfirm(
 		common.HexToAddress(evmAddress),
 		hex.EncodeToString(signature),
-		signBytes,
 	)
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetValsetConfirmKey(10, evmAddress)
+	testKey := p2p.GetValsetConfirmKey(10, evmAddress, signBytes.Hex())
 
 	// put the test DataCommitmentConfirm in the DHT
 	err = network.DHTs[2].PutValsetConfirm(context.Background(), testKey, *expectedConfirm)
@@ -197,7 +193,7 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 	defer network.Stop()
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(10, evmAddress)
+	testKey := p2p.GetDataCommitmentConfirmKey(10, evmAddress, "0x1234")
 
 	// try to get the non-existent ValsetConfirm
 	actualConfirm, err := network.DHTs[8].GetValsetConfirm(context.Background(), testKey)

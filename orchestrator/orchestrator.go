@@ -254,7 +254,11 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
 		}
-		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.OrchEVMAddress.Hex())
+		signBytes, err := vs.SignBytes()
+		if err != nil {
+			return err
+		}
+		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.OrchEVMAddress.Hex(), signBytes.Hex())
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
@@ -273,19 +277,29 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
 		}
+		commitment, err := orch.TmQuerier.QueryCommitment(
+			ctx,
+			dc.BeginBlock,
+			dc.EndBlock,
+		)
+		if err != nil {
+			return err
+		}
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
 		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByEVMAddress(
 			ctx,
 			dc.Nonce,
 			orch.OrchEVMAddress.Hex(),
+			dataRootHash.Hex(),
 		)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", resp.Commitment, "signature", resp.Signature)
+			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
 			return nil
 		}
-		err = orch.ProcessDataCommitmentEvent(ctx, *dc)
+		err = orch.ProcessDataCommitmentEvent(ctx, *dc, dataRootHash)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}
@@ -310,9 +324,8 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 	msg := types.NewValsetConfirm(
 		orch.OrchEVMAddress,
 		ethcmn.Bytes2Hex(signature),
-		signBytes,
 	)
-	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg)
+	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg, signBytes.Hex())
 	if err != nil {
 		return err
 	}
@@ -323,27 +336,18 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 func (orch Orchestrator) ProcessDataCommitmentEvent(
 	ctx context.Context,
 	dc celestiatypes.DataCommitment,
+	dataRootTupleRoot ethcmn.Hash,
 ) error {
-	commitment, err := orch.TmQuerier.QueryCommitment(
-		ctx,
-		dc.BeginBlock,
-		dc.EndBlock,
-	)
+	dcSig, err := evm.NewEthereumSignature(dataRootTupleRoot.Bytes(), &orch.EvmPrivateKey)
 	if err != nil {
 		return err
 	}
-	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
-	dcSig, err := evm.NewEthereumSignature(dataRootHash.Bytes(), &orch.EvmPrivateKey)
+	msg := types.NewDataCommitmentConfirm(ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
+	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg, dataRootTupleRoot.Hex())
 	if err != nil {
 		return err
 	}
-
-	msg := types.NewDataCommitmentConfirm(commitment.String(), ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
-	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg)
-	if err != nil {
-		return err
-	}
-	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "commitment", commitment)
+	orch.Logger.Info("signed commitment", "nonce", dc.Nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "data_root_tuple_root", dataRootTupleRoot.Hex())
 	return nil
 }
 

@@ -46,21 +46,19 @@ func TestMarshalDataCommitmentConfirm(t *testing.T) {
 	dataCommitmentConfirm := types.DataCommitmentConfirm{
 		Signature:  "signature",
 		EthAddress: "eth_address",
-		Commitment: "commitment",
 	}
 
 	jsonData, err := types.MarshalDataCommitmentConfirm(dataCommitmentConfirm)
 	assert.NoError(t, err)
-	expectedJSON := `{"Signature":"signature","EthAddress":"eth_address","Commitment":"commitment"}`
+	expectedJSON := `{"Signature":"signature","EthAddress":"eth_address"}`
 	assert.Equal(t, expectedJSON, string(jsonData))
 }
 
 func TestUnmarshalDataCommitmentConfirm(t *testing.T) {
-	jsonData := []byte(`{"Signature":"signature","EthAddress":"eth_address","Commitment":"commitment"}`)
+	jsonData := []byte(`{"Signature":"signature","EthAddress":"eth_address"}`)
 	expectedDataCommitmentConfirm := types.DataCommitmentConfirm{
 		Signature:  "signature",
 		EthAddress: "eth_address",
-		Commitment: "commitment",
 	}
 
 	dataCommitmentConfirm, err := types.UnmarshalDataCommitmentConfirm(jsonData)

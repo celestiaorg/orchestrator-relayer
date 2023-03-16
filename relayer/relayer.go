@@ -3,6 +3,7 @@ package relayer
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	coregethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -124,7 +125,11 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if err != nil {
 			return nil, err
 		}
-		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, vs.Nonce, *previousValset)
+		signBytes, err := vs.SignBytes()
+		if err != nil {
+			return nil, err
+		}
+		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, vs.Nonce, *previousValset, signBytes.Hex())
 		if err != nil {
 			return nil, err
 		}
@@ -143,13 +148,17 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if err != nil {
 			return nil, err
 		}
-
-		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, dc.Nonce)
+		commitment, err := r.TmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+		if err != nil {
+			return nil, err
+		}
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, dc.Nonce, dataRootHash.Hex())
 		if err != nil {
 			return nil, err
 		}
 
-		tx, err = r.SubmitDataRootTupleRoot(opts, *dc, *valset, confirms[0].Commitment, confirms)
+		tx, err = r.SubmitDataRootTupleRoot(opts, *dc, *valset, commitment.String(), confirms)
 		if err != nil {
 			return nil, err
 		}
