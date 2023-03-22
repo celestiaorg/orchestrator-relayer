@@ -6,7 +6,7 @@ require (
 	github.com/celestiaorg/celestia-app v0.12.0-rc7.0.20230303181453-62eae8774efe
 	github.com/celestiaorg/nmt v0.14.0 // indirect
 	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
-	github.com/ethereum/go-ethereum v1.11.4
+	github.com/ethereum/go-ethereum v1.11.5
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0
