@@ -7,6 +7,7 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	ds "github.com/ipfs/go-datastore"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
+	"github.com/libp2p/go-libp2p-kad-dht/providers"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/peer"
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -28,6 +29,10 @@ type QgbDHT struct {
 // NewQgbDHT create a new IPFS DHT using a suitable configuration for the QGB.
 // If nil is passed for bootstrappers, the DHT will not try to connect to any existing peer.
 func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo, logger tmlog.Logger) (*QgbDHT, error) {
+	// this value is set to 23 days, which is the unbonding period. We want to have the signatures
+	// available for this whole period.
+	providers.ProvideValidity = time.Hour * 24 * 23
+
 	router, err := dht.New(
 		ctx,
 		h,
