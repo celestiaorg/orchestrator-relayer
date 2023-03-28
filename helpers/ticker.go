@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// ImmediateTicker is a wrapper around time.Ticker that ticks an extra time during creation before
+// ImmediateTicker is a wrapper around time.Ticker that ticks an extra time during its creation before
 // starting to tick every `duration`.
 // The reason for adding it is for multiple services that use the ticker, to be able to run their logic
 // a single time before waiting for the `duration` to elapse.
