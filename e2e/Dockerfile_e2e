@@ -6,8 +6,6 @@ WORKDIR /orchestrator-relayer
 RUN make build
 
 # rebuild the celestia-app binary
-FROM golang:1.18-alpine as celestia-builder
-RUN apk update && apk --no-cache add make gcc musl-dev git
 WORKDIR /opt
 RUN git clone https://github.com/celestiaorg/celestia-app
 WORKDIR /opt/celestia-app
