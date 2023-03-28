@@ -35,7 +35,7 @@ func NewRootCmd() *cobra.Command {
 		relayer.Command(),
 		deploy.Command(),
 		client.VerifyCmd(),
-		generate.GenerateCmd(),
+		generate.Command(),
 	)
 
 	rootCmd.SetHelpCommand(&cobra.Command{})
