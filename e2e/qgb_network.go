@@ -113,7 +113,7 @@ func forceExitIfNeeded(exitCode int) {
 }
 
 // StartAll starts the whole QGB cluster with multiple validators, orchestrators and a relayer
-// Make sure to release the ressources after finishing by calling the `StopAll()` method.
+// Make sure to release the resources after finishing by calling the `StopAll()` method.
 func (network QGBNetwork) StartAll() error {
 	// the reason for building before executing `up` is to avoid rebuilding all the images
 	// if some container accidentally changed some files when running.
@@ -793,7 +793,9 @@ func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *wrapper
 				cancel()
 				return nil
 			}
-			fmt.Printf("waiting for nonce %d current noce %d\n", n, nonce)
+			if err != nil {
+				fmt.Printf("waiting for nonce %d current nonce %d\n", n, nonce)
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}
