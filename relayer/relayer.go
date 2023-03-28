@@ -6,8 +6,6 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/celestiaorg/orchestrator-relayer/helpers"
-
 	coregethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -28,7 +26,6 @@ type Relayer struct {
 	P2PQuerier *p2p.Querier
 	EVMClient  *evm.Client
 	logger     tmlog.Logger
-	Retrier    *helpers.Retrier
 }
 
 func NewRelayer(
@@ -37,16 +34,14 @@ func NewRelayer(
 	p2pQuerier *p2p.Querier,
 	evmClient *evm.Client,
 	logger tmlog.Logger,
-	retrier *helpers.Retrier,
-) (*Relayer, error) {
+) *Relayer {
 	return &Relayer{
 		TmQuerier:  tmQuerier,
 		AppQuerier: appQuerier,
 		P2PQuerier: p2pQuerier,
 		EVMClient:  evmClient,
 		logger:     logger,
-		Retrier:    retrier,
-	}, nil
+	}
 }
 
 func (r *Relayer) Start(ctx context.Context) error {

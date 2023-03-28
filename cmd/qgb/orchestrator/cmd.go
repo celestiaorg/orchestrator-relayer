@@ -3,9 +3,7 @@ package orchestrator
 import (
 	"context"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"

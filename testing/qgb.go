@@ -4,8 +4,6 @@ import (
 	"crypto/ecdsa"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
 	"github.com/celestiaorg/celestia-app/app"
@@ -28,9 +26,7 @@ func NewRelayer(
 	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.Client, logger)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	evmClient := NewEVMClient(node.EVMChain.Key)
-	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
-	r, err := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier)
-	require.NoError(t, err)
+	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger)
 	return r
 }
 

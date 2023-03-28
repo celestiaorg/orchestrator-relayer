@@ -7,7 +7,6 @@ import (
 	"math/big"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
@@ -211,7 +210,9 @@ func (orch Orchestrator) ProcessNonces(
 			orch.Logger.Debug("processing nonce", "nonce", nonce)
 			if err := orch.Process(ctx, nonce); err != nil {
 				orch.Logger.Error("failed to process nonce, retrying", "nonce", nonce, "err", err)
-				if err := orch.Retrier.Retry(ctx, nonce, orch.Process); err != nil {
+				if err := orch.Retrier.Retry(ctx, func() error {
+					return orch.Process(ctx, nonce)
+				}); err != nil {
 					close(signalChan)
 					return err
 				}
