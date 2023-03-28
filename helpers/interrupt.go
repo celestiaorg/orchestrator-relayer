@@ -9,7 +9,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-// TrapSignal will listen for any OS signal and gracefully exit.
+// TrapSignal will listen for any OS signal and cancel the context to gracefully exit.
 func TrapSignal(logger tmlog.Logger, cancel context.CancelFunc) {
 	sigCh := make(chan os.Signal, 1)
 

@@ -7,7 +7,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-// Retrier handles orchestrator retries of failed nonces.
+// Retrier handles retries of failed services.
 type Retrier struct {
 	logger        tmlog.Logger
 	retriesNumber int
@@ -25,6 +25,8 @@ func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Re
 	}
 }
 
+// Retry retries the `retryMethod` for `r.retiresNumber` times, separated by a delay equal to `r.delay`.
+// Returns the final execution error if all retries failed.
 func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 	var err error
 	for i := 0; i < r.retriesNumber; i++ {
@@ -46,6 +48,7 @@ func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 	return err
 }
 
+// RetryThenFail similar to `Retry` but panics upon failure.
 func (r Retrier) RetryThenFail(ctx context.Context, retryMethod func() error) {
 	err := r.Retry(ctx, retryMethod)
 	if err != nil {
