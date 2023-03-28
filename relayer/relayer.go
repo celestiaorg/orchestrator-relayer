@@ -34,14 +34,14 @@ func NewRelayer(
 	p2pQuerier *p2p.Querier,
 	evmClient *evm.Client,
 	logger tmlog.Logger,
-) (*Relayer, error) {
+) *Relayer {
 	return &Relayer{
 		TmQuerier:  tmQuerier,
 		AppQuerier: appQuerier,
 		P2PQuerier: p2pQuerier,
 		EVMClient:  evmClient,
 		logger:     logger,
-	}, nil
+	}
 }
 
 func (r *Relayer) Start(ctx context.Context) error {

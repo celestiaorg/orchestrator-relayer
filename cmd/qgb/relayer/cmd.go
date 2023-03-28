@@ -1,13 +1,14 @@
 package relayer
 
 import (
+	"context"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/helpers"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
@@ -87,6 +88,9 @@ func Command() *cobra.Command {
 				}
 			}(qgbGRPC)
 
+			ctx, cancel := context.WithCancel(cmd.Context())
+			defer cancel()
+
 			// creating the application querier
 			appQuerier := rpc.NewAppQuerier(logger, qgbGRPC, encCfg)
 
@@ -121,21 +125,20 @@ func Command() *cobra.Command {
 			}
 
 			// creating the dht
-			dht, err := p2p.NewQgbDHT(cmd.Context(), h, dataStore, bootstrappers, logger)
+			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, logger)
 			if err != nil {
 				return err
 			}
 
 			// wait for the dht to have some peers
-			err = dht.WaitForPeers(cmd.Context(), time.Hour, 10*time.Second, 1)
+			err = dht.WaitForPeers(ctx, time.Hour, 10*time.Second, 1)
 			if err != nil {
 				return err
 			}
 
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
-
-			relay, err := relayer.NewRelayer(
+			relay := relayer.NewRelayer(
 				tmQuerier,
 				appQuerier,
 				p2pQuerier,
@@ -148,11 +151,11 @@ func Command() *cobra.Command {
 				),
 				logger,
 			)
-			if err != nil {
-				return err
-			}
 
-			err = relay.Start(cmd.Context())
+			// Listen for and trap any OS signal to gracefully shutdown and exit
+			go helpers.TrapSignal(logger, cancel)
+
+			err = relay.Start(ctx)
 			if err != nil {
 				logger.Error(err.Error())
 				return err

@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	celestiatestnode "github.com/celestiaorg/celestia-app/testutil/testnode"
@@ -24,10 +26,7 @@ func NewRelayer(
 	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.Client, logger)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	evmClient := NewEVMClient(node.EVMChain.Key)
-	r, err := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger)
-	if err != nil {
-		panic(err)
-	}
+	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger)
 	return r
 }
 
@@ -46,7 +45,7 @@ func NewOrchestrator(
 	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.Client, logger)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	broadcaster := orchestrator.NewBroadcaster(node.DHTNetwork.DHTs[0])
-	retrier := orchestrator.NewRetrier(logger, 3, 500*time.Millisecond)
+	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
 	orch, err := orchestrator.New(logger, appQuerier, tmQuerier, p2pQuerier, broadcaster, retrier, *celestiatestnode.NodeEVMPrivateKey)
 	if err != nil {
 		panic(err)

@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
+
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
@@ -33,7 +35,7 @@ type Orchestrator struct {
 	TmQuerier   *rpc.TmQuerier
 	P2PQuerier  *p2p.Querier
 	Broadcaster *Broadcaster
-	Retrier     *Retrier
+	Retrier     *helpers.Retrier
 }
 
 func New(
@@ -42,7 +44,7 @@ func New(
 	tmQuerier *rpc.TmQuerier,
 	p2pQuerier *p2p.Querier,
 	broadcaster *Broadcaster,
-	retrier *Retrier,
+	retrier *helpers.Retrier,
 	evmPrivateKey ecdsa.PrivateKey,
 ) (*Orchestrator, error) {
 	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
@@ -208,7 +210,9 @@ func (orch Orchestrator) ProcessNonces(
 			orch.Logger.Debug("processing nonce", "nonce", nonce)
 			if err := orch.Process(ctx, nonce); err != nil {
 				orch.Logger.Error("failed to process nonce, retrying", "nonce", nonce, "err", err)
-				if err := orch.Retrier.Retry(ctx, nonce, orch.Process); err != nil {
+				if err := orch.Retrier.Retry(ctx, func() error {
+					return orch.Process(ctx, nonce)
+				}); err != nil {
 					close(signalChan)
 					return err
 				}

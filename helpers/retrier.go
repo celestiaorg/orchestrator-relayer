@@ -1,4 +1,4 @@
-package orchestrator
+package helpers
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-// Retrier handles orchestrator retries of failed nonces.
+// Retrier handles retries of failed services.
 type Retrier struct {
 	logger        tmlog.Logger
 	retriesNumber int
@@ -25,29 +25,32 @@ func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Re
 	}
 }
 
-func (r Retrier) Retry(ctx context.Context, nonce uint64, retryMethod func(context.Context, uint64) error) error {
+// Retry retries the `retryMethod` for `r.retriesNumber` times, separated by a delay equal to `r.delay`.
+// Returns the final execution error if all retries failed.
+func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 	var err error
 	for i := 0; i < r.retriesNumber; i++ {
 		// We can implement some exponential backoff in here
 		select {
 		case <-ctx.Done():
-			return nil
+			return ctx.Err()
 		default:
 			time.Sleep(r.delay)
-			r.logger.Info("retrying", "nonce", nonce, "retry_number", i, "retries_left", r.retriesNumber-i)
-			err = retryMethod(ctx, nonce)
+			r.logger.Info("retrying", "retry_number", i, "retries_left", r.retriesNumber-i)
+			err = retryMethod()
 			if err == nil {
-				r.logger.Info("nonce processing succeeded", "nonce", nonce, "retries_number", i)
+				r.logger.Info("succeeded", "retries_number", i)
 				return nil
 			}
-			r.logger.Error("failed to process nonce", "nonce", nonce, "retry", i, "err", err)
+			r.logger.Error("failed to process", "retry", i, "err", err)
 		}
 	}
 	return err
 }
 
-func (r Retrier) RetryThenFail(ctx context.Context, nonce uint64, retryMethod func(context.Context, uint64) error) {
-	err := r.Retry(ctx, nonce, retryMethod)
+// RetryThenFail similar to `Retry` but panics upon failure.
+func (r Retrier) RetryThenFail(ctx context.Context, retryMethod func() error) {
+	err := r.Retry(ctx, retryMethod)
 	if err != nil {
 		panic(err)
 	}

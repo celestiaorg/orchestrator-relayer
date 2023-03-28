@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/helpers"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/generate"
 
 	"github.com/celestiaorg/celestia-app/x/qgb/client"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/deploy"
@@ -35,7 +35,7 @@ func NewRootCmd() *cobra.Command {
 		relayer.Command(),
 		deploy.Command(),
 		client.VerifyCmd(),
-		helpers.GenerateCmd(),
+		generate.Command(),
 	)
 
 	rootCmd.SetHelpCommand(&cobra.Command{})

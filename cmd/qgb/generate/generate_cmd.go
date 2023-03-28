@@ -1,4 +1,4 @@
-package helpers
+package generate
 
 import (
 	"fmt"
@@ -9,10 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GenerateCmd helper command to generate a new Ed25519 private key in hex format.
+// Command helper command to generate a new Ed25519 private key in hex format.
 // This will be used to generate the key needed when starting the orchestrator or relayer.
 // Will be removed once we support a key management tool.
-func GenerateCmd() *cobra.Command {
+func Command() *cobra.Command {
 	return &cobra.Command{
 		Use:   "generate",
 		Short: "Generates a new Ed25519 private key in hex format",
