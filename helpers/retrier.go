@@ -25,7 +25,7 @@ func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Re
 	}
 }
 
-// Retry retries the `retryMethod` for `r.retiresNumber` times, separated by a delay equal to `r.delay`.
+// Retry retries the `retryMethod` for `r.retriesNumber` times, separated by a delay equal to `r.delay`.
 // Returns the final execution error if all retries failed.
 func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 	var err error
