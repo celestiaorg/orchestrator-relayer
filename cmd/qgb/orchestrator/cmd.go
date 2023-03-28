@@ -8,9 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
@@ -127,7 +128,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			retrier := orchestrator.NewRetrier(logger, 5, 15*time.Second)
+			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
 			orch, err := orchestrator.New(
 				logger,
 				appQuerier,
@@ -144,7 +145,7 @@ func Command() *cobra.Command {
 			logger.Debug("starting orchestrator")
 
 			// Listen for and trap any OS signal to gracefully shutdown and exit
-			go trapSignal(logger, cancel)
+			go helpers.TrapSignal(logger, cancel)
 
 			orch.Start(ctx)
 
@@ -152,16 +153,4 @@ func Command() *cobra.Command {
 		},
 	}
 	return addOrchestratorFlags(command)
-}
-
-// trapSignal will listen for any OS signal and gracefully exit.
-func trapSignal(logger tmlog.Logger, cancel context.CancelFunc) {
-	sigCh := make(chan os.Signal, 1)
-
-	signal.Notify(sigCh, syscall.SIGTERM)
-	signal.Notify(sigCh, syscall.SIGINT)
-
-	sig := <-sigCh
-	logger.Info("caught signal; shutting down...", "signal", sig.String())
-	cancel()
 }

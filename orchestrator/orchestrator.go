@@ -7,6 +7,9 @@ import (
 	"math/big"
 	"strconv"
 	"sync"
+	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
@@ -33,7 +36,7 @@ type Orchestrator struct {
 	TmQuerier   *rpc.TmQuerier
 	P2PQuerier  *p2p.Querier
 	Broadcaster *Broadcaster
-	Retrier     *Retrier
+	Retrier     *helpers.Retrier
 }
 
 func New(
@@ -42,7 +45,7 @@ func New(
 	tmQuerier *rpc.TmQuerier,
 	p2pQuerier *p2p.Querier,
 	broadcaster *Broadcaster,
-	retrier *Retrier,
+	retrier *helpers.Retrier,
 	evmPrivateKey ecdsa.PrivateKey,
 ) (*Orchestrator, error) {
 	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)

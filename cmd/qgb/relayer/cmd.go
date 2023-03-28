@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/libp2p/go-libp2p/core/peer"
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/helpers"
+	"github.com/libp2p/go-libp2p/core/peer"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
@@ -134,7 +134,7 @@ func Command() *cobra.Command {
 
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
-
+			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
 			relay, err := relayer.NewRelayer(
 				tmQuerier,
 				appQuerier,
@@ -147,12 +147,16 @@ func Command() *cobra.Command {
 					config.evmGasLimit,
 				),
 				logger,
+				retrier,
 			)
 			if err != nil {
 				return err
 			}
 
-			err = relay.Start(cmd.Context())
+			// Listen for and trap any OS signal to gracefully shutdown and exit
+			go helpers.TrapSignal(logger, cancel)
+
+			err = relay.Start(ctx)
 			if err != nil {
 				logger.Error(err.Error())
 				return err

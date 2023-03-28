@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/helpers"
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
