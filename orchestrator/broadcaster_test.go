@@ -37,18 +37,14 @@ func TestBroadcastDataCommitmentConfirm(t *testing.T) {
 	require.NoError(t, err)
 
 	// create a test DataCommitmentConfirm
-	expectedConfirm := types.DataCommitmentConfirm{
-		EthAddress: evmAddress,
-		Commitment: commitment,
-		Signature:  hex.EncodeToString(signature),
-	}
+	expectedConfirm := types.NewDataCommitmentConfirm(hex.EncodeToString(signature), common.HexToAddress(evmAddress))
 
 	// generate a test key for the DataCommitmentConfirm
-	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress)
+	testKey := p2p.GetDataCommitmentConfirmKey(nonce, evmAddress, dataRootHash.Hex())
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
-	err = broadcaster.ProvideDataCommitmentConfirm(context.Background(), nonce, expectedConfirm)
+	err = broadcaster.ProvideDataCommitmentConfirm(context.Background(), nonce, *expectedConfirm, dataRootHash.Hex())
 	assert.NoError(t, err)
 
 	// try to get the confirm from another peer
@@ -56,7 +52,7 @@ func TestBroadcastDataCommitmentConfirm(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, actualConfirm)
 
-	assert.Equal(t, expectedConfirm, actualConfirm)
+	assert.Equal(t, *expectedConfirm, actualConfirm)
 }
 
 func TestBroadcastValsetConfirm(t *testing.T) {
@@ -69,18 +65,14 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 	require.NoError(t, err)
 
 	// create a test DataCommitmentConfirm
-	expectedConfirm := types.NewValsetConfirm(
-		common.HexToAddress(evmAddress),
-		hex.EncodeToString(signature),
-		signBytes,
-	)
+	expectedConfirm := types.NewValsetConfirm(common.HexToAddress(evmAddress), hex.EncodeToString(signature))
 
 	// generate a test key for the ValsetConfirm
-	testKey := p2p.GetValsetConfirmKey(nonce, evmAddress)
+	testKey := p2p.GetValsetConfirmKey(nonce, evmAddress, signBytes.Hex())
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
-	err = broadcaster.ProvideValsetConfirm(context.Background(), nonce, *expectedConfirm)
+	err = broadcaster.ProvideValsetConfirm(context.Background(), nonce, *expectedConfirm, signBytes.Hex())
 	assert.NoError(t, err)
 
 	// try to get the confirm from another peer
@@ -105,13 +97,12 @@ func TestEmptyPeersTable(t *testing.T) {
 	// create a test DataCommitmentConfirm
 	dcConfirm := types.DataCommitmentConfirm{
 		EthAddress: evmAddress,
-		Commitment: "test commitment",
 		Signature:  "test signature",
 	}
 
 	// Broadcast the confirm
 	broadcaster := orchestrator.NewBroadcaster(dht)
-	err := broadcaster.ProvideDataCommitmentConfirm(context.Background(), 10, dcConfirm)
+	err := broadcaster.ProvideDataCommitmentConfirm(context.Background(), 10, dcConfirm, "test root")
 
 	// check if the correct error is returned
 	assert.Error(t, err)
@@ -124,7 +115,7 @@ func TestEmptyPeersTable(t *testing.T) {
 	}
 
 	// Broadcast the confirm
-	err = broadcaster.ProvideValsetConfirm(context.Background(), 10, vsConfirm)
+	err = broadcaster.ProvideValsetConfirm(context.Background(), 10, vsConfirm, "test root")
 
 	// check if the correct error is returned
 	assert.Error(t, err)

@@ -18,19 +18,14 @@ type DataCommitmentConfirm struct {
 	// Hex `0x` encoded Ethereum public key that will be used by this validator on
 	// Ethereum.
 	EthAddress string
-	// Merkle root over a merkle tree containing the data roots of a set of
-	// blocks.
-	Commitment string
 }
 
 // NewDataCommitmentConfirm creates a new NewDataCommitmentConfirm.
 func NewDataCommitmentConfirm(
-	commitment string,
 	signature string,
 	ethAddress ethcmn.Address,
 ) *DataCommitmentConfirm {
 	return &DataCommitmentConfirm{
-		Commitment: commitment,
 		Signature:  signature,
 		EthAddress: ethAddress.Hex(),
 	}
@@ -58,7 +53,6 @@ func UnmarshalDataCommitmentConfirm(encoded []byte) (DataCommitmentConfirm, erro
 func IsEmptyMsgDataCommitmentConfirm(dcc DataCommitmentConfirm) bool {
 	emptyDcc := DataCommitmentConfirm{}
 	return dcc.EthAddress == emptyDcc.EthAddress &&
-		dcc.Commitment == emptyDcc.Commitment &&
 		dcc.Signature == emptyDcc.Signature
 }
 

@@ -41,6 +41,7 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 	rate time.Duration,
 	previousValset celestiatypes.Valset,
 	nonce uint64,
+	dataRootTupleRoot string,
 ) ([]types.DataCommitmentConfirm, error) {
 	// create a map to easily search for power
 	vals := make(map[string]celestiatypes.BridgeValidator)
@@ -63,7 +64,7 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
 		case <-ticker.C:
-			confirms, err := q.QueryDataCommitmentConfirms(ctx, previousValset, nonce)
+			confirms, err := q.QueryDataCommitmentConfirms(ctx, previousValset, nonce, dataRootTupleRoot)
 			if err != nil {
 				return nil, err
 			}
@@ -120,6 +121,7 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 	rate time.Duration,
 	valsetNonce uint64,
 	previousValset celestiatypes.Valset,
+	signBytes string,
 ) ([]types.ValsetConfirm, error) {
 	// create a map to easily search for power
 	vals := make(map[string]celestiatypes.BridgeValidator)
@@ -142,7 +144,7 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
 		case <-ticker.C:
-			confirms, err := q.QueryValsetConfirms(ctx, valsetNonce, previousValset)
+			confirms, err := q.QueryValsetConfirms(ctx, valsetNonce, previousValset, signBytes)
 			if err != nil {
 				return nil, err
 			}
@@ -193,10 +195,11 @@ func (q Querier) QueryValsetConfirmByEVMAddress(
 	ctx context.Context,
 	nonce uint64,
 	address string,
+	signBytes string,
 ) (*types.ValsetConfirm, error) {
 	confirm, err := q.QgbDHT.GetValsetConfirm(
 		ctx,
-		GetValsetConfirmKey(nonce, address),
+		GetValsetConfirmKey(nonce, address, signBytes),
 	)
 	if err != nil {
 		if errors.Is(err, routing.ErrNotFound) {
@@ -211,10 +214,10 @@ func (q Querier) QueryValsetConfirmByEVMAddress(
 // QueryDataCommitmentConfirmByEVMAddress get the data commitment confirm having nonce `nonce`
 // and signed by the orchestrator whose EVM address is `address`.
 // Returns (nil, nil) if the confirm is not found
-func (q Querier) QueryDataCommitmentConfirmByEVMAddress(ctx context.Context, nonce uint64, address string) (*types.DataCommitmentConfirm, error) {
+func (q Querier) QueryDataCommitmentConfirmByEVMAddress(ctx context.Context, nonce uint64, address string, dataRootTupleRoot string) (*types.DataCommitmentConfirm, error) {
 	confirm, err := q.QgbDHT.GetDataCommitmentConfirm(
 		ctx,
-		GetDataCommitmentConfirmKey(nonce, address),
+		GetDataCommitmentConfirmKey(nonce, address, dataRootTupleRoot),
 	)
 	if err != nil {
 		if errors.Is(err, routing.ErrNotFound) {
@@ -228,12 +231,12 @@ func (q Querier) QueryDataCommitmentConfirmByEVMAddress(ctx context.Context, non
 
 // QueryDataCommitmentConfirms get all the data commitment confirms in store for a certain nonce.
 // It goes over the valset members and looks if they submitted any confirms.
-func (q Querier) QueryDataCommitmentConfirms(ctx context.Context, valset celestiatypes.Valset, nonce uint64) ([]types.DataCommitmentConfirm, error) {
+func (q Querier) QueryDataCommitmentConfirms(ctx context.Context, valset celestiatypes.Valset, nonce uint64, dataRootTupleRoot string) ([]types.DataCommitmentConfirm, error) {
 	confirms := make([]types.DataCommitmentConfirm, 0)
 	for _, member := range valset.Members {
 		confirm, err := q.QgbDHT.GetDataCommitmentConfirm(
 			ctx,
-			GetDataCommitmentConfirmKey(nonce, member.EvmAddress),
+			GetDataCommitmentConfirmKey(nonce, member.EvmAddress, dataRootTupleRoot),
 		)
 		if err == nil {
 			confirms = append(confirms, confirm)
@@ -249,12 +252,12 @@ func (q Querier) QueryDataCommitmentConfirms(ctx context.Context, valset celesti
 // QueryValsetConfirms get all the valset confirms in store for a certain nonce.
 // It goes over the specified valset members and looks if they submitted any confirms
 // for the provided nonce.
-func (q Querier) QueryValsetConfirms(ctx context.Context, nonce uint64, valset celestiatypes.Valset) ([]types.ValsetConfirm, error) {
+func (q Querier) QueryValsetConfirms(ctx context.Context, nonce uint64, valset celestiatypes.Valset, signBytes string) ([]types.ValsetConfirm, error) {
 	confirms := make([]types.ValsetConfirm, 0)
 	for _, member := range valset.Members {
 		confirm, err := q.QgbDHT.GetValsetConfirm(
 			ctx,
-			GetValsetConfirmKey(nonce, member.EvmAddress),
+			GetValsetConfirmKey(nonce, member.EvmAddress, signBytes),
 		)
 		if err == nil {
 			confirms = append(confirms, confirm)

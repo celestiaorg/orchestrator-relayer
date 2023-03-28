@@ -2,7 +2,6 @@ package p2p
 
 import (
 	"encoding/hex"
-	"math/big"
 	"strings"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
@@ -15,7 +14,7 @@ type ValsetConfirmValidator struct{}
 
 // Validate runs stateless checks on the provided confirm key and value.
 func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
-	namespace, _, evmAddr, err := ParseKey(key)
+	namespace, _, evmAddr, signBytes, err := ParseKey(key)
 	if err != nil {
 		return err
 	}
@@ -40,8 +39,7 @@ func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 		return ErrNotTheSameEVMAddress
 	}
 
-	// strip the 0x from the signBytes, if exists, to create its corresponding byte slice
-	signBytes := vsc.SignBytes
+	// strip the 0x from the signBytes, if exists, to create its corresponding byte slice.
 	// we want to make sure that len(signBytes) > 2 to avoid slice bounds out of range
 	// however, we don't care at this level if the signBytes is invalid as it will be checked below.
 	if len(signBytes) > 2 && signBytes[:2] == "0x" {
@@ -93,7 +91,7 @@ type DataCommitmentConfirmValidator struct{}
 
 // Validate runs stateless checks on the provided confirm key and value.
 func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) error {
-	namespace, nonce, evmAddr, err := ParseKey(key)
+	namespace, _, evmAddr, dataRootTupleRoot, err := ParseKey(key)
 	if err != nil {
 		return err
 	}
@@ -121,11 +119,10 @@ func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) err
 	// strip the 0x from the commitment, if exists, to create its corresponding byte slice
 	// we want to make sure that len(commitment) > 2 to avoid slice bounds out of range
 	// however, we don't care at this level if the commitment is invalid as it will be checked below.
-	commitment := dcc.Commitment
-	if len(commitment) > 2 && commitment[:2] == "0x" {
-		commitment = commitment[2:]
+	if len(dataRootTupleRoot) > 2 && dataRootTupleRoot[:2] == "0x" {
+		dataRootTupleRoot = dataRootTupleRoot[2:]
 	}
-	bCommitment, err := hex.DecodeString(commitment)
+	bDataRootTupleRoot, err := hex.DecodeString(dataRootTupleRoot)
 	if err != nil {
 		return err
 	}
@@ -143,8 +140,7 @@ func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) err
 	}
 
 	// check that the provided signature was created by the provided evm address
-	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
-	err = evm.ValidateEthereumSignature(dataRootHash.Bytes(), bSignature, common.HexToAddress(evmAddr))
+	err = evm.ValidateEthereumSignature(bDataRootTupleRoot, bSignature, common.HexToAddress(evmAddr))
 	if err != nil {
 		return err
 	}

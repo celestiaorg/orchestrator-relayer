@@ -2,7 +2,10 @@ package relayer_test
 
 import (
 	"context"
+	"math/big"
 	"time"
+
+	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
 
 	"github.com/stretchr/testify/assert"
 
@@ -17,7 +20,10 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 
 	att := types.NewDataCommitment(2, 10, 100)
 	ctx := context.Background()
-	err = s.Orchestrator.ProcessDataCommitmentEvent(ctx, *att)
+	commitment, err := s.Orchestrator.TmQuerier.QueryCommitment(ctx, att.BeginBlock, att.EndBlock)
+	require.NoError(t, err)
+	dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)
+	err = s.Orchestrator.ProcessDataCommitmentEvent(ctx, *att, dataRootTupleRoot)
 	require.NoError(t, err)
 
 	tx, err := s.Relayer.ProcessAttestation(ctx, s.Node.EVMChain.Auth, att)

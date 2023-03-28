@@ -1,7 +1,11 @@
 package orchestrator_test
 
 import (
+	"math/big"
 	"testing"
+
+	"github.com/celestiaorg/orchestrator-relayer/types"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
@@ -16,15 +20,18 @@ func (s *OrchestratorTestSuite) TestProcessDataCommitmentEvent() {
 	require.NoError(t, err)
 
 	dc := celestiatypes.NewDataCommitment(2, 10, 20)
+	commitment, err := hexutil.Decode("0x1234")
+	require.NoError(t, err)
+	dataRootTupleRoot := types.DataCommitmentTupleRootSignBytes(big.NewInt(2), commitment)
 
 	// signing and submitting the signature
-	err = s.Orchestrator.ProcessDataCommitmentEvent(s.Node.Context, *dc)
+	err = s.Orchestrator.ProcessDataCommitmentEvent(s.Node.Context, *dc, dataRootTupleRoot)
 	require.NoError(t, err)
 
 	// retrieving the signature
 	confirm, err := s.Node.DHTNetwork.DHTs[0].GetDataCommitmentConfirm(
 		s.Node.Context,
-		p2p.GetDataCommitmentConfirmKey(2, s.Orchestrator.OrchEVMAddress.Hex()),
+		p2p.GetDataCommitmentConfirmKey(2, s.Orchestrator.OrchEVMAddress.Hex(), dataRootTupleRoot.Hex()),
 	)
 	require.NoError(t, err)
 	assert.Equal(t, s.Orchestrator.OrchEVMAddress.Hex(), confirm.EthAddress)
@@ -45,6 +52,9 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 	)
 	require.NoError(t, err)
 
+	signBytes, err := vs.SignBytes()
+	require.NoError(t, err)
+
 	// signing and submitting the signature
 	err = s.Orchestrator.ProcessValsetEvent(s.Node.Context, *vs)
 	require.NoError(t, err)
@@ -52,7 +62,7 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 	// retrieving the signature
 	confirm, err := s.Node.DHTNetwork.DHTs[0].GetValsetConfirm(
 		s.Node.Context,
-		p2p.GetValsetConfirmKey(2, s.Orchestrator.OrchEVMAddress.Hex()),
+		p2p.GetValsetConfirmKey(2, s.Orchestrator.OrchEVMAddress.Hex(), signBytes.Hex()),
 	)
 	require.NoError(t, err)
 	assert.Equal(t, s.Orchestrator.OrchEVMAddress.Hex(), confirm.EthAddress)

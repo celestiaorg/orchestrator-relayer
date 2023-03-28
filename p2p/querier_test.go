@@ -62,14 +62,10 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	signature1, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey1)
 	require.NoError(t, err)
 	// put a single confirm
-	dc1 := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature1),
-		ethAddr1,
-	)
+	dc1 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature1), ethAddr1)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr1.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr1.String(), dataRootHash.Hex()),
 		*dc1,
 	)
 	require.NoError(t, err)
@@ -77,27 +73,37 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query two thirds of confirms. should time-out.
-	confirms, err := querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 10*time.Second, time.Millisecond, previousValset, dcNonce)
+	confirms, err := querier.QueryTwoThirdsDataCommitmentConfirms(
+		ctx,
+		10*time.Second,
+		time.Millisecond,
+		previousValset,
+		dcNonce,
+		dataRootHash.Hex(),
+	)
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
 	signature2, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey2)
 	require.NoError(t, err)
 	// put the second confirm.
-	dc2 := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature2),
-		ethAddr2,
-	)
+	dc2 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature2), ethAddr2)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr2.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr2.String(), dataRootHash.Hex()),
 		*dc2,
 	)
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 20*time.Second, time.Millisecond, previousValset, dcNonce)
+	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(
+		ctx,
+		20*time.Second,
+		time.Millisecond,
+		previousValset,
+		dcNonce,
+		dataRootHash.Hex(),
+	)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *dc1)
 	assert.Contains(t, confirms, *dc2)
@@ -105,20 +111,23 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	signature3, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey3)
 	require.NoError(t, err)
 	// put the third confirm.
-	dc3 := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature3),
-		ethAddr3,
-	)
+	dc3 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature3), ethAddr3)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr3.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr3.String(), dataRootHash.Hex()),
 		*dc3,
 	)
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(ctx, 20*time.Second, time.Millisecond, previousValset, dcNonce)
+	confirms, err = querier.QueryTwoThirdsDataCommitmentConfirms(
+		ctx,
+		20*time.Second,
+		time.Millisecond,
+		previousValset,
+		dcNonce,
+		dataRootHash.Hex(),
+	)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *dc1)
 	assert.Contains(t, confirms, *dc2)
@@ -161,11 +170,10 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	vs1 := types.NewValsetConfirm(
 		ethAddr1,
 		hex.EncodeToString(signature1),
-		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String(), signBytes.Hex()),
 		*vs1,
 	)
 	require.NoError(t, err)
@@ -173,7 +181,14 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query two thirds of confirms. should time-out.
-	confirms, err := querier.QueryTwoThirdsValsetConfirms(ctx, 10*time.Second, time.Millisecond, vsNonce, previousValset)
+	confirms, err := querier.QueryTwoThirdsValsetConfirms(
+		ctx,
+		10*time.Second,
+		time.Millisecond,
+		vsNonce,
+		previousValset,
+		signBytes.Hex(),
+	)
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
@@ -184,17 +199,23 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	vs2 := types.NewValsetConfirm(
 		ethAddr2,
 		hex.EncodeToString(signature2),
-		signBytes,
 	)
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr2.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr2.String(), signBytes.Hex()),
 		*vs2,
 	)
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, vsNonce, previousValset)
+	confirms, err = querier.QueryTwoThirdsValsetConfirms(
+		ctx,
+		20*time.Second,
+		time.Millisecond,
+		vsNonce,
+		previousValset,
+		signBytes.Hex(),
+	)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
@@ -203,20 +224,23 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// put the third confirm.
-	vs3 := types.NewValsetConfirm(
-		ethAddr3,
-		hex.EncodeToString(signature3),
-		signBytes,
-	)
+	vs3 := types.NewValsetConfirm(ethAddr3, hex.EncodeToString(signature3))
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr3.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr3.String(), signBytes.Hex()),
 		*vs3,
 	)
 	require.NoError(t, err)
 
 	// query two thirds of confirms. should return 2 confirms.
-	confirms, err = querier.QueryTwoThirdsValsetConfirms(ctx, 20*time.Second, time.Millisecond, vsNonce, previousValset)
+	confirms, err = querier.QueryTwoThirdsValsetConfirms(
+		ctx,
+		20*time.Second,
+		time.Millisecond,
+		vsNonce,
+		previousValset,
+		signBytes.Hex(),
+	)
 	require.NoError(t, err)
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
@@ -232,30 +256,27 @@ func TestQueryValsetConfirmByEVMAddress(t *testing.T) {
 
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
+	signBytes := common.HexToHash("1234")
+
 	// query the valset confirm: should return nil
-	confirm, err := querier.QueryValsetConfirmByEVMAddress(ctx, vsNonce, ethAddr1.String())
+	confirm, err := querier.QueryValsetConfirmByEVMAddress(ctx, vsNonce, ethAddr1.String(), signBytes.Hex())
 	require.NoError(t, err)
 	assert.Nil(t, confirm)
 
-	signBytes := common.HexToHash("1234")
 	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
 	require.NoError(t, err)
 
 	// put a single confirm
-	vs := types.NewValsetConfirm(
-		ethAddr1,
-		hex.EncodeToString(signature1),
-		signBytes,
-	)
+	vs := types.NewValsetConfirm(ethAddr1, hex.EncodeToString(signature1))
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String(), signBytes.Hex()),
 		*vs,
 	)
 	require.NoError(t, err)
 
 	// query the valset confirm
-	confirm, err = querier.QueryValsetConfirmByEVMAddress(ctx, vsNonce, ethAddr1.String())
+	confirm, err = querier.QueryValsetConfirmByEVMAddress(ctx, vsNonce, ethAddr1.String(), signBytes.Hex())
 	require.NoError(t, err)
 	require.NotNil(t, confirm)
 	assert.Equal(t, vs, confirm)
@@ -271,31 +292,27 @@ func TestQueryDataCommitmentConfirmByEVMAddress(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query the data commitment confirm: should return nil
-	confirm, err := querier.QueryDataCommitmentConfirmByEVMAddress(ctx, dcNonce, ethAddr1.String())
-	require.NoError(t, err)
-	assert.Nil(t, confirm)
-
 	commitment := "1234"
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dcNonce)), bCommitment)
 
+	confirm, err := querier.QueryDataCommitmentConfirmByEVMAddress(ctx, dcNonce, ethAddr1.String(), dataRootHash.Hex())
+	require.NoError(t, err)
+	assert.Nil(t, confirm)
+
 	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey1)
 	require.NoError(t, err)
 	// put a single confirm
-	dc := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature),
-		ethAddr1,
-	)
+	dc := types.NewDataCommitmentConfirm(hex.EncodeToString(signature), ethAddr1)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr1.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr1.String(), dataRootHash.Hex()),
 		*dc,
 	)
 	require.NoError(t, err)
 
 	// query the data commitment confirm
-	confirm, err = querier.QueryDataCommitmentConfirmByEVMAddress(ctx, dcNonce, ethAddr1.String())
+	confirm, err = querier.QueryDataCommitmentConfirmByEVMAddress(ctx, dcNonce, ethAddr1.String(), dataRootHash.Hex())
 	require.NoError(t, err)
 	require.NotNil(t, confirm)
 	assert.Equal(t, dc, confirm)
@@ -332,40 +349,28 @@ func TestQueryValsetConfirms(t *testing.T) {
 	require.NoError(t, err)
 
 	// put the confirms
-	vs1 := types.NewValsetConfirm(
-		ethAddr1,
-		hex.EncodeToString(signature1),
-		signBytes,
-	)
+	vs1 := types.NewValsetConfirm(ethAddr1, hex.EncodeToString(signature1))
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr1.String(), signBytes.Hex()),
 		*vs1,
 	)
 	require.NoError(t, err)
 	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey2)
 	require.NoError(t, err)
-	vs2 := types.NewValsetConfirm(
-		ethAddr2,
-		hex.EncodeToString(signature2),
-		signBytes,
-	)
+	vs2 := types.NewValsetConfirm(ethAddr2, hex.EncodeToString(signature2))
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr2.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr2.String(), signBytes.Hex()),
 		*vs2,
 	)
 	require.NoError(t, err)
 	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey3)
 	require.NoError(t, err)
-	vs3 := types.NewValsetConfirm(
-		ethAddr3,
-		hex.EncodeToString(signature3),
-		signBytes,
-	)
+	vs3 := types.NewValsetConfirm(ethAddr3, hex.EncodeToString(signature3))
 	err = network.DHTs[0].PutValsetConfirm(
 		ctx,
-		p2p.GetValsetConfirmKey(vsNonce, ethAddr3.String()),
+		p2p.GetValsetConfirmKey(vsNonce, ethAddr3.String(), signBytes.Hex()),
 		*vs3,
 	)
 	require.NoError(t, err)
@@ -373,7 +378,7 @@ func TestQueryValsetConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query the confirms
-	confirms, err := querier.QueryValsetConfirms(ctx, valset.Nonce, valset)
+	confirms, err := querier.QueryValsetConfirms(ctx, valset.Nonce, valset, signBytes.Hex())
 	require.NoError(t, err)
 	require.NotNil(t, confirms)
 	assert.Contains(t, confirms, *vs1)
@@ -413,40 +418,28 @@ func TestQueryDataCommitmentConfirms(t *testing.T) {
 	signature1, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey1)
 	require.NoError(t, err)
 	// put the confirms
-	dc1 := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature1),
-		ethAddr1,
-	)
+	dc1 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature1), ethAddr1)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr1.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr1.String(), dataRootHash.Hex()),
 		*dc1,
 	)
 	require.NoError(t, err)
 	signature2, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey2)
 	require.NoError(t, err)
-	dc2 := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature2),
-		ethAddr2,
-	)
+	dc2 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature2), ethAddr2)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr2.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr2.String(), dataRootHash.Hex()),
 		*dc2,
 	)
 	require.NoError(t, err)
 	signature3, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey3)
 	require.NoError(t, err)
-	dc3 := types.NewDataCommitmentConfirm(
-		commitment,
-		hex.EncodeToString(signature3),
-		ethAddr3,
-	)
+	dc3 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature3), ethAddr3)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
 		ctx,
-		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr3.String()),
+		p2p.GetDataCommitmentConfirmKey(dcNonce, ethAddr3.String(), dataRootHash.Hex()),
 		*dc3,
 	)
 	require.NoError(t, err)
@@ -454,7 +447,7 @@ func TestQueryDataCommitmentConfirms(t *testing.T) {
 	querier := p2p.NewQuerier(network.DHTs[0], tmlog.NewNopLogger())
 
 	// query the confirms
-	confirms, err := querier.QueryDataCommitmentConfirms(ctx, valset, dcNonce)
+	confirms, err := querier.QueryDataCommitmentConfirms(ctx, valset, dcNonce, dataRootHash.Hex())
 	require.NoError(t, err)
 	require.NotNil(t, confirms)
 	assert.Contains(t, confirms, *dc1)
