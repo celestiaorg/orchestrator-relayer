@@ -120,7 +120,7 @@ func (network QGBNetwork) StartAll() error {
 	// This to speed up a bit the execution.
 	fmt.Println("building images...")
 	err := network.Instance.
-		WithCommand([]string{"build", "--quiet"}).
+		WithCommand([]string{"build"}).
 		Invoke().Error
 	if err != nil {
 		return err
@@ -177,7 +177,7 @@ func (network QGBNetwork) Start(service Service) error {
 	}
 	fmt.Println("building images...")
 	err = network.Instance.
-		WithCommand([]string{"build", "--quiet", serviceName}).
+		WithCommand([]string{"build", serviceName}).
 		Invoke().Error
 	if err != nil {
 		return err
@@ -197,7 +197,7 @@ func (network QGBNetwork) Start(service Service) error {
 func (network QGBNetwork) DeployQGBContract() error {
 	fmt.Println("building images...")
 	err := network.Instance.
-		WithCommand([]string{"build", "--quiet", DEPLOYER}).
+		WithCommand([]string{"build", DEPLOYER}).
 		Invoke().Error
 	if err != nil {
 		return err
@@ -227,7 +227,7 @@ func (network QGBNetwork) StartMultiple(services ...Service) error {
 	}
 	fmt.Println("building images...")
 	err := network.Instance.
-		WithCommand(append([]string{"build", "--quiet"}, serviceNames...)).
+		WithCommand(append([]string{"build"}, serviceNames...)).
 		Invoke().Error
 	if err != nil {
 		return err
@@ -297,7 +297,7 @@ func (network QGBNetwork) ExecCommand(service Service, command []string) error {
 func (network QGBNetwork) StartMinimal() error {
 	fmt.Println("building images...")
 	err := network.Instance.
-		WithCommand([]string{"build", "--quiet", "core0", "core0-orch", "relayer", "ganache"}).
+		WithCommand([]string{"build", "core0", "core0-orch", "relayer", "ganache"}).
 		Invoke().Error
 	if err != nil {
 		return err
@@ -317,7 +317,7 @@ func (network QGBNetwork) StartMinimal() error {
 func (network QGBNetwork) StartBase() error {
 	fmt.Println("building images...")
 	err := network.Instance.
-		WithCommand([]string{"build", "--quiet", "core0"}).
+		WithCommand([]string{"build", "core0"}).
 		Invoke().Error
 	if err != nil {
 		return err
