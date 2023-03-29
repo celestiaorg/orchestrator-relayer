@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
+
 	coregethtypes "github.com/ethereum/go-ethereum/core/types"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
@@ -26,6 +28,7 @@ type Relayer struct {
 	P2PQuerier *p2p.Querier
 	EVMClient  *evm.Client
 	logger     tmlog.Logger
+	Retrier    *helpers.Retrier
 }
 
 func NewRelayer(
@@ -34,6 +37,7 @@ func NewRelayer(
 	p2pQuerier *p2p.Querier,
 	evmClient *evm.Client,
 	logger tmlog.Logger,
+	retrier *helpers.Retrier,
 ) *Relayer {
 	return &Relayer{
 		TmQuerier:  tmQuerier,
@@ -41,6 +45,7 @@ func NewRelayer(
 		P2PQuerier: p2pQuerier,
 		EVMClient:  evmClient,
 		logger:     logger,
+		Retrier:    retrier,
 	}
 }
 
@@ -51,67 +56,78 @@ func (r *Relayer) Start(ctx context.Context) error {
 		return err
 	}
 	defer ethClient.Close()
+
+	processFunc := func() error {
+		// this function will relay attestations as long as there are confirms. And, after the contract is
+		// up-to-date with the chain, it will stop.
+		for {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				lastContractNonce, err := r.EVMClient.StateLastEventNonce(&bind.CallOpts{})
+				if err != nil {
+					return err
+				}
+
+				latestNonce, err := r.AppQuerier.QueryLatestAttestationNonce(ctx)
+				if err != nil {
+					return err
+				}
+
+				// If the contract has already the last version, no need to relay anything
+				if lastContractNonce >= latestNonce {
+					r.logger.Info("waiting for new nonce", "current_contract_nonce", lastContractNonce)
+					return nil
+				}
+
+				att, err := r.AppQuerier.QueryAttestationByNonce(ctx, lastContractNonce+1)
+				if err != nil {
+					return err
+				}
+				if att == nil {
+					return ErrAttestationNotFound
+				}
+
+				opts, err := r.EVMClient.NewTransactionOpts(ctx)
+				if err != nil {
+					return err
+				}
+
+				tx, err := r.ProcessAttestation(ctx, opts, att)
+				if err != nil {
+					return err
+				}
+
+				// wait for transaction to be mined
+				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	for {
-		lastContractNonce, err := r.EVMClient.StateLastEventNonce(&bind.CallOpts{})
-		if err != nil {
-			r.logger.Error(err.Error())
-			continue
-		}
-
-		latestNonce, err := r.AppQuerier.QueryLatestAttestationNonce(ctx)
-		if err != nil {
-			r.logger.Error(err.Error())
-			continue
-		}
-
-		// If the contract has already the last version, no need to relay anything
-		if lastContractNonce >= latestNonce {
-			time.Sleep(10 * time.Second) // TODO sleep and at the same time listen for interruptions
-			continue
-		}
-
-		att, err := r.AppQuerier.QueryAttestationByNonce(ctx, lastContractNonce+1)
-		if err != nil {
-			r.logger.Error(err.Error())
-			continue
-		}
-		if att == nil {
-			r.logger.Error(ErrAttestationNotFound.Error())
-			continue
-		}
-
-		opts, err := r.EVMClient.NewTransactionOpts(ctx)
-		if err != nil {
-			r.logger.Error(ErrAttestationNotFound.Error())
-			time.Sleep(10 * time.Second)
-			// will keep retrying indefinitely
-			continue
-		}
-
-		tx, err := r.ProcessAttestation(ctx, opts, att)
-		if err != nil {
-			r.logger.Error(ErrAttestationNotFound.Error())
-			time.Sleep(10 * time.Second)
-			// will keep retrying indefinitely
-			continue
-		}
-
-		// wait for transaction to be mined
-		_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx)
-		if err != nil {
-			r.logger.Error(err.Error())
-			time.Sleep(2 * time.Second)
-			continue
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			// using an immediate ticker not to wait the initial wait period before starting to relay
+			err := helpers.ImmediateTicker(
+				ctx,
+				10*time.Second,
+				processFunc,
+			)
+			if err != nil {
+				// if an error occurs, retry few times before exiting
+				err = r.Retrier.Retry(ctx, processFunc)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
-}
-
-func (r *Relayer) Stop() error {
-	err := r.TmQuerier.Stop()
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, att celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {

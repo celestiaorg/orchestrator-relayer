@@ -26,7 +26,8 @@ func NewRelayer(
 	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.Client, logger)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	evmClient := NewEVMClient(node.EVMChain.Key)
-	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger)
+	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
+	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier)
 	return r
 }
 
