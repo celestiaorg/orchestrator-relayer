@@ -138,6 +138,7 @@ func Command() *cobra.Command {
 
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
+			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
 			relay := relayer.NewRelayer(
 				tmQuerier,
 				appQuerier,
@@ -150,6 +151,7 @@ func Command() *cobra.Command {
 					config.evmGasLimit,
 				),
 				logger,
+				retrier,
 			)
 
 			// Listen for and trap any OS signal to gracefully shutdown and exit
