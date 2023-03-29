@@ -75,7 +75,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	// query two thirds of confirms. should time-out.
 	confirms, err := querier.QueryTwoThirdsDataCommitmentConfirms(
 		ctx,
-		10*time.Second,
+		time.Second,
 		time.Millisecond,
 		previousValset,
 		dcNonce,
@@ -183,7 +183,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	// query two thirds of confirms. should time-out.
 	confirms, err := querier.QueryTwoThirdsValsetConfirms(
 		ctx,
-		10*time.Second,
+		time.Second,
 		time.Millisecond,
 		vsNonce,
 		previousValset,

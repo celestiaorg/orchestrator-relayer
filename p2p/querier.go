@@ -51,56 +51,80 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 
 	majThreshHold := previousValset.TwoThirdsThreshold()
 
+	var validConfirms []types.DataCommitmentConfirm
+	queryFunc := func() error {
+		confirms, err := q.QueryDataCommitmentConfirms(ctx, previousValset, nonce, dataRootTupleRoot)
+		if err != nil {
+			return err
+		}
+
+		currThreshold := uint64(0)
+		for _, dataCommitmentConfirm := range confirms {
+			val, has := vals[dataCommitmentConfirm.EthAddress]
+			if !has {
+				q.logger.Debug(fmt.Sprintf(
+					"dataCommitmentConfirm signer not found in stored validator set: address %s nonce %d",
+					val.EvmAddress,
+					previousValset.Nonce,
+				))
+				continue
+			}
+			currThreshold += val.Power
+		}
+
+		if currThreshold >= majThreshHold {
+			q.logger.Debug("found enough data commitment confirms to be relayed",
+				"majThreshHold",
+				majThreshHold,
+				"currThreshold",
+				currThreshold,
+			)
+			validConfirms = confirms
+			return nil
+		}
+		q.logger.Debug(
+			"found DataCommitmentConfirms",
+			"total_power",
+			currThreshold,
+			"number_of_confirms",
+			len(confirms),
+			"missing_confirms",
+			len(previousValset.Members)-len(confirms),
+		)
+		return nil
+	}
+
+	// because the ticker waits for the period to pass to return for the first time, we will execute
+	// the query func here to get the confirms if they're already ready instead of waiting for the first
+	// duration to elapse.
+	err := queryFunc()
+	if err != nil {
+		return nil, err
+	}
+	if len(validConfirms) != 0 {
+		return validConfirms, nil
+	}
+
 	t := time.After(timeout)
 	ticker := time.NewTicker(rate)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, nil //nolint:nilnil
+			return nil, ctx.Err()
 		case <-t:
 			return nil, pkgerrors.Wrap(
 				ErrNotEnoughDataCommitmentConfirms,
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
 		case <-ticker.C:
-			confirms, err := q.QueryDataCommitmentConfirms(ctx, previousValset, nonce, dataRootTupleRoot)
+			err := queryFunc()
 			if err != nil {
 				return nil, err
 			}
-
-			currThreshold := uint64(0)
-			for _, dataCommitmentConfirm := range confirms {
-				val, has := vals[dataCommitmentConfirm.EthAddress]
-				if !has {
-					q.logger.Debug(fmt.Sprintf(
-						"dataCommitmentConfirm signer not found in stored validator set: address %s nonce %d",
-						val.EvmAddress,
-						previousValset.Nonce,
-					))
-					continue
-				}
-				currThreshold += val.Power
+			if len(validConfirms) != 0 {
+				return validConfirms, nil
 			}
-
-			if currThreshold >= majThreshHold {
-				q.logger.Debug("found enough data commitment confirms to be relayed",
-					"majThreshHold",
-					majThreshHold,
-					"currThreshold",
-					currThreshold,
-				)
-				return confirms, nil
-			}
-			q.logger.Debug(
-				"found DataCommitmentConfirms",
-				"total_power",
-				currThreshold,
-				"number_of_confirms",
-				len(confirms),
-				"missing_confirms",
-				len(previousValset.Members)-len(confirms),
-			)
 		}
 	}
 }
@@ -130,13 +154,71 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 	}
 
 	majThreshHold := previousValset.TwoThirdsThreshold()
+
+	var validConfirms []types.ValsetConfirm
+	queryFunc := func() error {
+		confirms, err := q.QueryValsetConfirms(ctx, valsetNonce, previousValset, signBytes)
+		if err != nil {
+			return err
+		}
+
+		currThreshold := uint64(0)
+		for _, valsetConfirm := range confirms {
+			val, has := vals[valsetConfirm.EthAddress]
+			if !has {
+				q.logger.Debug(
+					fmt.Sprintf(
+						"valSetConfirm signer not found in stored validator set: address %s nonce %d",
+						val.EvmAddress,
+						previousValset.Nonce,
+					))
+				continue
+			}
+			currThreshold += val.Power
+		}
+
+		if currThreshold >= majThreshHold {
+			q.logger.Debug("found enough valset confirms to be relayed",
+				"majThreshHold",
+				majThreshHold,
+				"currThreshold",
+				currThreshold,
+			)
+			validConfirms = confirms
+			return nil
+		}
+		q.logger.Debug(
+			"found ValsetConfirms",
+			"nonce",
+			valsetNonce,
+			"total_power",
+			currThreshold,
+			"number_of_confirms",
+			len(confirms),
+			"missing_confirms",
+			len(previousValset.Members)-len(confirms),
+		)
+		return nil
+	}
+
+	// because the ticker waits for the period to pass to return for the first time, we will execute
+	// the query func here to get the confirms if they're already ready instead of waiting for the first
+	// duration to elapse.
+	err := queryFunc()
+	if err != nil {
+		return nil, err
+	}
+	if len(validConfirms) != 0 {
+		return validConfirms, nil
+	}
+
 	t := time.After(timeout)
 	ticker := time.NewTicker(rate)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, nil //nolint:nilnil
+			return nil, ctx.Err()
 		// TODO: remove this extra case, and we can instead rely on the caller to pass a context with a timeout
 		case <-t:
 			return nil, pkgerrors.Wrap(
@@ -144,46 +226,13 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 				fmt.Sprintf("failure to query for majority validator set confirms: timout %s", timeout),
 			)
 		case <-ticker.C:
-			confirms, err := q.QueryValsetConfirms(ctx, valsetNonce, previousValset, signBytes)
+			err := queryFunc()
 			if err != nil {
 				return nil, err
 			}
-
-			currThreshold := uint64(0)
-			for _, valsetConfirm := range confirms {
-				val, has := vals[valsetConfirm.EthAddress]
-				if !has {
-					q.logger.Debug(
-						fmt.Sprintf(
-							"valSetConfirm signer not found in stored validator set: address %s nonce %d",
-							val.EvmAddress,
-							previousValset.Nonce,
-						))
-					continue
-				}
-				currThreshold += val.Power
+			if len(validConfirms) != 0 {
+				return validConfirms, nil
 			}
-
-			if currThreshold >= majThreshHold {
-				q.logger.Debug("found enough valset confirms to be relayed",
-					"majThreshHold",
-					majThreshHold,
-					"currThreshold",
-					currThreshold,
-				)
-				return confirms, nil
-			}
-			q.logger.Debug(
-				"found ValsetConfirms",
-				"nonce",
-				valsetNonce,
-				"total_power",
-				currThreshold,
-				"number_of_confirms",
-				len(confirms),
-				"missing_confirms",
-				len(previousValset.Members)-len(confirms),
-			)
 		}
 	}
 }
