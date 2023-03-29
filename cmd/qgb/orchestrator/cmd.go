@@ -113,7 +113,7 @@ func Command() *cobra.Command {
 			}
 
 			// wait for the dht to have some peers
-			err = dht.WaitForPeers(cmd.Context(), time.Hour, 10*time.Second, 1)
+			err = dht.WaitForPeers(cmd.Context(), 5*time.Minute, 10*time.Second, 1)
 			if err != nil {
 				return err
 			}
