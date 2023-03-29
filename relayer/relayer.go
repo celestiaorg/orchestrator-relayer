@@ -134,7 +134,6 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 			return nil, err
 		}
 
-		// FIXME: arguments to be verified
 		tx, err = r.UpdateValidatorSet(ctx, opts, *vs, vs.TwoThirdsThreshold(), confirms)
 		if err != nil {
 			return nil, err
@@ -185,7 +184,7 @@ func (r *Relayer) UpdateValidatorSet(
 	}
 
 	sigsMap := make(map[string]string)
-	// to fetch the signatures easilly by eth address
+	// to fetch the signatures easily by eth address
 	for _, c := range confirms {
 		sigsMap[c.EthAddress] = c.Signature
 	}
@@ -217,7 +216,7 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 	confirms []types.DataCommitmentConfirm,
 ) (*coregethtypes.Transaction, error) {
 	sigsMap := make(map[string]string)
-	// to fetch the signatures easilly by eth address
+	// to fetch the signatures easily by eth address
 	for _, c := range confirms {
 		sigsMap[c.EthAddress] = c.Signature
 	}

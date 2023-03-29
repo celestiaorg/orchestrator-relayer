@@ -73,6 +73,7 @@ func (orch Orchestrator) Start(ctx context.Context) {
 
 	wg := &sync.WaitGroup{}
 
+	// go routine to listen for new attestation nonces
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -84,6 +85,7 @@ func (orch Orchestrator) Start(ctx context.Context) {
 		orch.Logger.Error("stopping listening to new attestations")
 	}()
 
+	// go routine for processing nonces
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -95,15 +97,16 @@ func (orch Orchestrator) Start(ctx context.Context) {
 		orch.Logger.Error("stopping processing attestations")
 	}()
 
+	// go routine for handling the previous attestation nonces
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		err := orch.EnqueueMissingEvents(withCancel, noncesQueue, signalChan)
 		if err != nil {
-			orch.Logger.Error("error enqueing missing attestations", "err", err)
+			orch.Logger.Error("error enqueuing missing attestations", "err", err)
 			cancel()
 		}
-		orch.Logger.Error("stopping enqueing missing attestations")
+		orch.Logger.Error("stopping enqueuing missing attestations")
 	}()
 
 	// FIXME should we add  another go routine that keep checking if all the attestations
@@ -174,7 +177,7 @@ func (orch Orchestrator) EnqueueMissingEvents(
 
 	// To accommodate the delay that might happen between starting the two go routines above.
 	// Probably, it would be a good idea to further refactor the orchestrator to the relayer style
-	// as it is entirely synchronous. Probably, enqueing separatly old nonces and new ones, is not
+	// as it is entirely synchronous. Probably, enqueuing separately old nonces and new ones, is not
 	// the best design.
 	// TODO decide on this later
 	for i := uint64(lastUnbondingHeight); i < latestNonce; i++ {
