@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
@@ -117,22 +118,51 @@ func (orch Orchestrator) StartNewEventsListener(
 	queue chan<- uint64,
 	signalChan <-chan struct{},
 ) error {
-	results, err := orch.TmQuerier.SubscribeEvents(
-		ctx,
-		"attestation-changes",
-		fmt.Sprintf("%s.%s='%s'", celestiatypes.EventTypeAttestationRequest, sdk.AttributeKeyModule, celestiatypes.ModuleName),
-	)
+	subscriptionName := "attestation-changes"
+	query := fmt.Sprintf("%s.%s='%s'", celestiatypes.EventTypeAttestationRequest, sdk.AttributeKeyModule, celestiatypes.ModuleName)
+	results, err := orch.TmQuerier.SubscribeEvents(ctx, subscriptionName, query)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		err := orch.TmQuerier.UnsubscribeEvents(ctx, subscriptionName, query)
+		if err != nil {
+			orch.Logger.Error(err.Error())
+		}
+	}()
 	attestationEventName := fmt.Sprintf("%s.%s", celestiatypes.EventTypeAttestationRequest, celestiatypes.AttributeKeyNonce)
 	orch.Logger.Info("listening for new block events...")
+	// ticker for keeping an eye on the health of the tendermint RPC
+	// this is because the ws connection doesn't complain when the node is down
+	// which leaves the orchestrator in a hanging state
+	ticker := time.NewTicker(30 * time.Second)
 	for {
 		select {
 		case <-signalChan:
-			return nil
+			return ErrSignalChanNotif
 		case <-ctx.Done():
-			return nil
+			return ctx.Err()
+		case <-ticker.C:
+			running := orch.TmQuerier.IsRunning(ctx)
+			// if the connection is lost, retry connecting a few times
+			if !running {
+				orch.Logger.Error("tendermint RPC down. Retrying to connect")
+				err := orch.Retrier.Retry(ctx, func() error {
+					err := orch.TmQuerier.Reconnect()
+					if err != nil {
+						return err
+					}
+					results, err = orch.TmQuerier.SubscribeEvents(ctx, subscriptionName, query)
+					if err != nil {
+						return err
+					}
+					return nil
+				})
+				if err != nil {
+					orch.Logger.Error(err.Error())
+					return err
+				}
+			}
 		case result := <-results:
 			blockEvent := mustGetEvent(result, coretypes.EventTypeKey)
 			isBlock := blockEvent[0] == coretypes.EventNewBlock
@@ -145,10 +175,12 @@ func (orch Orchestrator) StartNewEventsListener(
 			if err != nil {
 				return err
 			}
-			orch.Logger.Debug("enqueueing new attestation nonce", "nonce", nonce)
+			orch.Logger.Info("enqueueing new attestation nonce", "nonce", nonce)
 			select {
+			case <-ctx.Done():
+				return ctx.Err()
 			case <-signalChan:
-				return nil
+				return ErrSignalChanNotif
 			case queue <- uint64(nonce):
 			}
 		}
@@ -180,14 +212,14 @@ func (orch Orchestrator) EnqueueMissingEvents(
 	for i := uint64(lastUnbondingHeight); i < latestNonce; i++ {
 		select {
 		case <-signalChan:
-			return nil
+			return ErrSignalChanNotif
 		case <-ctx.Done():
 			return nil
 		default:
 			orch.Logger.Debug("enqueueing missing attestation nonce", "nonce", latestNonce-i)
 			select {
 			case <-signalChan:
-				return nil
+				return ErrSignalChanNotif
 			case queue <- latestNonce - i:
 			}
 		}
@@ -205,9 +237,9 @@ func (orch Orchestrator) ProcessNonces(
 		select {
 		case <-ctx.Done():
 			close(signalChan)
-			return nil
+			return ErrSignalChanNotif
 		case nonce := <-noncesQueue:
-			orch.Logger.Debug("processing nonce", "nonce", nonce)
+			orch.Logger.Info("processing nonce", "nonce", nonce)
 			if err := orch.Process(ctx, nonce); err != nil {
 				orch.Logger.Error("failed to process nonce, retrying", "nonce", nonce, "err", err)
 				if err := orch.Retrier.Retry(ctx, func() error {

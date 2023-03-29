@@ -1,6 +1,7 @@
 package rpc_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -23,7 +24,8 @@ type QuerierTestSuite struct {
 
 func (s *QuerierTestSuite) SetupSuite() {
 	t := s.T()
-	s.Network = qgbtesting.NewCelestiaNetwork(t, time.Millisecond)
+	ctx := context.Background()
+	s.Network = qgbtesting.NewCelestiaNetwork(ctx, t, time.Millisecond)
 	_, err := s.Network.WaitForHeightWithTimeout(400, 30*time.Second)
 	s.EncConf = encoding.MakeConfig(app.ModuleEncodingRegisters...)
 	s.Logger = tmlog.NewNopLogger()

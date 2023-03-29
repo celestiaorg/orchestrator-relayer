@@ -11,9 +11,6 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/assert"
 )
@@ -161,11 +158,11 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	time.Sleep(30 * time.Second)
 
 	// check whether the four validators are up and running
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	HandleNetworkError(t, network, err, false)
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	err = appQuerier.Start()
 	HandleNetworkError(t, network, err, false)
+	defer appQuerier.Stop() //nolint:errcheck
 
 	latestValset, err := appQuerier.QueryLatestValset(ctx)
 	assert.NoError(t, err)

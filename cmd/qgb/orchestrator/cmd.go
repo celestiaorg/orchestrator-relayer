@@ -18,9 +18,6 @@ import (
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	"github.com/tendermint/tendermint/rpc/client/http"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func Command() *cobra.Command {
@@ -42,42 +39,34 @@ func Command() *cobra.Command {
 
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
-			// creating an RPC connection to tendermint
-			trpc, err := http.New(config.tendermintRPC, "/websocket")
-			if err != nil {
-				return err
-			}
-			err = trpc.Start()
-			if err != nil {
-				return err
-			}
-			defer func(trpc *http.HTTP) {
-				err := trpc.Stop()
-				if err != nil {
-					logger.Error(err.Error())
-				}
-			}(trpc)
-
 			// creating tendermint querier
-			tmQuerier := rpc.NewTmQuerier(trpc, logger)
+			tmQuerier := rpc.NewTmQuerier(config.tendermintRPC, logger)
 			if err != nil {
 				return err
 			}
-
-			// creating a grpc connection to Celestia-app
-			qgbGRPC, err := grpc.Dial(config.celesGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			err = tmQuerier.Start()
 			if err != nil {
 				return err
 			}
-			defer func(qgbGRPC *grpc.ClientConn) {
-				err := qgbGRPC.Close()
+			defer func() {
+				err := tmQuerier.Stop()
 				if err != nil {
 					logger.Error(err.Error())
 				}
-			}(qgbGRPC)
+			}()
 
 			// creating the application querier
-			appQuerier := rpc.NewAppQuerier(logger, qgbGRPC, encCfg)
+			appQuerier := rpc.NewAppQuerier(logger, config.celesGRPC, encCfg)
+			err = appQuerier.Start()
+			if err != nil {
+				return err
+			}
+			defer func() {
+				err := appQuerier.Stop()
+				if err != nil {
+					logger.Error(err.Error())
+				}
+			}()
 
 			// creating the host
 			h, err := p2p.CreateHost(config.p2pListenAddr, config.p2pIdentity)
