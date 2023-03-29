@@ -182,10 +182,12 @@ func (orch Orchestrator) EnqueueMissingEvents(
 		case <-signalChan:
 			return nil
 		case <-ctx.Done():
-			return nil
+			return ctx.Err()
 		default:
 			orch.Logger.Debug("enqueueing missing attestation nonce", "nonce", latestNonce-i)
 			select {
+			case <-ctx.Done():
+				return ctx.Err()
 			case <-signalChan:
 				return nil
 			case queue <- latestNonce - i:

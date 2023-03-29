@@ -62,24 +62,32 @@ func (q QgbDHT) WaitForPeers(ctx context.Context, timeout time.Duration, rate ti
 		return ErrPeersThresholdCannotBeNegative
 	}
 
+	// checking before entering the for loop to avoid waiting for the initial ticker duration.
+	peersLen := len(q.RoutingTable().ListPeers())
+	if peersLen >= peersThreshold {
+		q.logger.Info("found peers", "peers count", peersLen)
+		return nil
+	}
+
 	t := time.After(timeout)
 	ticker := time.NewTicker(rate)
 	for {
 		select {
 		case <-ctx.Done():
-			return nil
+			return ctx.Err()
 		case <-t:
 			return ErrPeersTimeout
 		case <-ticker.C:
 			peersLen := len(q.RoutingTable().ListPeers())
 			if peersLen >= peersThreshold {
+				q.logger.Info("found peers", "peers count", peersLen)
 				return nil
 			}
 			q.logger.Info(
 				"waiting for routing table to populate",
 				"target number of peers",
 				peersThreshold,
-				"current number",
+				"current count",
 				peersLen,
 			)
 		}
