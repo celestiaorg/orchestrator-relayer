@@ -16,9 +16,10 @@ import (
 
 // AppQuerier queries the application for attestations and unbonding periods.
 type AppQuerier struct {
-	QgbRPC *grpc.ClientConn
-	Logger tmlog.Logger
-	EncCfg encoding.Config
+	qgbRPC     string
+	clientConn *grpc.ClientConn
+	Logger     tmlog.Logger
+	EncCfg     encoding.Config
 }
 
 func NewAppQuerier(logger tmlog.Logger, qgbRPC string, encCft encoding.Config) *AppQuerier {
