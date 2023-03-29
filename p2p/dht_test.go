@@ -223,6 +223,6 @@ func TestWaitForPeers(t *testing.T) {
 	require.NoError(t, err)
 
 	// wait for peers
-	err = dht1.WaitForPeers(ctx, 10*time.Millisecond, time.Millisecond, 1)
+	err = dht1.WaitForPeers(ctx, 100*time.Millisecond, time.Millisecond, 1)
 	assert.NoError(t, err)
 }

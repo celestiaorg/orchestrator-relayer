@@ -418,6 +418,11 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 	defer appQuerier.Stop() //nolint:errcheck
 
 	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
+	err = tmQuerier.Start()
+	if err != nil {
+		return err
+	}
+	defer tmQuerier.Stop() //nolint:errcheck
 
 	ctx, cancel := context.WithTimeout(_ctx, 5*time.Minute)
 	for {
@@ -533,6 +538,11 @@ func (network QGBNetwork) GetValsetConfirm(
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer appQuerier.Stop() //nolint:errcheck
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
@@ -583,9 +593,19 @@ func (network QGBNetwork) GetDataCommitmentConfirm(
 
 	// creating an RPC connection to tendermint
 	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
+	err := tmQuerier.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer tmQuerier.Stop() //nolint:errcheck
 
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err = appQuerier.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer appQuerier.Stop() //nolint:errcheck
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
@@ -684,6 +704,11 @@ func (network QGBNetwork) WasAttestationSigned(
 
 	// creating an RPC connection to tendermint
 	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
+	err = tmQuerier.Start()
+	if err != nil {
+		return false, err
+	}
+	defer tmQuerier.Stop() //nolint:errcheck
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
