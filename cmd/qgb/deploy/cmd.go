@@ -13,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func Command() *cobra.Command {
@@ -31,18 +29,17 @@ func Command() *cobra.Command {
 
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
-			qgbGRPC, err := grpc.Dial(config.celesGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+			querier := rpc.NewAppQuerier(logger, config.celesGRPC, encCfg)
+			err = querier.Start()
 			if err != nil {
 				return err
 			}
-			defer func(qgbGRPC *grpc.ClientConn) {
-				err := qgbGRPC.Close()
+			defer func() {
+				err := querier.Stop()
 				if err != nil {
 					logger.Error(err.Error())
 				}
-			}(qgbGRPC)
-
-			querier := rpc.NewAppQuerier(logger, qgbGRPC, encCfg)
+			}()
 
 			vs, err := getStartingValset(cmd.Context(), querier, config.startingNonce)
 			if err != nil {

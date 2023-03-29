@@ -3,13 +3,15 @@ package rpc
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/celestiaorg/orchestrator-relayer/types"
 
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	"google.golang.org/grpc"
 )
 
 // AppQuerier queries the application for attestations and unbonding periods.
@@ -19,13 +21,27 @@ type AppQuerier struct {
 	EncCfg encoding.Config
 }
 
-func NewAppQuerier(logger tmlog.Logger, qgbRPC *grpc.ClientConn, encCft encoding.Config) *AppQuerier {
-	return &AppQuerier{Logger: logger, QgbRPC: qgbRPC, EncCfg: encCft}
+func NewAppQuerier(logger tmlog.Logger, qgbRPC string, encCft encoding.Config) *AppQuerier {
+	return &AppQuerier{Logger: logger, qgbRPC: qgbRPC, EncCfg: encCft}
+}
+
+func (aq *AppQuerier) Start() error {
+	// creating a grpc connection to Celestia-app
+	qgbGRPC, err := grpc.Dial(aq.qgbRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+	aq.clientConn = qgbGRPC
+	return nil
+}
+
+func (aq *AppQuerier) Stop() error {
+	return aq.clientConn.Close()
 }
 
 // QueryAttestationByNonce query an attestation by nonce from the state machine.
-func (aq AppQuerier) QueryAttestationByNonce(ctx context.Context, nonce uint64) (celestiatypes.AttestationRequestI, error) {
-	queryClient := celestiatypes.NewQueryClient(aq.QgbRPC)
+func (aq *AppQuerier) QueryAttestationByNonce(ctx context.Context, nonce uint64) (celestiatypes.AttestationRequestI, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 
 	atResp, err := queryClient.AttestationRequestByNonce(
 		ctx,
@@ -47,8 +63,8 @@ func (aq AppQuerier) QueryAttestationByNonce(ctx context.Context, nonce uint64) 
 }
 
 // QueryLatestAttestationNonce query the latest attestation nonce from the state machine.
-func (aq AppQuerier) QueryLatestAttestationNonce(ctx context.Context) (uint64, error) {
-	queryClient := celestiatypes.NewQueryClient(aq.QgbRPC)
+func (aq *AppQuerier) QueryLatestAttestationNonce(ctx context.Context) (uint64, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 
 	resp, err := queryClient.LatestAttestationNonce(
 		ctx,
@@ -62,7 +78,7 @@ func (aq AppQuerier) QueryLatestAttestationNonce(ctx context.Context) (uint64, e
 }
 
 // QueryDataCommitmentByNonce query a data commitment by its nonce.
-func (aq AppQuerier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint64) (*celestiatypes.DataCommitment, error) {
+func (aq *AppQuerier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint64) (*celestiatypes.DataCommitment, error) {
 	attestation, err := aq.QueryAttestationByNonce(ctx, nonce)
 	if err != nil {
 		return nil, err
@@ -84,8 +100,8 @@ func (aq AppQuerier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint6
 }
 
 // QueryDataCommitmentForHeight query a data commitment by one of the heights that it commits to.
-func (aq AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height uint64) (*celestiatypes.DataCommitment, error) {
-	queryClient := celestiatypes.NewQueryClient(aq.QgbRPC)
+func (aq *AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height uint64) (*celestiatypes.DataCommitment, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 	resp, err := queryClient.DataCommitmentRangeForHeight(ctx, &celestiatypes.QueryDataCommitmentRangeForHeightRequest{Height: height})
 	if err != nil {
 		return nil, err
@@ -98,7 +114,7 @@ func (aq AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height ui
 }
 
 // QueryValsetByNonce query a valset by nonce.
-func (aq AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
+func (aq *AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
 	attestation, err := aq.QueryAttestationByNonce(ctx, nonce)
 	if err != nil {
 		return nil, err
@@ -120,7 +136,7 @@ func (aq AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*cel
 }
 
 // QueryLatestValset query the latest recorded valset in the state machine.
-func (aq AppQuerier) QueryLatestValset(ctx context.Context) (*celestiatypes.Valset, error) {
+func (aq *AppQuerier) QueryLatestValset(ctx context.Context) (*celestiatypes.Valset, error) {
 	latestNonce, err := aq.QueryLatestAttestationNonce(ctx)
 	if err != nil {
 		return nil, err
@@ -142,8 +158,8 @@ func (aq AppQuerier) QueryLatestValset(ctx context.Context) (*celestiatypes.Vals
 // This will be needed when signing to know the validator set at that particular nonce.
 // the provided `nonce` can be a valset, but this will return the valset before it.
 // If nonce is 1, it will return an error. Because, there is no valset before nonce 1.
-func (aq AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
-	queryClient := celestiatypes.NewQueryClient(aq.QgbRPC)
+func (aq *AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 	resp, err := queryClient.LastValsetRequestBeforeNonce(
 		ctx,
 		&celestiatypes.QueryLastValsetRequestBeforeNonceRequest{Nonce: nonce},
@@ -156,8 +172,8 @@ func (aq AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint6
 }
 
 // QueryLastUnbondingHeight query the last unbonding height from state machine.
-func (aq AppQuerier) QueryLastUnbondingHeight(ctx context.Context) (int64, error) {
-	queryClient := celestiatypes.NewQueryClient(aq.QgbRPC)
+func (aq *AppQuerier) QueryLastUnbondingHeight(ctx context.Context) (int64, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 	resp, err := queryClient.LastUnbondingHeight(ctx, &celestiatypes.QueryLastUnbondingHeightRequest{})
 	if err != nil {
 		return 0, err
@@ -167,7 +183,7 @@ func (aq AppQuerier) QueryLastUnbondingHeight(ctx context.Context) (int64, error
 }
 
 // unmarshallAttestation unmarshal a wrapper protobuf `Any` type to an `AttestationRequestI`.
-func (aq AppQuerier) unmarshallAttestation(attestation *cdctypes.Any) (celestiatypes.AttestationRequestI, error) {
+func (aq *AppQuerier) unmarshallAttestation(attestation *cdctypes.Any) (celestiatypes.AttestationRequestI, error) {
 	var unmarshalledAttestation celestiatypes.AttestationRequestI
 	err := aq.EncCfg.InterfaceRegistry.UnpackAny(attestation, &unmarshalledAttestation)
 	if err != nil {

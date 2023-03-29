@@ -1,8 +1,11 @@
 package testing
 
 import (
+	"context"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	celestiatestnode "github.com/celestiaorg/celestia-app/testutil/testnode"
 )
@@ -14,12 +17,14 @@ type CelestiaNetwork struct {
 	celestiatestnode.Context
 	Accounts  []string
 	BlockTime time.Duration
+	RPCAddr   string
+	GRPCAddr  string
 }
 
 // NewCelestiaNetwork creates a new CelestiaNetwork.
 // Uses `testing.T` to fail if an error happens.
 // Only supports the creation of a single validator currently.
-func NewCelestiaNetwork(t *testing.T, blockTime time.Duration) *CelestiaNetwork {
+func NewCelestiaNetwork(ctx context.Context, t *testing.T, blockTime time.Duration) *CelestiaNetwork {
 	if testing.Short() {
 		// The main reason for skipping these tests in short mode is to avoid detecting unrelated
 		// race conditions.
@@ -29,9 +34,14 @@ func NewCelestiaNetwork(t *testing.T, blockTime time.Duration) *CelestiaNetwork 
 		t.Skip("skipping tests in short mode.")
 	}
 	accounts, clientContext := celestiatestnode.DefaultNetwork(t, blockTime)
+	appRPC := clientContext.GRPCClient.Target()
+	status, err := clientContext.Client.Status(ctx)
+	require.NoError(t, err)
 	return &CelestiaNetwork{
 		Context:   clientContext,
 		Accounts:  accounts,
 		BlockTime: blockTime,
+		GRPCAddr:  appRPC,
+		RPCAddr:   status.NodeInfo.ListenAddr,
 	}
 }

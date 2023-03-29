@@ -2,7 +2,10 @@ package testing
 
 import (
 	"crypto/ecdsa"
+	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
@@ -19,11 +22,18 @@ import (
 )
 
 func NewRelayer(
+	t *testing.T,
 	node *TestNode,
 ) *relayer.Relayer {
 	logger := tmlog.NewNopLogger()
-	appQuerier := rpc.NewAppQuerier(logger, node.CelestiaNetwork.GRPCClient, encoding.MakeConfig(app.ModuleEncodingRegisters...))
-	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.Client, logger)
+	node.CelestiaNetwork.GRPCClient.Close()
+	appQuerier := rpc.NewAppQuerier(logger, node.CelestiaNetwork.GRPCAddr, encoding.MakeConfig(app.ModuleEncodingRegisters...))
+	require.NoError(t, appQuerier.Start())
+	t.Cleanup(func() {
+		_ = appQuerier.Stop()
+	})
+	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.RPCAddr, logger)
+	tmQuerier.WithClientConn(node.CelestiaNetwork.Client)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	evmClient := NewEVMClient(node.EVMChain.Key)
 	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger)
@@ -38,17 +48,21 @@ func NewEVMClient(key *ecdsa.PrivateKey) *evm.Client {
 }
 
 func NewOrchestrator(
+	t *testing.T,
 	node *TestNode,
 ) *orchestrator.Orchestrator {
 	logger := tmlog.NewNopLogger()
-	appQuerier := rpc.NewAppQuerier(logger, node.CelestiaNetwork.GRPCClient, encoding.MakeConfig(app.ModuleEncodingRegisters...))
-	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.Client, logger)
+	appQuerier := rpc.NewAppQuerier(logger, node.CelestiaNetwork.GRPCAddr, encoding.MakeConfig(app.ModuleEncodingRegisters...))
+	require.NoError(t, appQuerier.Start())
+	t.Cleanup(func() {
+		_ = appQuerier.Stop()
+	})
+	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.RPCAddr, logger)
+	tmQuerier.WithClientConn(node.CelestiaNetwork.Client)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	broadcaster := orchestrator.NewBroadcaster(node.DHTNetwork.DHTs[0])
 	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
 	orch, err := orchestrator.New(logger, appQuerier, tmQuerier, p2pQuerier, broadcaster, retrier, *celestiatestnode.NodeEVMPrivateKey)
-	if err != nil {
-		panic(err)
-	}
+	require.NoError(t, err)
 	return orch
 }

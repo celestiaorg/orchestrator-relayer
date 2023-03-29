@@ -19,7 +19,7 @@ func (s *OrchestratorTestSuite) SetupSuite() {
 	t := s.T()
 	ctx := context.Background()
 	s.Node = qgbtesting.NewTestNode(ctx, t)
-	s.Orchestrator = qgbtesting.NewOrchestrator(s.Node)
+	s.Orchestrator = qgbtesting.NewOrchestrator(t, s.Node)
 }
 
 func (s *OrchestratorTestSuite) TearDownSuite() {

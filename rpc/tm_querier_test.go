@@ -19,9 +19,10 @@ func (s *QuerierTestSuite) TestQueryCommitment() {
 	require.NoError(t, err)
 
 	tmQuerier := rpc.NewTmQuerier(
-		s.Network.Client,
+		s.Network.RPCAddr,
 		tmlog.NewNopLogger(),
 	)
+	tmQuerier.WithClientConn(s.Network.Client)
 
 	expectedCommitment, err := s.Network.Client.DataCommitment(context.Background(), 1, 100)
 	require.NoError(t, err)
@@ -37,9 +38,10 @@ func (s *QuerierTestSuite) TestSubscribeEvents() {
 	require.NoError(t, err)
 
 	tmQuerier := rpc.NewTmQuerier(
-		s.Network.Client,
+		s.Network.RPCAddr,
 		tmlog.NewNopLogger(),
 	)
+	tmQuerier.WithClientConn(s.Network.Client)
 
 	eventsChan, err := tmQuerier.SubscribeEvents(
 		context.Background(),

@@ -10,21 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestiaorg/orchestrator-relayer/p2p"
-	"github.com/celestiaorg/orchestrator-relayer/rpc"
-	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
-	tmlog "github.com/tendermint/tendermint/libs/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
+	"github.com/celestiaorg/orchestrator-relayer/p2p"
+	"github.com/celestiaorg/orchestrator-relayer/rpc"
+	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
 	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/google/uuid"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/http"
 	"github.com/testcontainers/testcontainers-go"
 )
@@ -413,30 +410,14 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
-	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
 	if err != nil {
 		return err
 	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	defer appQuerier.Stop() //nolint:errcheck
 
-	// creating an RPC connection to tendermint
-	trpc, err := http.New(network.TendermintRPC, "/websocket")
-	if err != nil {
-		return err
-	}
-	err = trpc.Start()
-	if err != nil {
-		return err
-	}
-	defer func(trpc *http.HTTP) {
-		err := trpc.Stop()
-		if err != nil {
-			network.Logger.Error(err.Error())
-		}
-	}(trpc)
-	tmQuerier := rpc.NewTmQuerier(trpc, network.Logger)
+	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
 
 	ctx, cancel := context.WithTimeout(_ctx, 5*time.Minute)
 	for {
@@ -503,13 +484,12 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 // This is used after enabling orchestrators not to sign unless they belong to some valset.
 // Thus, any nonce after the returned valset should be signed by all orchestrators.
 func (network QGBNetwork) GetValsetContainingVals(_ctx context.Context, number int) (*types.Valset, error) {
-	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
 	if err != nil {
 		return nil, err
 	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	defer appQuerier.Stop() //nolint:errcheck
 
 	ctx, cancel := context.WithTimeout(_ctx, 5*time.Minute)
 	for {
@@ -552,12 +532,7 @@ func (network QGBNetwork) GetValsetConfirm(
 ) (*qgbtypes.ValsetConfirm, error) {
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
-	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
@@ -607,29 +582,10 @@ func (network QGBNetwork) GetDataCommitmentConfirm(
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
 	// creating an RPC connection to tendermint
-	trpc, err := http.New(network.TendermintRPC, "/websocket")
-	if err != nil {
-		return nil, err
-	}
-	err = trpc.Start()
-	if err != nil {
-		return nil, err
-	}
-	defer func(trpc *http.HTTP) {
-		err := trpc.Stop()
-		if err != nil {
-			network.Logger.Error(err.Error())
-		}
-	}(trpc)
-	tmQuerier := rpc.NewTmQuerier(trpc, network.Logger)
+	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
 
 	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
-	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
@@ -673,12 +629,12 @@ func (network QGBNetwork) GetDataCommitmentConfirmByHeight(
 	evmAddr string,
 ) (*qgbtypes.DataCommitmentConfirm, error) {
 	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
 	if err != nil {
 		return nil, err
 	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	defer appQuerier.Stop() //nolint:errcheck
 
 	attestation, err := appQuerier.QueryDataCommitmentForHeight(_ctx, height)
 	if err != nil {
@@ -694,12 +650,12 @@ func (network QGBNetwork) GetDataCommitmentConfirmByHeight(
 // GetLatestAttestationNonce Returns the latest attestation nonce.
 func (network QGBNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint64, error) {
 	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
 	if err != nil {
 		return 0, err
 	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	defer appQuerier.Stop() //nolint:errcheck
 
 	nonce, err := appQuerier.QueryLatestAttestationNonce(_ctx)
 	if err != nil {
@@ -716,32 +672,18 @@ func (network QGBNetwork) WasAttestationSigned(
 	evmAddress string,
 ) (bool, error) {
 	// create app querier
-	qgbGRPC, err := grpc.Dial(network.CelestiaGRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
 	if err != nil {
 		return false, err
 	}
-	defer qgbGRPC.Close()
-	appQuerier := rpc.NewAppQuerier(network.Logger, qgbGRPC, network.EncCfg)
+	defer appQuerier.Stop() //nolint:errcheck
 
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
 	// creating an RPC connection to tendermint
-	trpc, err := http.New(network.TendermintRPC, "/websocket")
-	if err != nil {
-		return false, err
-	}
-	err = trpc.Start()
-	if err != nil {
-		return false, err
-	}
-	defer func(trpc *http.HTTP) {
-		err := trpc.Stop()
-		if err != nil {
-			network.Logger.Error(err.Error())
-		}
-	}(trpc)
-	tmQuerier := rpc.NewTmQuerier(trpc, network.Logger)
+	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
 
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {

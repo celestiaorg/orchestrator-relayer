@@ -3,15 +3,19 @@ package rpc_test
 import (
 	"context"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 )
 
 func (s *QuerierTestSuite) TestQueryAttestationByNonce() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	att, err := appQuerier.QueryAttestationByNonce(context.Background(), 1)
 	s.NoError(err)
@@ -21,9 +25,11 @@ func (s *QuerierTestSuite) TestQueryAttestationByNonce() {
 func (s *QuerierTestSuite) TestQueryLatestAttestationNonce() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	nonce, err := appQuerier.QueryLatestAttestationNonce(context.Background())
 	s.NoError(err)
@@ -33,9 +39,11 @@ func (s *QuerierTestSuite) TestQueryLatestAttestationNonce() {
 func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	dc, err := appQuerier.QueryDataCommitmentByNonce(context.Background(), 2)
 	s.NoError(err)
@@ -45,9 +53,11 @@ func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
 func (s *QuerierTestSuite) TestQueryDataCommitmentForHeight() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	dc, err := appQuerier.QueryDataCommitmentForHeight(context.Background(), 10)
 	s.NoError(err)
@@ -57,9 +67,11 @@ func (s *QuerierTestSuite) TestQueryDataCommitmentForHeight() {
 func (s *QuerierTestSuite) TestQueryValsetByNonce() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	vs, err := appQuerier.QueryValsetByNonce(context.Background(), 1)
 	s.NoError(err)
@@ -69,9 +81,11 @@ func (s *QuerierTestSuite) TestQueryValsetByNonce() {
 func (s *QuerierTestSuite) TestQueryLatestValset() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	vs, err := appQuerier.QueryLatestValset(context.Background())
 	s.NoError(err)
@@ -81,9 +95,11 @@ func (s *QuerierTestSuite) TestQueryLatestValset() {
 func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	vs, err := appQuerier.QueryLastValsetBeforeNonce(context.Background(), 2)
 	s.NoError(err)
@@ -93,9 +109,11 @@ func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
 func (s *QuerierTestSuite) TestQueryLastUnbondingHeight() {
 	appQuerier := rpc.NewAppQuerier(
 		s.Logger,
-		s.Network.GRPCClient,
+		s.Network.GRPCAddr,
 		s.EncConf,
 	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
 
 	unbondingHeight, err := appQuerier.QueryLastUnbondingHeight(context.Background())
 	s.NoError(err)
