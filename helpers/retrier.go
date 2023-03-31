@@ -29,13 +29,13 @@ func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Re
 // Returns the final execution error if all retries failed.
 func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 	var err error
+	ticker := time.NewTicker(r.delay)
 	for i := 0; i < r.retriesNumber; i++ {
 		// We can implement some exponential backoff in here
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
-			time.Sleep(r.delay)
+		case <-ticker.C:
 			r.logger.Info("retrying", "retry_number", i, "retries_left", r.retriesNumber-i)
 			err = retryMethod()
 			if err == nil {
