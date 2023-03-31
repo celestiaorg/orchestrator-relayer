@@ -6,5 +6,5 @@ var (
 	// ErrOpened is thrown on attempt to open already open/in-use Store.
 	ErrOpened = errors.New("store is in use")
 	// ErrNotInited is thrown on attempt to open Store without initialization.
-	ErrNotInited = errors.New("node: store is not initialized")
+	ErrNotInited = errors.New("store is not initialized")
 )
