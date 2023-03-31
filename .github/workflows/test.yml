@@ -127,7 +127,6 @@ jobs:
       - name: filter out DONTCOVER and e2e
         # yamllint disable
         run: |
-          (find . -type f -name '*.go' | xargs grep -l 'DONTCOVER') > exclude_list.txt
           find . -type f -path './e2e/*.go' >> exclude_list.txt
           while IFS= read -r filename; do
             # trim filename
