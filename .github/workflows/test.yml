@@ -130,7 +130,6 @@ jobs:
           (find . -type f -name '*.go' | xargs grep -l 'DONTCOVER') > exclude_list.txt
           find . -type f -path './e2e/*.go' >> exclude_list.txt
           while IFS= read -r filename; do
-            # trim filename
             trimmed_name=$(echo $filename | xargs)
             echo "Excluding ${trimmed_name} from coverage report..."
             sed -i.bak "/$(echo $trimmed_name | sed 's/\//\\\//g')/d" coverage.txt
