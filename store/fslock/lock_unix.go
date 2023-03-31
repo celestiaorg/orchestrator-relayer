@@ -1,4 +1,3 @@
-//go:build darwin || freebsd || linux
 
 package fslock
 
