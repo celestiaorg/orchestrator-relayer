@@ -37,9 +37,13 @@ do
   sleep 5s
 done
 
+# initialize orchestrator
+/bin/qgb orch init
+
+# start orchestrator
 if [[ -z "${P2P_BOOTSTRAPPERS}" ]]
 then
-  /bin/qgb orchestrator \
+  /bin/qgb orchestrator start \
     -p=/opt \
     -x=qgb-e2e \
     -d="${PRIVATE_KEY}" \
@@ -50,7 +54,7 @@ then
 else
   # to give time for the bootstrappers to be up
   sleep 5s
-  /bin/qgb orchestrator \
+  /bin/qgb orchestrator start \
     -p=/opt \
     -x=qgb-e2e \
     -d="${PRIVATE_KEY}" \
