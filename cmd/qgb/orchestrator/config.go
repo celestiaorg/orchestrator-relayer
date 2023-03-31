@@ -161,10 +161,3 @@ func DefaultQGBStorePath() (string, error) {
 	}
 	return fmt.Sprintf("%s/.qgb", home), nil
 }
-
-// - the log params can be part of the base config
-//
-
-// - if the directory is not initiated, then the fsLock fails
-// - we should check if the directory is initiated when running before
-// - we should check if the directory is initiated when initiating
