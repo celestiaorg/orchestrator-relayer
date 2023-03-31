@@ -6,14 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestiaorg/orchestrator-relayer/helpers"
+	"github.com/celestiaorg/orchestrator-relayer/store"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
+	"github.com/celestiaorg/orchestrator-relayer/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
-	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/cobra"
@@ -21,10 +21,28 @@ import (
 )
 
 func Command() *cobra.Command {
+	orchCmd := &cobra.Command{
+		Use:          "orchestrator",
+		Aliases:      []string{"orch"},
+		Short:        "QGB orchestrator that signs attestations",
+		SilenceUsage: true,
+	}
+
+	orchCmd.AddCommand(
+		Start(),
+		Init(),
+	)
+
+	orchCmd.SetHelpCommand(&cobra.Command{})
+
+	return orchCmd
+}
+
+// Start starts the orchestrator to listen on new attestations, sign them and broadcast them.
+func Start() *cobra.Command {
 	command := &cobra.Command{
-		Use:     "orchestrator <flags>",
-		Aliases: []string{"orch"},
-		Short:   "Runs the QGB orchestrator to sign attestations",
+		Use:   "start <flags>",
+		Short: "Starts the QGB orchestrator to sign attestations",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseOrchestratorFlags(cmd)
 			if err != nil {
@@ -34,9 +52,19 @@ func Command() *cobra.Command {
 			logger := tmlog.NewTMLogger(os.Stdout)
 			logger.Debug("initializing orchestrator")
 
+			// checking if the provided home is already initiated
+			isInit := store.IsInit(logger, config.home)
+			if !isInit {
+				logger.Info(
+					"provided path is not initiated. Please run the init command before running the orchestrator",
+				)
+				return nil
+			}
+
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
+			// load app encoding configuration
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
 			// creating tendermint querier
@@ -80,8 +108,19 @@ func Command() *cobra.Command {
 				"Addresses",
 				h.Addrs(),
 			)
+
 			// creating the data store
-			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
+			s, err := store.OpenStore(logger, config.home, store.DefaultBadgerOptions(config.home))
+			if err != nil {
+				return err
+			}
+			defer func(s *store.Store, log tmlog.Logger) {
+				err := s.Close(log)
+				if err != nil {
+					logger.Error(err.Error())
+				}
+			}(s, logger)
+			dataStore := dssync.MutexWrap(s.DataStore)
 
 			// get the bootstrappers
 			var bootstrappers []peer.AddrInfo
@@ -110,12 +149,16 @@ func Command() *cobra.Command {
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
 
+			// creating the broadcasted
 			broadcaster := orchestrator.NewBroadcaster(dht)
 			if err != nil {
 				return err
 			}
 
+			// creating the retrier
 			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
+
+			// creating the orchestrator
 			orch, err := orchestrator.New(
 				logger,
 				appQuerier,
@@ -134,10 +177,41 @@ func Command() *cobra.Command {
 			// Listen for and trap any OS signal to gracefully shutdown and exit
 			go helpers.TrapSignal(logger, cancel)
 
+			// starting the orchestrator
 			orch.Start(ctx)
 
 			return nil
 		},
 	}
 	return addOrchestratorFlags(command)
+}
+
+// Init initializes the orchestrator store and creates necessary files.
+func Init() *cobra.Command {
+	cmd := cobra.Command{
+		Use:   "init",
+		Short: "Initialize the QGB orchestrator store. Passed flags have persisted effect.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parseInitFlags(cmd)
+			if err != nil {
+				return err
+			}
+
+			logger := tmlog.NewTMLogger(os.Stdout)
+
+			isInit := store.IsInit(logger, config.home)
+			if isInit {
+				logger.Info("provided path is already initiated", "path", config.home)
+				return nil
+			}
+
+			err = store.Init(logger, config.home)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	return addInitFlags(&cmd)
 }
