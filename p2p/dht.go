@@ -70,7 +70,6 @@ func (q QgbDHT) WaitForPeers(ctx context.Context, timeout time.Duration, rate ti
 	}
 
 	t := time.After(timeout)
-	t = time.After(timeout)
 	ticker := time.NewTicker(rate)
 	for {
 		select {
