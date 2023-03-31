@@ -16,7 +16,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
-const DEFAULTEVMGASLIMIT = uint64(25000000)
+const DefaultGasLimit = uint64(25000000)
 
 type Client struct {
 	logger     tmlog.Logger
