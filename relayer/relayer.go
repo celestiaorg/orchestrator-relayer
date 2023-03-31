@@ -77,7 +77,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 
 				// If the contract has already the last version, no need to relay anything
 				if lastContractNonce >= latestNonce {
-					r.logger.Info("waiting for new nonce", "current_contract_nonce", lastContractNonce)
+					r.logger.Debug("waiting for new nonce", "current_contract_nonce", lastContractNonce)
 					return nil
 				}
 
