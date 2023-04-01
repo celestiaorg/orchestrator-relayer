@@ -9,8 +9,10 @@ RUN make build
 WORKDIR /opt
 RUN git clone https://github.com/celestiaorg/celestia-app
 WORKDIR /opt/celestia-app
+# set timeout propose to 1s and timeout commit to 1ms
 RUN sed -i 's#time.Second#time.Millisecond#g' pkg/appconsts/consensus_consts.go
 RUN sed -i 's#10#1#g' pkg/appconsts/consensus_consts.go
+RUN sed -i 's#TimeoutPropose[[:space:]]=[[:space:]]time.Millisecond[[:space:]]\*[[:space:]]1#TimeoutPropose = time.Second#g' pkg/appconsts/consensus_consts.go
 RUN make build
 
 # final image

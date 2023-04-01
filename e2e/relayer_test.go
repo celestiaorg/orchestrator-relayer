@@ -99,7 +99,7 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
-	time.Sleep(30 * time.Second)
+	time.Sleep(time.Second)
 
 	bridge, err := network.GetLatestDeployedQGBContract(ctx)
 	HandleNetworkError(t, network, err, false)
@@ -155,7 +155,7 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
-	time.Sleep(30 * time.Second)
+	time.Sleep(time.Second)
 
 	// check whether the four validators are up and running
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
