@@ -878,11 +878,11 @@ func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *wrapper
 			return ctx.Err()
 		default:
 			nonce, err := bridge.StateEventNonce(&bind.CallOpts{Context: ctx})
-			if err == nil && nonce != nil && nonce.Int64() >= int64(n) {
-				cancel()
-				return nil
-			}
-			if err != nil {
+			if err == nil {
+				if nonce != nil && nonce.Int64() >= int64(n) {
+					cancel()
+					return nil
+				}
 				fmt.Printf("waiting for nonce %d current nonce %d\n", n, nonce)
 			}
 			time.Sleep(5 * time.Second)
