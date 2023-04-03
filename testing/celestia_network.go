@@ -2,7 +2,6 @@ package testing
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -35,9 +34,6 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, blockTime time.Durati
 		t.Skip("skipping tests in short mode.")
 	}
 	accounts, clientContext := celestiatestnode.DefaultNetwork(t, blockTime)
-	accounts2, clientContext2 := celestiatestnode.DefaultNetwork(t, blockTime)
-	fmt.Println(clientContext2)
-	fmt.Println(accounts2)
 	appRPC := clientContext.GRPCClient.Target()
 	status, err := clientContext.Client.Status(ctx)
 	require.NoError(t, err)
