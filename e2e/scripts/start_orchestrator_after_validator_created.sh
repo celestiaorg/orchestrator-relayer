@@ -24,7 +24,7 @@ do
   result=$?
   if [ "${result}" != "0" ]; then
     echo "Waiting for node gRPC to be available ..."
-    sleep 5s
+    sleep 1s
     continue
   fi
 
@@ -34,7 +34,7 @@ do
     break
   fi
   echo "Waiting for validator to be created..."
-  sleep 5s
+  sleep 3s
 done
 
 # initialize orchestrator

@@ -47,7 +47,7 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
-	time.Sleep(30 * time.Second)
+	time.Sleep(time.Second)
 
 	vsConfirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
 	// assert the confirm exist
@@ -110,7 +110,7 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
-	time.Sleep(30 * time.Second)
+	time.Sleep(time.Second)
 
 	// check core0 submitted the valset confirm
 	core0ValsetConfirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
@@ -183,7 +183,7 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
-	time.Sleep(30 * time.Second)
+	time.Sleep(time.Second)
 
 	// check core0 submitted the valset confirm
 	core0ValsetConfirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
@@ -276,7 +276,7 @@ func TestOrchestratorReplayOld(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
-	time.Sleep(30 * time.Second)
+	time.Sleep(time.Second)
 
 	// check core0 submitted valset 1 confirm
 	vs1Core0Confirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)

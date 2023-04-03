@@ -30,7 +30,7 @@ do
   result=$?
   if [ "${result}" != "0" ]; then
     echo "Waiting for node gRPC to be available ..."
-    sleep 5s
+    sleep 1s
     continue
   fi
 
@@ -39,7 +39,7 @@ do
     break
   fi
   echo "Waiting for block 1 to be generated..."
-  sleep 5s
+  sleep 1s
 done
 
 # wait for the evm node to start
@@ -57,7 +57,7 @@ do
       break
     fi
     echo "Waiting for ethereum node to be up..."
-    sleep 2s
+    sleep 1s
 done
 
 echo "deploying QGB contract..."

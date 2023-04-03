@@ -35,7 +35,7 @@ apk add curl
       break
     fi
     echo "Waiting for node to be up..."
-    sleep 5s
+    sleep 2s
   done
 
   VAL_ADDRESS=$(celestia-appd keys show ${MONIKER} --keyring-backend test --bech=val --home /opt -a)
@@ -64,7 +64,7 @@ apk add curl
       break
     fi
     echo "trying to create validator..."
-    sleep 5s
+    sleep 1s
   done
 
 } &
