@@ -33,7 +33,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 			"\"latest\": for latest valset nonce, "+
 			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
 	)
-	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DEFAULTEVMGASLIMIT, "Specify the evm gas limit")
+	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 
 	return cmd
 }

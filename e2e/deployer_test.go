@@ -40,7 +40,7 @@ func TestDeployer(t *testing.T) {
 	bridge, err := network.GetLatestDeployedQGBContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
-	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DEFAULTEVMGASLIMIT)
+	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
 
 	eventNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
 	assert.NoError(t, err)

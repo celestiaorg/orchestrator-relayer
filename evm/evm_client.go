@@ -16,7 +16,8 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
-const DEFAULTEVMGASLIMIT = uint64(25000000)
+// DefaultEVMGasLimit the default gas limit to use when sending transactions to the EVM chain.
+const DefaultEVMGasLimit = uint64(25000000)
 
 type Client struct {
 	logger     tmlog.Logger
