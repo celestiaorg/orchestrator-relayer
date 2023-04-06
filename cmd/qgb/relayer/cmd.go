@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
+
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -151,5 +153,6 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
+	command.AddCommand(keys.Command())
 	return addRelayerFlags(command)
 }

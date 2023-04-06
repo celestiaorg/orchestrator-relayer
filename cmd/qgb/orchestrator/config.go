@@ -5,11 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"os"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/tendermint/tendermint/libs/cli"
-
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/spf13/cobra"
@@ -23,7 +21,6 @@ const (
 	bootstrappersFlag    = "bootstrappers"
 	p2pListenAddressFlag = "p2p-listen-addr"
 	p2pIdentityFlag      = "p2p-priv-key"
-	FlagHome             = cli.HomeFlag
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -39,12 +36,12 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
-	cmd.Flags().String(FlagHome, "", "The qgb orchestrator home directory")
+	cmd.Flags().String(base.FlagHome, "", "The qgb orchestrator home directory")
 	return cmd
 }
 
 type StartConfig struct {
-	home                                      string
+	*base.Config
 	celestiaChainID, celesGRPC, tendermintRPC string
 	evmPrivateKey                             *ecdsa.PrivateKey
 	bootstrappers, p2pListenAddr              string
@@ -95,13 +92,13 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	if err != nil {
 		return StartConfig{}, err
 	}
-	homeDir, err := cmd.Flags().GetString(flags.FlagHome)
+	homeDir, err := cmd.Flags().GetString(base.FlagHome)
 	if err != nil {
 		return StartConfig{}, err
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = DefaultQGBStorePath()
+		homeDir, err = base.DefaultServicePath("orchestrator")
 		if err != nil {
 			return StartConfig{}, err
 		}
@@ -115,12 +112,14 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 		bootstrappers:   bootstrappers,
 		p2pIdentity:     identity,
 		p2pListenAddr:   p2pListenAddress,
-		home:            homeDir,
+		Config: &base.Config{
+			Home: homeDir,
+		},
 	}, nil
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().String(FlagHome, "", "The qgb orchestrator home directory")
+	cmd.Flags().String(base.FlagHome, "", "The qgb orchestrator home directory")
 	return cmd
 }
 
@@ -135,7 +134,7 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = DefaultQGBStorePath()
+		homeDir, err = base.DefaultServicePath("orchestrator")
 		if err != nil {
 			return InitConfig{}, err
 		}
@@ -144,20 +143,4 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	return InitConfig{
 		home: homeDir,
 	}, nil
-}
-
-// DefaultQGBStorePath constructs the default qgb store path.
-func DefaultQGBStorePath() (string, error) {
-	// TODO do we need to worry about different networks and have default home
-	// specified for every different network?
-	home := os.Getenv("QGB_HOME")
-
-	if home == "" {
-		var err error
-		home, err = os.UserHomeDir()
-		if err != nil {
-			return "", err
-		}
-	}
-	return fmt.Sprintf("%s/.qgb", home), nil
 }
