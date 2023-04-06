@@ -12,7 +12,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func Root() *cobra.Command {
@@ -80,7 +80,7 @@ func Add() *cobra.Command {
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide a passphrase for your account")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
@@ -211,7 +211,7 @@ func Delete() *cobra.Command {
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
@@ -312,7 +312,7 @@ func ImportFile() *cobra.Command {
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
@@ -323,7 +323,7 @@ func ImportFile() *cobra.Command {
 			// if the new passphrase is not specified as a flag, ask for it.
 			if newPassphrase == "" {
 				logger.Info("please provide the address new passphrase")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
@@ -390,7 +390,7 @@ func ImportECDSA() *cobra.Command {
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
@@ -480,7 +480,7 @@ func Update() *cobra.Command {
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
@@ -491,7 +491,7 @@ func Update() *cobra.Command {
 			// if the new passphrase is not specified as a flag, ask for it.
 			if newPassphrase == "" {
 				logger.Info("please provide the address new passphrase")
-				bzPassphrase, err := terminal.ReadPassword(int(os.Stdin.Fd()))
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
 				if err != nil {
 					return err
 				}
