@@ -14,7 +14,6 @@ func Command() *cobra.Command {
 
 	keysCmd.AddCommand(
 		evm.Root(),
-		P2PCmd(),
 	)
 
 	keysCmd.SetHelpCommand(&cobra.Command{})
