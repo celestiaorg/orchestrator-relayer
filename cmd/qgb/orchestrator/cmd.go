@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
+
 	"github.com/celestiaorg/orchestrator-relayer/store"
 
 	"github.com/celestiaorg/celestia-app/app"
@@ -31,6 +33,7 @@ func Command() *cobra.Command {
 	orchCmd.AddCommand(
 		Start(),
 		Init(),
+		keys.Command(),
 	)
 
 	orchCmd.SetHelpCommand(&cobra.Command{})
@@ -53,7 +56,11 @@ func Start() *cobra.Command {
 			logger.Debug("initializing orchestrator")
 
 			// checking if the provided home is already initiated
-			isInit := store.IsInit(logger, config.home)
+			isInit := store.IsInit(logger, config.Home, store.InitOptions{
+				NeedDataStore:   true,
+				NeedEVMKeyStore: true,
+				NeedP2PKeyStore: false,
+			})
 			if !isInit {
 				logger.Info(
 					"provided path is not initiated. Please run the init command before running the orchestrator",
@@ -110,12 +117,18 @@ func Start() *cobra.Command {
 			)
 
 			// creating the data store
-			s, err := store.OpenStore(logger, config.home, store.DefaultBadgerOptions(config.home))
+			openOptions := store.OpenOptions{
+				HasDataStore:   true,
+				BadgerOptions:  store.DefaultBadgerOptions(config.Home),
+				HasEVMKeyStore: true,
+				HasP2PKeyStore: false,
+			}
+			s, err := store.OpenStore(logger, config.Home, openOptions)
 			if err != nil {
 				return err
 			}
 			defer func(s *store.Store, log tmlog.Logger) {
-				err := s.Close(log)
+				err := s.Close(log, openOptions)
 				if err != nil {
 					logger.Error(err.Error())
 				}
@@ -199,13 +212,21 @@ func Init() *cobra.Command {
 
 			logger := tmlog.NewTMLogger(os.Stdout)
 
-			isInit := store.IsInit(logger, config.home)
+			isInit := store.IsInit(logger, config.home, store.InitOptions{
+				NeedDataStore:   true,
+				NeedEVMKeyStore: true,
+				NeedP2PKeyStore: false,
+			})
 			if isInit {
 				logger.Info("provided path is already initiated", "path", config.home)
 				return nil
 			}
 
-			err = store.Init(logger, config.home)
+			err = store.Init(logger, config.home, store.InitOptions{
+				NeedDataStore:   true,
+				NeedEVMKeyStore: true,
+				NeedP2PKeyStore: false,
+			})
 			if err != nil {
 				return err
 			}

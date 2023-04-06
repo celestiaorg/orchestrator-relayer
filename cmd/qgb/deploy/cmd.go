@@ -5,6 +5,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
@@ -88,6 +90,7 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
+	command.AddCommand(keys.Command())
 	return addDeployFlags(command)
 }
 

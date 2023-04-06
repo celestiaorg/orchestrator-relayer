@@ -9,19 +9,33 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-// DataPath the subdir for the data folder containing the p2p data relative to the path.
-const DataPath = "data"
+const (
+	// DataPath the subdir for the data folder containing the p2p data relative to the path.
+	DataPath = "data"
+	// EVMKeyStorePath the subdir for the path containing the EVM keystore.
+	EVMKeyStorePath = "keystore/evm"
+	// P2PKeyStorePath the subdir for the path containing the p2p keystore.
+	P2PKeyStorePath = "keystore/p2p"
+)
 
 // storePath clean up the store path.
 func storePath(path string) (string, error) {
 	return homedir.Expand(filepath.Clean(path))
 }
 
+// InitOptions contains the options used to init a path or check if a path
+// is already initiated.
+type InitOptions struct {
+	NeedDataStore   bool
+	NeedEVMKeyStore bool
+	NeedP2PKeyStore bool
+}
+
 // Init initializes the qgb file system in the directory under
 // 'path'.
 // It also creates a lock under that directory, so it can't be used
 // by multiple processes.
-func Init(log tmlog.Logger, path string) error {
+func Init(log tmlog.Logger, path string, options InitOptions) error {
 	path, err := storePath(path)
 	if err != nil {
 		return err
@@ -41,12 +55,32 @@ func Init(log tmlog.Logger, path string) error {
 		return err
 	}
 
-	err = initDir(dataPath(path))
-	if err != nil {
-		return err
+	if options.NeedDataStore {
+		err = initDir(dataPath(path))
+		if err != nil {
+			return err
+		}
+
+		log.Info("data dir initialized", "path", dataPath(path))
 	}
 
-	log.Info("data dir initialized", "path", dataPath(path))
+	if options.NeedP2PKeyStore {
+		err = initDir(p2pKeyStorePath(path))
+		if err != nil {
+			return err
+		}
+
+		log.Info("p2p keystore dir initialized", "path", p2pKeyStorePath(path))
+	}
+
+	if options.NeedEVMKeyStore {
+		err = initDir(evmKeyStorePath(path))
+		if err != nil {
+			return err
+		}
+
+		log.Info("evm keystore dir initialized", "path", evmKeyStorePath(path))
+	}
 
 	err = flock.Unlock()
 	if err != nil {
@@ -59,16 +93,35 @@ func Init(log tmlog.Logger, path string) error {
 }
 
 // IsInit checks whether FileSystem Store was set up under given 'path'.
-// If the path doesn't contain the data folder, then it returns false.
-// Other validation will be added when the keystores are added.
-func IsInit(logger tmlog.Logger, path string) bool {
+// If the paths of the provided options don't exist, then it returns false.
+func IsInit(logger tmlog.Logger, path string, options InitOptions) bool {
 	path, err := storePath(path)
 	if err != nil {
 		logger.Error("parsing store path", "path", path, "err", err)
 		return false
 	}
 
-	return Exists(dataPath(path))
+	// check if the root path exists
+	if !Exists(path) {
+		return false
+	}
+
+	// check if the data store exists if it's needed
+	if options.NeedDataStore && !Exists(dataPath(path)) {
+		return false
+	}
+
+	// check if the p2p key store path exists if it's needed
+	if options.NeedP2PKeyStore && !Exists(p2pKeyStorePath(path)) {
+		return false
+	}
+
+	// check if the EVM key store path exists if it's needed
+	if options.NeedEVMKeyStore && !Exists(evmKeyStorePath(path)) {
+		return false
+	}
+
+	return true
 }
 
 const perms = 0o755
@@ -99,7 +152,7 @@ func initDir(path string) error {
 	if Exists(path) {
 		return nil
 	}
-	return os.Mkdir(path, perms)
+	return os.MkdirAll(path, perms)
 }
 
 // Exists checks whether file or directory exists under the given 'path' on the system.
