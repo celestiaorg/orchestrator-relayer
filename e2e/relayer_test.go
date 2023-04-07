@@ -48,7 +48,7 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	err = network.WaitForRelayerToStart(ctx, bridge)
 	HandleNetworkError(t, network, err, false)
 
-	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
+	evmClient := evm.NewClient(nil, bridge, nil, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
 
 	n := uint64(2)
 	err = network.WaitForEventNonce(ctx, bridge, n)
@@ -107,7 +107,7 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	err = network.WaitForRelayerToStart(ctx, bridge)
 	HandleNetworkError(t, network, err, false)
 
-	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
+	evmClient := evm.NewClient(nil, bridge, nil, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
 
 	n := uint64(2)
 	err = network.WaitForEventNonce(ctx, bridge, n)
@@ -174,7 +174,7 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	err = network.WaitForRelayerToStart(ctx, bridge)
 	HandleNetworkError(t, network, err, false)
 
-	evmClient := evm.NewClient(nil, bridge, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
+	evmClient := evm.NewClient(nil, bridge, nil, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
 
 	n := uint64(2)
 	err = network.WaitForEventNonce(ctx, bridge, n)

@@ -40,27 +40,32 @@ done
 # initialize orchestrator
 /bin/qgb orch init
 
+# add keys to keystore
+/bin/qgb orch keys evm import ecdsa "${PRIVATE_KEY}" --passphrase 123
+
 # start orchestrator
 if [[ -z "${P2P_BOOTSTRAPPERS}" ]]
 then
   /bin/qgb orchestrator start \
     -p=/opt \
     -x=qgb-e2e \
-    -d="${PRIVATE_KEY}" \
+    -d="${EVM_ADDRESS}" \
     -t="${TENDERMINT_RPC}" \
     -c="${CELESTIA_GRPC}" \
     -p="${P2P_IDENTITY}" \
-    -q="${P2P_LISTEN}"
+    -q="${P2P_LISTEN}" \
+    --passphrase=123
 else
   # to give time for the bootstrappers to be up
   sleep 5s
   /bin/qgb orchestrator start \
     -p=/opt \
     -x=qgb-e2e \
-    -d="${PRIVATE_KEY}" \
+    -d="${EVM_ADDRESS}" \
     -t="${TENDERMINT_RPC}" \
     -c="${CELESTIA_GRPC}" \
     -b="${P2P_BOOTSTRAPPERS}" \
     -p="${P2P_IDENTITY}" \
-    -q="${P2P_LISTEN}"
+    -q="${P2P_LISTEN}"\
+    --passphrase=123
 fi

@@ -5,6 +5,11 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
+	"golang.org/x/term"
+
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
 
 	"github.com/celestiaorg/celestia-app/app"
@@ -12,6 +17,7 @@ import (
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
+	"github.com/celestiaorg/orchestrator-relayer/store"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -28,6 +34,13 @@ func Command() *cobra.Command {
 			}
 
 			logger := tmlog.NewTMLogger(os.Stdout)
+
+			// checking if the provided home is already initiated
+			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
+			if !isInit {
+				logger.Info("please initialize the EVM keystore using the `deploy keys add/import` command")
+				return store.ErrNotInited
+			}
 
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
@@ -51,10 +64,67 @@ func Command() *cobra.Command {
 				)
 			}
 
+			// creating the data store
+			openOptions := store.OpenOptions{HasEVMKeyStore: true}
+			s, err := store.OpenStore(logger, config.Home, openOptions)
+			if err != nil {
+				return err
+			}
+			defer func(s *store.Store, log tmlog.Logger) {
+				err := s.Close(log, openOptions)
+				if err != nil {
+					logger.Error(err.Error())
+				}
+			}(s, logger)
+
+			if !common.IsHexAddress(config.evmAccAddress) {
+				logger.Error("provided address is not a correct EVM address", "address", config.evmAccAddress)
+				return nil // should we return errors in these cases?
+			}
+
+			addr := common.HexToAddress(config.evmAccAddress)
+			if !s.EVMKeyStore.HasAddress(addr) {
+				logger.Info("account not found in keystore", "address", config.evmAccAddress)
+				return nil
+			}
+
+			logger.Info("loading EVM account", "address", addr.String())
+
+			var acc accounts.Account
+			for _, storeAcc := range s.EVMKeyStore.Accounts() {
+				if storeAcc.Address.String() == addr.String() {
+					acc = storeAcc
+				}
+			}
+
+			passphrase := config.Passphrase
+			// if the passphrase is not specified as a flag, ask for it.
+			if passphrase == "" {
+				logger.Info("please provide the account passphrase")
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				if err != nil {
+					return err
+				}
+				passphrase = string(bzPassphrase)
+			}
+
+			err = s.EVMKeyStore.Unlock(acc, passphrase)
+			if err != nil {
+				logger.Error("unable to load the EVM private key")
+				return err
+			}
+			defer func(EVMKeyStore *keystore.KeyStore, addr common.Address) {
+				err := EVMKeyStore.Lock(addr)
+				if err != nil {
+					panic(err)
+				}
+			}(s.EVMKeyStore, acc.Address)
+
 			evmClient := evm.NewClient(
 				tmlog.NewTMLogger(os.Stdout),
 				nil,
-				config.privateKey,
+				s.EVMKeyStore,
+				&acc,
 				config.evmRPC,
 				config.evmGasLimit,
 			)
@@ -78,7 +148,7 @@ func Command() *cobra.Command {
 				false,
 			)
 			if err != nil {
-				logger.Error("failed to delpoy QGB contract")
+				logger.Error("failed to deploy QGB contract")
 				return err
 			}
 

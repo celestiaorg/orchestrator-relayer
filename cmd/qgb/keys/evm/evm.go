@@ -76,7 +76,7 @@ func Add() *cobra.Command {
 				}
 			}(s, logger)
 
-			passphrase := config.passphrase
+			passphrase := config.Passphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide a passphrase for your account")
@@ -119,8 +119,7 @@ func List() *cobra.Command {
 
 			// initialize the store if not initialized
 			if !isInit {
-				logger.Info("key store not initialized. add new keys using the add/import sub commands")
-				return nil
+				return store.ErrNotInited
 			}
 
 			// open store
@@ -170,8 +169,7 @@ func Delete() *cobra.Command {
 
 			// initialize the store if not initialized
 			if !isInit {
-				logger.Info("key store not initialized. add new keys using the add/import sub commands")
-				return nil
+				return store.ErrNotInited
 			}
 
 			// open store
@@ -207,7 +205,7 @@ func Delete() *cobra.Command {
 				}
 			}
 
-			passphrase := config.passphrase
+			passphrase := config.Passphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -308,7 +306,7 @@ func ImportFile() *cobra.Command {
 				return err
 			}
 
-			passphrase := config.passphrase
+			passphrase := config.Passphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -386,7 +384,7 @@ func ImportECDSA() *cobra.Command {
 
 			logger.Info("importing account")
 
-			passphrase := config.passphrase
+			passphrase := config.Passphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -437,10 +435,7 @@ func Update() *cobra.Command {
 
 			// initialize the store if not initialized
 			if !isInit {
-				err := store.Init(logger, config.Home, initOptions)
-				if err != nil {
-					return err
-				}
+				return store.ErrNotInited
 			}
 
 			// open store
@@ -476,7 +471,7 @@ func Update() *cobra.Command {
 				}
 			}
 
-			passphrase := config.passphrase
+			passphrase := config.Passphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -517,7 +512,7 @@ func commandToServiceName(commandUsage string) (string, error) {
 	if strings.Contains(commandUsage, "orch") {
 		return "orchestrator", nil
 	}
-	if strings.Contains(commandUsage, "deployer") {
+	if strings.Contains(commandUsage, "deploy") {
 		return "deployer", nil
 	}
 	return "", fmt.Errorf("unknown service %s", commandUsage)

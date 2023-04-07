@@ -108,16 +108,19 @@ func IsInit(logger tmlog.Logger, path string, options InitOptions) bool {
 
 	// check if the data store exists if it's needed
 	if options.NeedDataStore && !Exists(dataPath(path)) {
+		logger.Info("data path not initialized", "path", path)
 		return false
 	}
 
 	// check if the p2p key store path exists if it's needed
 	if options.NeedP2PKeyStore && !Exists(p2pKeyStorePath(path)) {
+		logger.Info("p2p keystore not initialized", "path", path)
 		return false
 	}
 
 	// check if the EVM key store path exists if it's needed
 	if options.NeedEVMKeyStore && !Exists(evmKeyStorePath(path)) {
+		logger.Info("evm keystore not initialized", "path", path)
 		return false
 	}
 

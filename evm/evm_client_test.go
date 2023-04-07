@@ -4,6 +4,8 @@ import (
 	"context"
 	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/types"
@@ -23,7 +25,13 @@ func (s *EVMTestSuite) TestSubmitDataCommitment() {
 		commitment[:],
 	)
 
-	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), s.VsPrivateKey)
+	ks := keystore.NewKeyStore(s.T().TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(s.VsPrivateKey, "123")
+	s.NoError(err)
+	err = ks.Unlock(acc, "123")
+	s.NoError(err)
+
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 	s.NoError(err)
 
 	evmVals := make([]wrapper.Validator, len(s.InitVs.Members))
@@ -83,9 +91,15 @@ func (s *EVMTestSuite) TestUpdateValset() {
 		Height: 10,
 	}
 
+	ks := keystore.NewKeyStore(s.T().TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(s.VsPrivateKey, "123")
+	s.NoError(err)
+	err = ks.Unlock(acc, "123")
+	s.NoError(err)
+
 	signBytes, err := updatedValset.SignBytes()
 	s.NoError(err)
-	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), s.VsPrivateKey)
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 	s.NoError(err)
 
 	hexSig := ethcmn.Bytes2Hex(signature)

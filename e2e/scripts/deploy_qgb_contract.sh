@@ -60,16 +60,20 @@ do
     sleep 1s
 done
 
+# import keys to deployer
+/bin/qgb deploy keys evm import ecdsa "${PRIVATE_KEY}" --passphrase=123
+
 echo "deploying QGB contract..."
 
 /bin/qgb deploy \
-  -z ${EVM_CHAIN_ID} \
-  -d ${PRIVATE_KEY} \
-  -c ${CELESTIA_GRPC} \
-  -z ${EVM_CHAIN_ID} \
-  -n ${STARTING_NONCE} \
-  -e ${EVM_ENDPOINT} > /opt/output
+  -z "${EVM_CHAIN_ID}" \
+  -d "${EVM_ADDRESS}" \
+  -c "${CELESTIA_GRPC}" \
+  -z "${EVM_CHAIN_ID}" \
+  -n "${STARTING_NONCE}" \
+  -e "${EVM_ENDPOINT}" \
+  --passphrase=123 > /opt/output
 
 echo $(cat /opt/output)
 
-cat /opt/output | tail -n 1 | awk '{ print $5 }' | cut -f 2 -d = > /opt/qgb_address.txt
+cat /opt/output | grep "deployed" | awk '{ print $5 }' | cut -f 2 -d = > /opt/qgb_address.txt

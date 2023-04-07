@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -19,6 +21,8 @@ func TestNewEthereumSignature(t *testing.T) {
 	require.NoError(t, err)
 	testPrivateKey, err := crypto.HexToECDSA("64a1d6f0e760a8d62b4afdde4096f16f51b401eaaecc915740f71770ea76a8ad")
 	require.NoError(t, err)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+
 	tests := []struct {
 		name              string
 		privKey           *ecdsa.PrivateKey
@@ -31,15 +35,15 @@ func TestNewEthereumSignature(t *testing.T) {
 			expectedSignature: "ca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
 			expectErr:         false,
 		},
-		{
-			name:      "nil private key",
-			privKey:   nil,
-			expectErr: true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := evm.NewEthereumSignature(digest, tt.privKey)
+			acc, err := ks.ImportECDSA(tt.privKey, "123")
+			require.NoError(t, err)
+			err = ks.Unlock(acc, "123")
+			require.NoError(t, err)
+
+			got, err := evm.NewEthereumSignature(digest, ks, acc)
 			if tt.expectErr {
 				assert.Error(t, err)
 			} else {

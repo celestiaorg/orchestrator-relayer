@@ -7,9 +7,11 @@ import (
 	"testing"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/evm"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	"github.com/ethereum/go-ethereum/common"
 
-	"github.com/celestiaorg/orchestrator-relayer/evm"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
@@ -57,11 +59,17 @@ func TestPutDataCommitmentConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
 	nonce := uint64(10)
 	commitment := "1234"
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
-	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey)
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc)
 	require.NoError(t, err)
 
 	// create a test DataCommitmentConfirm
@@ -89,11 +97,17 @@ func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
 	nonce := uint64(10)
 	commitment := "1234"
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
-	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey)
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc)
 	require.NoError(t, err)
 
 	// create a test DataCommitmentConfirm
@@ -134,8 +148,14 @@ func TestPutValsetConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
 	signBytes := common.HexToHash("1234")
-	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 	require.NoError(t, err)
 
 	// create a test ValsetConfirm
@@ -163,8 +183,14 @@ func TestNetworkPutValsetConfirm(t *testing.T) {
 	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
 	signBytes := common.HexToHash("1234")
-	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 	require.NoError(t, err)
 
 	// create a test ValsetConfirm

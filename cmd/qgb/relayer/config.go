@@ -1,10 +1,11 @@
 package relayer
 
 import (
-	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
 	"fmt"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
 
 	"github.com/libp2p/go-libp2p/core/crypto"
 
@@ -12,11 +13,10 @@ import (
 	"github.com/spf13/cobra"
 
 	ethcmn "github.com/ethereum/go-ethereum/common"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
 
 const (
-	privateKeyFlag       = "eth-priv-key"
+	evmAccAddressFlag    = "evm-address"
 	evmChainIDFlag       = "evm-chain-id"
 	celesGRPCFlag        = "celes-grpc"
 	tendermintRPCFlag    = "celes-http-rpc"
@@ -29,7 +29,7 @@ const (
 )
 
 func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(privateKeyFlag, "d", "", "Provide the private key used to sign relayed evm transactions")
+	cmd.Flags().StringP(evmAccAddressFlag, "d", "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
 	cmd.Flags().Uint64P(evmChainIDFlag, "z", 5, "Specify the evm chain id")
 	cmd.Flags().StringP(celesGRPCFlag, "c", "localhost:9090", "Specify the grpc address")
 	cmd.Flags().StringP(tendermintRPCFlag, "t", "http://localhost:26657", "Specify the rest rpc address")
@@ -39,14 +39,17 @@ func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
+	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
+	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd
 }
 
 type Config struct {
+	*base.Config
 	evmChainID                       uint64
 	evmRPC, celesGRPC, tendermintRPC string
-	evmPrivateKey                    *ecdsa.PrivateKey
+	evmAccAddress                    string
 	contractAddr                     ethcmn.Address
 	evmGasLimit                      uint64
 	bootstrappers, p2pListenAddr     string
@@ -54,16 +57,12 @@ type Config struct {
 }
 
 func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
-	rawPrivateKey, err := cmd.Flags().GetString(privateKeyFlag)
+	evmAccAddr, err := cmd.Flags().GetString(evmAccAddressFlag)
 	if err != nil {
 		return Config{}, err
 	}
-	if rawPrivateKey == "" {
-		return Config{}, errors.New("private key flag required")
-	}
-	ethPrivKey, err := ethcrypto.HexToECDSA(rawPrivateKey)
-	if err != nil {
-		return Config{}, fmt.Errorf("failed to hex-decode Ethereum ECDSA Private Key: %w", err)
+	if evmAccAddr == "" {
+		return Config{}, errors.New("the evm account address should be specified")
 	}
 	evmChainID, err := cmd.Flags().GetUint64(evmChainIDFlag)
 	if err != nil {
@@ -116,9 +115,24 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	homeDir, err := cmd.Flags().GetString(base.FlagHome)
+	if err != nil {
+		return Config{}, err
+	}
+	if homeDir == "" {
+		var err error
+		homeDir, err = base.DefaultServicePath("relayer")
+		if err != nil {
+			return Config{}, err
+		}
+	}
+	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	if err != nil {
+		return Config{}, err
+	}
 
 	return Config{
-		evmPrivateKey: ethPrivKey,
+		evmAccAddress: evmAccAddr,
 		evmChainID:    evmChainID,
 		celesGRPC:     celesGRPC,
 		tendermintRPC: tendermintRPC,
@@ -128,5 +142,9 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 		bootstrappers: bootstrappers,
 		p2pListenAddr: p2pListenAddress,
 		p2pIdentity:   identity,
+		Config: &base.Config{
+			Home:       homeDir,
+			Passphrase: passphrase,
+		},
 	}, nil
 }

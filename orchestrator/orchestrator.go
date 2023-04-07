@@ -2,23 +2,24 @@ package orchestrator
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/evm"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
-	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ethcmn "github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pkg/errors"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	corerpctypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -28,9 +29,8 @@ import (
 type Orchestrator struct {
 	Logger tmlog.Logger // maybe use a more general interface
 
-	EvmPrivateKey  ecdsa.PrivateKey
-	OrchEVMAddress ethcmn.Address
-	OrchAccAddress sdk.AccAddress
+	EvmKeyStore *keystore.KeyStore
+	EvmAccount  *accounts.Account
 
 	AppQuerier  *rpc.AppQuerier
 	TmQuerier   *rpc.TmQuerier
@@ -46,20 +46,19 @@ func New(
 	p2pQuerier *p2p.Querier,
 	broadcaster *Broadcaster,
 	retrier *helpers.Retrier,
-	evmPrivateKey ecdsa.PrivateKey,
-) (*Orchestrator, error) {
-	orchEVMAddr := crypto.PubkeyToAddress(evmPrivateKey.PublicKey)
-
+	evmKeyStore *keystore.KeyStore,
+	evmAccount *accounts.Account,
+) *Orchestrator {
 	return &Orchestrator{
-		Logger:         logger,
-		EvmPrivateKey:  evmPrivateKey,
-		OrchEVMAddress: orchEVMAddr,
-		AppQuerier:     appQuerier,
-		TmQuerier:      tmQuerier,
-		P2PQuerier:     p2pQuerier,
-		Broadcaster:    broadcaster,
-		Retrier:        retrier,
-	}, nil
+		Logger:      logger,
+		EvmKeyStore: evmKeyStore,
+		EvmAccount:  evmAccount,
+		AppQuerier:  appQuerier,
+		TmQuerier:   tmQuerier,
+		P2PQuerier:  p2pQuerier,
+		Broadcaster: broadcaster,
+		Retrier:     retrier,
+	}
 }
 
 func (orch Orchestrator) Start(ctx context.Context) {
@@ -284,7 +283,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return err
 		}
 	}
-	if !ValidatorPartOfValset(previousValset.Members, orch.OrchEVMAddress.Hex()) {
+	if !ValidatorPartOfValset(previousValset.Members, orch.EvmAccount.Address.Hex()) {
 		// no need to sign if the orchestrator is not part of the validator set that needs to sign the attestation
 		orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
 		return nil
@@ -299,7 +298,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if err != nil {
 			return err
 		}
-		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.OrchEVMAddress.Hex(), signBytes.Hex())
+		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.EvmAccount.Address.Hex(), signBytes.Hex())
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
@@ -330,7 +329,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByEVMAddress(
 			ctx,
 			dc.Nonce,
-			orch.OrchEVMAddress.Hex(),
+			orch.EvmAccount.Address.Hex(),
 			dataRootHash.Hex(),
 		)
 		if err != nil {
@@ -356,14 +355,14 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 	if err != nil {
 		return err
 	}
-	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), &orch.EvmPrivateKey)
+	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), orch.EvmKeyStore, *orch.EvmAccount)
 	if err != nil {
 		return err
 	}
 
 	// create and send the valset hash
 	msg := types.NewValsetConfirm(
-		orch.OrchEVMAddress,
+		orch.EvmAccount.Address,
 		ethcmn.Bytes2Hex(signature),
 	)
 	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg, signBytes.Hex())
@@ -379,11 +378,11 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 	dc celestiatypes.DataCommitment,
 	dataRootTupleRoot ethcmn.Hash,
 ) error {
-	dcSig, err := evm.NewEthereumSignature(dataRootTupleRoot.Bytes(), &orch.EvmPrivateKey)
+	dcSig, err := evm.NewEthereumSignature(dataRootTupleRoot.Bytes(), orch.EvmKeyStore, *orch.EvmAccount)
 	if err != nil {
 		return err
 	}
-	msg := types.NewDataCommitmentConfirm(ethcmn.Bytes2Hex(dcSig), orch.OrchEVMAddress)
+	msg := types.NewDataCommitmentConfirm(ethcmn.Bytes2Hex(dcSig), orch.EvmAccount.Address)
 	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg, dataRootTupleRoot.Hex())
 	if err != nil {
 		return err

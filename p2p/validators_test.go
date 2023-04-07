@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
@@ -20,6 +22,12 @@ func TestValsetConfirmValidate(t *testing.T) {
 	evmAddress := "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
 	privateKey, _ := ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
 	tests := []struct {
 		name    string
 		key     string
@@ -30,7 +38,7 @@ func TestValsetConfirmValidate(t *testing.T) {
 			name: "valid valset confirm",
 			key:  "/vc/b:" + evmAddress + ":" + signBytes.Hex(),
 			value: func() []byte {
-				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 				require.NoError(t, err)
 				vsc, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress(evmAddress),
@@ -101,6 +109,12 @@ func TestValsetConfirmSelect(t *testing.T) {
 	evmAddress := "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
 	privateKey, _ := ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
 	tests := []struct {
 		name          string
 		key           string
@@ -112,7 +126,7 @@ func TestValsetConfirmSelect(t *testing.T) {
 			name: "first valset confirm is valid",
 			key:  "/vc/b:" + evmAddress + ":" + signBytes.Hex(),
 			values: func() [][]byte {
-				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 				require.NoError(t, err)
 				vc1, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress(evmAddress),
@@ -139,7 +153,7 @@ func TestValsetConfirmSelect(t *testing.T) {
 					common.HexToAddress("0xfA906e15C9Eaf338c4110f0E21983c6b3b2d622b"),
 					"0xca2aa01f5b32722238e8f45356878e2cfbdc7c3335fbbf4e1dc3dfc53465e3e137103769d6956414014ae340cc4cb97384b2980eea47942f135931865471031a00",
 				))
-				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 				require.NoError(t, err)
 				vc2, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress(evmAddress),
@@ -158,7 +172,7 @@ func TestValsetConfirmSelect(t *testing.T) {
 			name: "first and second valset confirms are valid",
 			key:  "/vc/b:" + evmAddress + ":" + signBytes.Hex(),
 			values: func() [][]byte {
-				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey)
+				signature, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc)
 				require.NoError(t, err)
 				vc1, _ := types.MarshalValsetConfirm(*types.NewValsetConfirm(
 					common.HexToAddress(evmAddress),
@@ -222,12 +236,17 @@ func TestDataCommitmentConfirmValidate(t *testing.T) {
 
 	evmAddress := "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
 	privateKey, _ := ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
 
 	nonce := uint64(10)
 	commitment := "1234"
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
-	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey)
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -308,12 +327,17 @@ func TestDataCommitmentConfirmSelect(t *testing.T) {
 
 	evmAddress := "0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488"
 	privateKey, _ := ethcrypto.HexToECDSA("da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9")
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(privateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
 
 	nonce := uint64(10)
 	commitment := "1234"
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), bCommitment)
-	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey)
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc)
 	require.NoError(t, err)
 
 	tests := []struct {

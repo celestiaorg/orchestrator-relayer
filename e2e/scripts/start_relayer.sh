@@ -40,15 +40,19 @@ fi
 # get the address from the `qgb_address.txt` file
 QGB_CONTRACT=$(cat /opt/qgb_address.txt)
 
+# import keys to relayer
+/bin/qgb relayer keys evm import ecdsa "${PRIVATE_KEY}" --passphrase 123
+
 # to give time for the bootstrappers to be up
 sleep 5s
 /bin/qgb relayer \
-  -d=${PRIVATE_KEY} \
-  -t=${TENDERMINT_RPC} \
-  -c=${CELESTIA_GRPC} \
-  -z=${EVM_CHAIN_ID} \
-  -e=${EVM_ENDPOINT} \
-  -a=${QGB_CONTRACT} \
-  -b=${P2P_BOOTSTRAPPERS} \
-  -p=${P2P_IDENTITY} \
-  -q=${P2P_LISTEN}
+  -d="${EVM_ADDRESS}" \
+  -t="${TENDERMINT_RPC}" \
+  -c="${CELESTIA_GRPC}" \
+  -z="${EVM_CHAIN_ID}" \
+  -e="${EVM_ENDPOINT}" \
+  -a="${QGB_CONTRACT}" \
+  -b="${P2P_BOOTSTRAPPERS}" \
+  -p="${P2P_IDENTITY}" \
+  -q="${P2P_LISTEN}" \
+  --passphrase=123
