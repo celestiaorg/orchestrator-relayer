@@ -1,9 +1,11 @@
 package testing
 
 import (
-	"crypto/ecdsa"
 	"testing"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	"github.com/stretchr/testify/require"
 
@@ -35,17 +37,22 @@ func NewRelayer(
 	tmQuerier := rpc.NewTmQuerier(node.CelestiaNetwork.RPCAddr, logger)
 	tmQuerier.WithClientConn(node.CelestiaNetwork.Client)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
-	evmClient := NewEVMClient(node.EVMChain.Key)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(celestiatestnode.NodeEVMPrivateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+	evmClient := NewEVMClient(ks, &acc)
 	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
 	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier)
 	return r
 }
 
-func NewEVMClient(key *ecdsa.PrivateKey) *evm.Client {
+func NewEVMClient(ks *keystore.KeyStore, acc *accounts.Account) *evm.Client {
 	logger := tmlog.NewNopLogger()
 	// specifying an empty RPC endpoint as we will not be testing the methods that require it.
 	// the simulated backend doesn't provide an RPC endpoint.
-	return evm.NewClient(logger, nil, key, "", 100000000)
+	return evm.NewClient(logger, nil, ks, acc, "", 100000000)
 }
 
 func NewOrchestrator(
@@ -63,7 +70,11 @@ func NewOrchestrator(
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	broadcaster := orchestrator.NewBroadcaster(node.DHTNetwork.DHTs[0])
 	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
-	orch, err := orchestrator.New(logger, appQuerier, tmQuerier, p2pQuerier, broadcaster, retrier, *celestiatestnode.NodeEVMPrivateKey)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(celestiatestnode.NodeEVMPrivateKey, "123")
 	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+	orch := orchestrator.New(logger, appQuerier, tmQuerier, p2pQuerier, broadcaster, retrier, ks, &acc)
 	return orch
 }

@@ -2,32 +2,26 @@ package evm
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"fmt"
 	"math/big"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	"github.com/pkg/errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcmn "github.com/ethereum/go-ethereum/common"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
 // TODO: make gas price configurable.
 type transactOpsBuilder func(ctx context.Context, client *ethclient.Client, gasLim uint64) (*bind.TransactOpts, error)
 
-func newTransactOptsBuilder(privKey *ecdsa.PrivateKey) transactOpsBuilder {
-	publicKey := privKey.Public()
-	publicKeyECDSA, ok := publicKey.(*ecdsa.PublicKey)
-	if !ok {
-		panic(fmt.Errorf("invalid public key; expected: %T, got: %T", &ecdsa.PublicKey{}, publicKey))
-	}
-
-	evmAddress := ethcrypto.PubkeyToAddress(*publicKeyECDSA)
+func newTransactOptsBuilder(ks *keystore.KeyStore, acc *accounts.Account) transactOpsBuilder {
 	return func(ctx context.Context, client *ethclient.Client, gasLim uint64) (*bind.TransactOpts, error) {
-		nonce, err := client.PendingNonceAt(ctx, evmAddress)
+		nonce, err := client.PendingNonceAt(ctx, acc.Address)
 		if err != nil {
 			return nil, err
 		}
@@ -37,7 +31,7 @@ func newTransactOptsBuilder(privKey *ecdsa.PrivateKey) transactOpsBuilder {
 			return nil, fmt.Errorf("failed to get Ethereum chain ID: %w", err)
 		}
 
-		auth, err := bind.NewKeyedTransactorWithChainID(privKey, ethChainID)
+		auth, err := bind.NewKeyStoreTransactorWithChainID(ks, *acc, ethChainID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create Ethereum transactor: %w", err)
 		}

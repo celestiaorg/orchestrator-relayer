@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	"github.com/ethereum/go-ethereum/crypto"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
@@ -59,7 +61,21 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dcNonce)), bCommitment)
 
-	signature1, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey1)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc1, err := ks.ImportECDSA(privateKey1, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc1, "123")
+	require.NoError(t, err)
+	acc2, err := ks.ImportECDSA(privateKey2, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc2, "123")
+	require.NoError(t, err)
+	acc3, err := ks.ImportECDSA(privateKey3, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc3, "123")
+	require.NoError(t, err)
+
+	signature1, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc1)
 	require.NoError(t, err)
 	// put a single confirm
 	dc1 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature1), ethAddr1)
@@ -84,7 +100,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
-	signature2, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey2)
+	signature2, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc2)
 	require.NoError(t, err)
 	// put the second confirm.
 	dc2 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature2), ethAddr2)
@@ -108,7 +124,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	assert.Contains(t, confirms, *dc1)
 	assert.Contains(t, confirms, *dc2)
 
-	signature3, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey3)
+	signature3, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc3)
 	require.NoError(t, err)
 	// put the third confirm.
 	dc3 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature3), ethAddr3)
@@ -160,10 +176,24 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 		Height: 10,
 	}
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc1, err := ks.ImportECDSA(privateKey1, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc1, "123")
+	require.NoError(t, err)
+	acc2, err := ks.ImportECDSA(privateKey2, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc2, "123")
+	require.NoError(t, err)
+	acc3, err := ks.ImportECDSA(privateKey3, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc3, "123")
+	require.NoError(t, err)
+
 	signBytes, err := previousValset.SignBytes()
 	require.NoError(t, err)
 
-	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
+	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc1)
 	require.NoError(t, err)
 
 	// put a single confirm
@@ -192,7 +222,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, confirms)
 
-	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey2)
+	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc2)
 	require.NoError(t, err)
 
 	// put the second confirm.
@@ -220,7 +250,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	assert.Contains(t, confirms, *vs1)
 	assert.Contains(t, confirms, *vs2)
 
-	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey3)
+	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc3)
 	require.NoError(t, err)
 
 	// put the third confirm.
@@ -263,7 +293,13 @@ func TestQueryValsetConfirmByEVMAddress(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, confirm)
 
-	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc1, err := ks.ImportECDSA(privateKey1, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc1, "123")
+	require.NoError(t, err)
+
+	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc1)
 	require.NoError(t, err)
 
 	// put a single confirm
@@ -300,7 +336,13 @@ func TestQueryDataCommitmentConfirmByEVMAddress(t *testing.T) {
 	require.NoError(t, err)
 	assert.Nil(t, confirm)
 
-	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey1)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc1, err := ks.ImportECDSA(privateKey1, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc1, "123")
+	require.NoError(t, err)
+
+	signature, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc1)
 	require.NoError(t, err)
 	// put a single confirm
 	dc := types.NewDataCommitmentConfirm(hex.EncodeToString(signature), ethAddr1)
@@ -344,8 +386,22 @@ func TestQueryValsetConfirms(t *testing.T) {
 		Height: 10,
 	}
 
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc1, err := ks.ImportECDSA(privateKey1, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc1, "123")
+	require.NoError(t, err)
+	acc2, err := ks.ImportECDSA(privateKey2, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc2, "123")
+	require.NoError(t, err)
+	acc3, err := ks.ImportECDSA(privateKey3, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc3, "123")
+	require.NoError(t, err)
+
 	signBytes, _ := valset.SignBytes()
-	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey1)
+	signature1, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc1)
 	require.NoError(t, err)
 
 	// put the confirms
@@ -356,7 +412,7 @@ func TestQueryValsetConfirms(t *testing.T) {
 		*vs1,
 	)
 	require.NoError(t, err)
-	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey2)
+	signature2, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc2)
 	require.NoError(t, err)
 	vs2 := types.NewValsetConfirm(ethAddr2, hex.EncodeToString(signature2))
 	err = network.DHTs[0].PutValsetConfirm(
@@ -365,7 +421,7 @@ func TestQueryValsetConfirms(t *testing.T) {
 		*vs2,
 	)
 	require.NoError(t, err)
-	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), privateKey3)
+	signature3, err := evm.NewEthereumSignature(signBytes.Bytes(), ks, acc3)
 	require.NoError(t, err)
 	vs3 := types.NewValsetConfirm(ethAddr3, hex.EncodeToString(signature3))
 	err = network.DHTs[0].PutValsetConfirm(
@@ -415,7 +471,21 @@ func TestQueryDataCommitmentConfirms(t *testing.T) {
 	bCommitment, _ := hex.DecodeString(commitment)
 	dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dcNonce)), bCommitment)
 
-	signature1, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey1)
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc1, err := ks.ImportECDSA(privateKey1, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc1, "123")
+	require.NoError(t, err)
+	acc2, err := ks.ImportECDSA(privateKey2, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc2, "123")
+	require.NoError(t, err)
+	acc3, err := ks.ImportECDSA(privateKey3, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc3, "123")
+	require.NoError(t, err)
+
+	signature1, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc1)
 	require.NoError(t, err)
 	// put the confirms
 	dc1 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature1), ethAddr1)
@@ -425,7 +495,7 @@ func TestQueryDataCommitmentConfirms(t *testing.T) {
 		*dc1,
 	)
 	require.NoError(t, err)
-	signature2, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey2)
+	signature2, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc2)
 	require.NoError(t, err)
 	dc2 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature2), ethAddr2)
 	err = network.DHTs[0].PutDataCommitmentConfirm(
@@ -434,7 +504,7 @@ func TestQueryDataCommitmentConfirms(t *testing.T) {
 		*dc2,
 	)
 	require.NoError(t, err)
-	signature3, err := evm.NewEthereumSignature(dataRootHash.Bytes(), privateKey3)
+	signature3, err := evm.NewEthereumSignature(dataRootHash.Bytes(), ks, acc3)
 	require.NoError(t, err)
 	dc3 := types.NewDataCommitmentConfirm(hex.EncodeToString(signature3), ethAddr3)
 	err = network.DHTs[0].PutDataCommitmentConfirm(

@@ -1,14 +1,11 @@
 package orchestrator
 
 import (
-	"crypto/ecdsa"
 	"encoding/hex"
 	"errors"
-	"fmt"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +13,7 @@ import (
 const (
 	celestiaChainIDFlag  = "celes-chain-id"
 	celestiaGRPCFlag     = "celes-grpc"
-	evmPrivateKeyFlag    = "evm-priv-key"
+	evmAccAddressFlag    = "evm-address"
 	tendermintRPCFlag    = "celes-http-rpc"
 	bootstrappersFlag    = "bootstrappers"
 	p2pListenAddressFlag = "p2p-listen-addr"
@@ -28,37 +25,35 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(tendermintRPCFlag, "t", "http://localhost:26657", "Specify the rest rpc address")
 	cmd.Flags().StringP(celestiaGRPCFlag, "c", "localhost:9090", "Specify the grpc address")
 	cmd.Flags().StringP(
-		evmPrivateKeyFlag,
+		evmAccAddressFlag,
 		"d",
 		"",
-		"Specify the ECDSA private key used to sign orchestrator commitments in hex",
+		"Specify the EVM account address to use for signing (Note: the private key should be in the keystore)",
 	)
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	cmd.Flags().String(base.FlagHome, "", "The qgb orchestrator home directory")
+	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
+
 	return cmd
 }
 
 type StartConfig struct {
 	*base.Config
 	celestiaChainID, celesGRPC, tendermintRPC string
-	evmPrivateKey                             *ecdsa.PrivateKey
+	evmAccAddress                             string
 	bootstrappers, p2pListenAddr              string
 	p2pIdentity                               crypto.PrivKey
 }
 
 func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
-	rawPrivateKey, err := cmd.Flags().GetString(evmPrivateKeyFlag)
+	evmAccAddr, err := cmd.Flags().GetString(evmAccAddressFlag)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if rawPrivateKey == "" {
-		return StartConfig{}, errors.New("private key flag required")
-	}
-	evmPrivKey, err := ethcrypto.HexToECDSA(rawPrivateKey)
-	if err != nil {
-		return StartConfig{}, fmt.Errorf("failed to hex-decode EVM ECDSA Private Key: %w", err)
+	if evmAccAddr == "" {
+		return StartConfig{}, errors.New("the evm account address should be specified")
 	}
 	chainID, err := cmd.Flags().GetString(celestiaChainIDFlag)
 	if err != nil {
@@ -103,9 +98,13 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 			return StartConfig{}, err
 		}
 	}
+	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	if err != nil {
+		return StartConfig{}, err
+	}
 
 	return StartConfig{
-		evmPrivateKey:   evmPrivKey,
+		evmAccAddress:   evmAccAddr,
 		celestiaChainID: chainID,
 		celesGRPC:       celesGRPC,
 		tendermintRPC:   tendermintRPC,
@@ -113,7 +112,8 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 		p2pIdentity:     identity,
 		p2pListenAddr:   p2pListenAddress,
 		Config: &base.Config{
-			Home: homeDir,
+			Home:       homeDir,
+			Passphrase: passphrase,
 		},
 	}, nil
 }

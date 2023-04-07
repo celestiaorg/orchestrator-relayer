@@ -2,9 +2,11 @@ package evm
 
 import (
 	"context"
-	"crypto/ecdsa"
 	"errors"
 	"math/big"
+
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	coregethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -20,11 +22,12 @@ import (
 const DefaultEVMGasLimit = uint64(25000000)
 
 type Client struct {
-	logger     tmlog.Logger
-	Wrapper    *wrapper.QuantumGravityBridge
-	PrivateKey *ecdsa.PrivateKey
-	EvmRPC     string
-	GasLimit   uint64
+	logger   tmlog.Logger
+	Wrapper  *wrapper.QuantumGravityBridge
+	Ks       *keystore.KeyStore
+	Acc      *accounts.Account
+	EvmRPC   string
+	GasLimit uint64
 }
 
 // NewClient Creates a new EVM Client that can be used to deploy the QGB contract and
@@ -33,16 +36,18 @@ type Client struct {
 func NewClient(
 	logger tmlog.Logger,
 	wrapper *wrapper.QuantumGravityBridge,
-	privateKey *ecdsa.PrivateKey,
+	ks *keystore.KeyStore,
+	acc *accounts.Account,
 	evmRPC string,
 	gasLimit uint64,
 ) *Client {
 	return &Client{
-		logger:     logger,
-		Wrapper:    wrapper,
-		PrivateKey: privateKey,
-		EvmRPC:     evmRPC,
-		GasLimit:   gasLimit,
+		logger:   logger,
+		Wrapper:  wrapper,
+		Ks:       ks,
+		Acc:      acc,
+		EvmRPC:   evmRPC,
+		GasLimit: gasLimit,
 	}
 }
 
@@ -165,7 +170,7 @@ func (ec *Client) SubmitDataRootTupleRoot(
 
 // NewTransactionOpts creates a new transaction Opts to be used when submitting transactions.
 func (ec *Client) NewTransactionOpts(ctx context.Context) (*bind.TransactOpts, error) {
-	builder := newTransactOptsBuilder(ec.PrivateKey)
+	builder := newTransactOptsBuilder(ec.Ks, ec.Acc)
 
 	ethClient, err := ethclient.Dial(ec.EvmRPC)
 	if err != nil {

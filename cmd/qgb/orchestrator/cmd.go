@@ -6,6 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
+	"golang.org/x/term"
+
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
 
 	"github.com/celestiaorg/orchestrator-relayer/store"
@@ -62,10 +67,7 @@ func Start() *cobra.Command {
 				NeedP2PKeyStore: false,
 			})
 			if !isInit {
-				logger.Info(
-					"provided path is not initiated. Please run the init command before running the orchestrator",
-				)
-				return nil
+				return store.ErrNotInited
 			}
 
 			ctx, cancel := context.WithCancel(cmd.Context())
@@ -171,15 +173,59 @@ func Start() *cobra.Command {
 			// creating the retrier
 			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
 
+			if !common.IsHexAddress(config.evmAccAddress) {
+				logger.Error("provided address is not a correct EVM address", "address", config.evmAccAddress)
+				return nil // should we return errors in these cases?
+			}
+
+			addr := common.HexToAddress(config.evmAccAddress)
+			if !s.EVMKeyStore.HasAddress(addr) {
+				logger.Info("account not found in keystore", "address", config.evmAccAddress)
+				return nil
+			}
+
+			logger.Info("loading EVM account", "address", addr.String())
+
+			var acc accounts.Account
+			for _, storeAcc := range s.EVMKeyStore.Accounts() {
+				if storeAcc.Address.String() == addr.String() {
+					acc = storeAcc
+				}
+			}
+
+			passphrase := config.Passphrase
+			// if the passphrase is not specified as a flag, ask for it.
+			if passphrase == "" {
+				logger.Info("please provide the account passphrase")
+				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				if err != nil {
+					return err
+				}
+				passphrase = string(bzPassphrase)
+			}
+
+			err = s.EVMKeyStore.Unlock(acc, passphrase)
+			if err != nil {
+				logger.Error("unable to load the EVM private key")
+				return err
+			}
+			defer func(EVMKeyStore *keystore.KeyStore, addr common.Address) {
+				err := EVMKeyStore.Lock(addr)
+				if err != nil {
+					panic(err)
+				}
+			}(s.EVMKeyStore, acc.Address)
+
 			// creating the orchestrator
-			orch, err := orchestrator.New(
+			orch := orchestrator.New(
 				logger,
 				appQuerier,
 				tmQuerier,
 				p2pQuerier,
 				broadcaster,
 				retrier,
-				*config.evmPrivateKey,
+				s.EVMKeyStore,
+				&acc,
 			)
 			if err != nil {
 				panic(err)
@@ -212,21 +258,18 @@ func Init() *cobra.Command {
 
 			logger := tmlog.NewTMLogger(os.Stdout)
 
-			isInit := store.IsInit(logger, config.home, store.InitOptions{
+			initOptions := store.InitOptions{
 				NeedDataStore:   true,
 				NeedEVMKeyStore: true,
 				NeedP2PKeyStore: false,
-			})
+			}
+			isInit := store.IsInit(logger, config.home, initOptions)
 			if isInit {
 				logger.Info("provided path is already initiated", "path", config.home)
 				return nil
 			}
 
-			err = store.Init(logger, config.home, store.InitOptions{
-				NeedDataStore:   true,
-				NeedEVMKeyStore: true,
-				NeedP2PKeyStore: false,
-			})
+			err = store.Init(logger, config.home, initOptions)
 			if err != nil {
 				return err
 			}

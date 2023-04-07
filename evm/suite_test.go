@@ -4,6 +4,8 @@ import (
 	"crypto/ecdsa"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
@@ -27,7 +29,14 @@ func (s *EVMTestSuite) SetupTest() {
 	s.VsPrivateKey = testPrivateKey
 	require.NoError(t, err)
 	s.Chain = qgbtesting.NewEVMChain(testPrivateKey)
-	s.Client = qgbtesting.NewEVMClient(testPrivateKey)
+
+	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
+	acc, err := ks.ImportECDSA(testPrivateKey, "123")
+	require.NoError(t, err)
+	err = ks.Unlock(acc, "123")
+	require.NoError(t, err)
+
+	s.Client = qgbtesting.NewEVMClient(ks, &acc)
 	s.InitVs, err = celestiatypes.NewValset(
 		1,
 		10,

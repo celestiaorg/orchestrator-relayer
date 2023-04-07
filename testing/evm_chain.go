@@ -21,7 +21,7 @@ type EVMChain struct {
 	Auth         *bind.TransactOpts
 	GenesisAlloc core.GenesisAlloc
 	Backend      *backends.SimulatedBackend
-	Key          *ecdsa.PrivateKey
+	Key          *ecdsa.PrivateKey // TODO provide the keystore directly here
 	ChainID      uint64
 }
 

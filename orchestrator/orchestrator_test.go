@@ -31,10 +31,10 @@ func (s *OrchestratorTestSuite) TestProcessDataCommitmentEvent() {
 	// retrieving the signature
 	confirm, err := s.Node.DHTNetwork.DHTs[0].GetDataCommitmentConfirm(
 		s.Node.Context,
-		p2p.GetDataCommitmentConfirmKey(2, s.Orchestrator.OrchEVMAddress.Hex(), dataRootTupleRoot.Hex()),
+		p2p.GetDataCommitmentConfirmKey(2, s.Orchestrator.EvmAccount.Address.Hex(), dataRootTupleRoot.Hex()),
 	)
 	require.NoError(t, err)
-	assert.Equal(t, s.Orchestrator.OrchEVMAddress.Hex(), confirm.EthAddress)
+	assert.Equal(t, s.Orchestrator.EvmAccount.Address.Hex(), confirm.EthAddress)
 }
 
 func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
@@ -47,7 +47,7 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 		10,
 		[]*celestiatypes.InternalBridgeValidator{{
 			Power:      10,
-			EVMAddress: s.Orchestrator.OrchEVMAddress,
+			EVMAddress: s.Orchestrator.EvmAccount.Address,
 		}},
 	)
 	require.NoError(t, err)
@@ -62,10 +62,10 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 	// retrieving the signature
 	confirm, err := s.Node.DHTNetwork.DHTs[0].GetValsetConfirm(
 		s.Node.Context,
-		p2p.GetValsetConfirmKey(2, s.Orchestrator.OrchEVMAddress.Hex(), signBytes.Hex()),
+		p2p.GetValsetConfirmKey(2, s.Orchestrator.EvmAccount.Address.Hex(), signBytes.Hex()),
 	)
 	require.NoError(t, err)
-	assert.Equal(t, s.Orchestrator.OrchEVMAddress.Hex(), confirm.EthAddress)
+	assert.Equal(t, s.Orchestrator.EvmAccount.Address.Hex(), confirm.EthAddress)
 }
 
 func TestValidatorPartOfValset(t *testing.T) {

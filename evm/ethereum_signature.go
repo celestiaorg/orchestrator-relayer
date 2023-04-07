@@ -1,7 +1,8 @@
 package evm
 
 import (
-	"crypto/ecdsa"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	"github.com/pkg/errors"
 
@@ -14,13 +15,16 @@ const (
 	signaturePrefix = "\x19Ethereum Signed Message:\n32"
 )
 
-// NewEthereumSignature creates a new signature over a given byte array.
-func NewEthereumSignature(hash []byte, privateKey *ecdsa.PrivateKey) ([]byte, error) {
-	if privateKey == nil {
-		return nil, errors.Wrap(celestiatypes.ErrEmpty, "private key")
+// NewEthereumSignature creates a new eip-191 signature over a given byte array.
+// hash: digest to be signed over.
+// ks: the keystore to use for the signature
+// acc: the account in the keystore to use for the signature
+func NewEthereumSignature(hash []byte, ks *keystore.KeyStore, acc accounts.Account) ([]byte, error) {
+	if ks == nil {
+		return nil, errors.Wrap(celestiatypes.ErrEmpty, "nil keystore")
 	}
 	protectedHash := crypto.Keccak256Hash([]uint8(signaturePrefix), hash)
-	return crypto.Sign(protectedHash.Bytes(), privateKey)
+	return ks.SignHash(acc, protectedHash.Bytes())
 }
 
 func EthAddressFromSignature(hash []byte, signature []byte) (common.Address, error) {
