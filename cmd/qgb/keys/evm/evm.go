@@ -1,11 +1,10 @@
 package evm
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"strings"
 
+	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"
@@ -41,7 +40,7 @@ func Add() *cobra.Command {
 		Short: "create a new EVM address",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := commandToServiceName(grandParentName)
+			serviceName, err := common2.CommandToServiceName(grandParentName)
 			if err != nil {
 				return err
 			}
@@ -104,7 +103,7 @@ func List() *cobra.Command {
 		Short: "list EVM addresses in key store",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := commandToServiceName(grandParentName)
+			serviceName, err := common2.CommandToServiceName(grandParentName)
 			if err != nil {
 				return err
 			}
@@ -154,7 +153,7 @@ func Delete() *cobra.Command {
 		Short: "delete an EVM addresses from the key store",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := commandToServiceName(grandParentName)
+			serviceName, err := common2.CommandToServiceName(grandParentName)
 			if err != nil {
 				return err
 			}
@@ -252,7 +251,7 @@ func ImportFile() *cobra.Command {
 		Short: "import an EVM address from a file",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Parent().Use
-			serviceName, err := commandToServiceName(grandParentName)
+			serviceName, err := common2.CommandToServiceName(grandParentName)
 			if err != nil {
 				return err
 			}
@@ -347,7 +346,7 @@ func ImportECDSA() *cobra.Command {
 		Short: "import an EVM address from an ECDSA private key",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Parent().Use
-			serviceName, err := commandToServiceName(grandParentName)
+			serviceName, err := common2.CommandToServiceName(grandParentName)
 			if err != nil {
 				return err
 			}
@@ -419,7 +418,7 @@ func Update() *cobra.Command {
 		Short: "update an EVM account passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := commandToServiceName(grandParentName)
+			serviceName, err := common2.CommandToServiceName(grandParentName)
 			if err != nil {
 				return err
 			}
@@ -503,17 +502,4 @@ func Update() *cobra.Command {
 		},
 	}
 	return keysNewPassphraseConfigFlags(&cmd)
-}
-
-func commandToServiceName(commandUsage string) (string, error) {
-	if strings.Contains(commandUsage, "relayer") {
-		return "relayer", nil
-	}
-	if strings.Contains(commandUsage, "orch") {
-		return "orchestrator", nil
-	}
-	if strings.Contains(commandUsage, "deploy") {
-		return "deployer", nil
-	}
-	return "", fmt.Errorf("unknown service %s", commandUsage)
 }
