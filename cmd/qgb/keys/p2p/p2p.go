@@ -229,7 +229,7 @@ func Import() *cobra.Command {
 func Delete() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "delete <nickname>",
-		Short: "deletes an Ed25519 P2P address from store",
+		Short: "delete an Ed25519 P2P private key from store",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			grandParentName := cmd.Parent().Parent().Parent().Use
