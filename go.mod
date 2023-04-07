@@ -16,10 +16,10 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tm-db v0.6.7 // indirect
-	golang.org/x/crypto v0.6.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0
+	golang.org/x/crypto v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	google.golang.org/grpc v1.54.0
 )
@@ -31,7 +31,7 @@ require (
 	github.com/ipfs/go-ds-badger2 v0.1.3
 	github.com/ipfs/go-ipfs-util v0.0.2
 	github.com/libp2p/go-libp2p v0.26.3
-	github.com/libp2p/go-libp2p-kad-dht v0.22.0
+	github.com/libp2p/go-libp2p-kad-dht v0.23.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/multiformats/go-multiaddr v0.9.0
 	github.com/tendermint/tendermint v0.34.24
@@ -116,6 +116,8 @@ require (
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
+	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
@@ -158,7 +160,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.12.2 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
-	github.com/ipfs/boxo v0.8.0-rc1 // indirect
+	github.com/ipfs/boxo v0.8.0 // indirect
 	github.com/ipfs/go-cid v0.4.0 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-log/v2 v2.5.1 // indirect
@@ -270,6 +272,8 @@ require (
 	github.com/zondax/ledger-go v0.14.1 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	go.opencensus.io v0.24.0 // indirect
+	go.opentelemetry.io/otel v1.14.0 // indirect
+	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.15.0 // indirect
 	go.uber.org/fx v1.18.2 // indirect
@@ -279,9 +283,10 @@ require (
 	golang.org/x/mod v0.8.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
+	gonum.org/v1/gonum v0.11.0 // indirect
 	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.2-0.20220831092852-f930b1dc76e8 // indirect
