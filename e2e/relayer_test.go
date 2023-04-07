@@ -36,8 +36,12 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
+
+	// force the connection to the DHT to start the orchestrator
+	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
+	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
@@ -89,8 +93,12 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
+
+	// force the connection to the DHT to start the orchestrator
+	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
+	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
@@ -139,8 +147,12 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
+
+	// force the connection to the DHT to start the orchestrator
+	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
+	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
