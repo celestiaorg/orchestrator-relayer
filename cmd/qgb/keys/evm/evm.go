@@ -75,7 +75,7 @@ func Add() *cobra.Command {
 				}
 			}(s, logger)
 
-			passphrase := config.Passphrase
+			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide a passphrase for your account")
@@ -204,7 +204,7 @@ func Delete() *cobra.Command {
 				}
 			}
 
-			passphrase := config.Passphrase
+			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -305,7 +305,7 @@ func ImportFile() *cobra.Command {
 				return err
 			}
 
-			passphrase := config.Passphrase
+			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -383,7 +383,7 @@ func ImportECDSA() *cobra.Command {
 
 			logger.Info("importing account")
 
-			passphrase := config.Passphrase
+			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")
@@ -470,7 +470,7 @@ func Update() *cobra.Command {
 				}
 			}
 
-			passphrase := config.Passphrase
+			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the address passphrase")

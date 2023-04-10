@@ -32,7 +32,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(p2pNicknameFlag, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	cmd.Flags().String(base.FlagHome, "", "The qgb orchestrator home directory")
-	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd
 }
@@ -88,7 +88,7 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 			return StartConfig{}, err
 		}
 	}
-	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
 	if err != nil {
 		return StartConfig{}, err
 	}
@@ -102,8 +102,8 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 		p2pNickname:     p2pNickname,
 		p2pListenAddr:   p2pListenAddress,
 		Config: &base.Config{
-			Home:       homeDir,
-			Passphrase: passphrase,
+			Home:          homeDir,
+			EVMPassphrase: passphrase,
 		},
 	}, nil
 }

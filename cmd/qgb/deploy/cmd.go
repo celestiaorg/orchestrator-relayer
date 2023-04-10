@@ -97,7 +97,7 @@ func Command() *cobra.Command {
 				}
 			}
 
-			passphrase := config.Passphrase
+			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				logger.Info("please provide the account passphrase")
