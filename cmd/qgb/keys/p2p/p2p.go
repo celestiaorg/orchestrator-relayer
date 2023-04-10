@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/ipfs/boxo/keystore"
+
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	util "github.com/ipfs/go-ipfs-util"
@@ -79,17 +81,15 @@ func Add() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				nickname = string(rune(len(k)))
+				nickname = fmt.Sprintf("%d", len(k))
 			} else {
 				nickname = args[0]
 			}
 
-			fmt.Println("generating a new Ed25519 private key", "nickname", nickname)
+			logger.Info("generating a new Ed25519 private key", "nickname", nickname)
 
-			sr := util.NewTimeSeededRand()
-			priv, _, err := crypto.GenerateEd25519Key(sr)
+			priv, err := GenerateNewEd25519()
 			if err != nil {
-				fmt.Println(err.Error())
 				return err
 			}
 
@@ -103,6 +103,15 @@ func Add() *cobra.Command {
 		},
 	}
 	return keysConfigFlags(&cmd)
+}
+
+func GenerateNewEd25519() (crypto.PrivKey, error) {
+	sr := util.NewTimeSeededRand()
+	priv, _, err := crypto.GenerateEd25519Key(sr)
+	if err != nil {
+		return nil, err
+	}
+	return priv, nil
 }
 
 func List() *cobra.Command {
@@ -280,4 +289,37 @@ func Delete() *cobra.Command {
 		},
 	}
 	return keysConfigFlags(&cmd)
+}
+
+// GetP2PKeyOrGenerateNewOne takes a nickname and either returns its corresponding private key, if it
+// doesn't exist, return the first key in the store, if it doesn't exist, create a new key, store it in the
+// keystore, then return it.
+func GetP2PKeyOrGenerateNewOne(ks *keystore.FSKeystore, nickname string) (crypto.PrivKey, error) {
+	// if the key name is not empty, then we try to get its corresponding key
+	if nickname != "" {
+		// return the corresponding key or return an error
+		return ks.Get(nickname)
+	}
+	// if not, check if the keystore has any other keys
+	nicknames, err := ks.List()
+	if err != nil {
+		return nil, err
+	}
+	// if so, get the first key
+	if len(nicknames) != 0 {
+		return ks.Get(nicknames[0])
+	}
+	// if not, generate a new key
+	priv, err := GenerateNewEd25519()
+	if err != nil {
+		return nil, err
+	}
+	// store it under the name "0"
+	newKeyNickname := "0"
+	err = ks.Put(newKeyNickname, priv)
+	if err != nil {
+		return nil, err
+	}
+	// return the newly generated key
+	return ks.Get(newKeyNickname)
 }

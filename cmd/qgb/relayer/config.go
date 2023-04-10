@@ -1,13 +1,10 @@
 package relayer
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
-
-	"github.com/libp2p/go-libp2p/core/crypto"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/spf13/cobra"
@@ -25,7 +22,7 @@ const (
 	evmGasLimitFlag      = "evm-gas-limit"
 	bootstrappersFlag    = "bootstrappers"
 	p2pListenAddressFlag = "p2p-listen-addr"
-	p2pIdentityFlag      = "p2p-priv-key"
+	p2pNicknameFlag      = "p2p-nickname"
 )
 
 func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
@@ -37,7 +34,7 @@ func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(contractAddressFlag, "a", "", "Specify the contract at which the qgb is deployed")
 	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
-	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
+	cmd.Flags().StringP(p2pNicknameFlag, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
 	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
@@ -53,7 +50,7 @@ type Config struct {
 	contractAddr                     ethcmn.Address
 	evmGasLimit                      uint64
 	bootstrappers, p2pListenAddr     string
-	p2pIdentity                      crypto.PrivKey
+	p2pNickname                      string
 }
 
 func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
@@ -103,15 +100,7 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	hexIdentity, err := cmd.Flags().GetString(p2pIdentityFlag)
-	if err != nil {
-		return Config{}, err
-	}
-	bIdentity, err := hex.DecodeString(hexIdentity)
-	if err != nil {
-		return Config{}, err
-	}
-	identity, err := crypto.UnmarshalEd25519PrivateKey(bIdentity)
+	p2pNickname, err := cmd.Flags().GetString(p2pNicknameFlag)
 	if err != nil {
 		return Config{}, err
 	}
@@ -141,7 +130,7 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 		evmGasLimit:   evmGasLimit,
 		bootstrappers: bootstrappers,
 		p2pListenAddr: p2pListenAddress,
-		p2pIdentity:   identity,
+		p2pNickname:   p2pNickname,
 		Config: &base.Config{
 			Home:       homeDir,
 			Passphrase: passphrase,

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -88,61 +89,16 @@ func Command() *cobra.Command {
 				}
 			}()
 
-			// creating the host
-			h, err := p2p.CreateHost(config.p2pListenAddr, config.p2pIdentity)
-			if err != nil {
-				return err
-			}
-			if err != nil {
-				return err
-			}
-			logger.Info(
-				"created host",
-				"ID",
-				h.ID().String(),
-				"Addresses",
-				h.Addrs(),
-			)
-			// creating the data store
-			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
-
-			// get the bootstrappers
-			var bootstrappers []peer.AddrInfo
-			if config.bootstrappers == "" {
-				bootstrappers = nil
-			} else {
-				bs := strings.Split(config.bootstrappers, ",")
-				bootstrappers, err = helpers.ParseAddrInfos(logger, bs)
-				if err != nil {
-					return err
-				}
-			}
-
-			// creating the dht
-			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, logger)
-			if err != nil {
-				return err
-			}
-
-			// wait for the dht to have some peers
-			err = dht.WaitForPeers(ctx, 2*time.Minute, 10*time.Second, 1)
-			if err != nil {
-				return err
-			}
-
-			// creating the p2p querier
-			p2pQuerier := p2p.NewQuerier(dht, logger)
-			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
-
 			// checking if the provided home is already initiated
-			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
+			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true, NeedP2PKeyStore: true})
 			if !isInit {
+				// TODO we don't need to manually initialize the p2p keystore
 				logger.Info("please initialize the EVM keystore using the `relayer keys add/import` command")
 				return store.ErrNotInited
 			}
 
 			// creating the data store
-			openOptions := store.OpenOptions{HasEVMKeyStore: true}
+			openOptions := store.OpenOptions{HasEVMKeyStore: true, HasP2PKeyStore: true}
 			s, err := store.OpenStore(logger, config.Home, openOptions)
 			if err != nil {
 				return err
@@ -196,6 +152,58 @@ func Command() *cobra.Command {
 					panic(err)
 				}
 			}(s.EVMKeyStore, acc.Address)
+
+			// get the p2p private key or generate a new one
+			privKey, err := common2.GetP2PKeyOrGenerateNewOne(s.P2PKeyStore, config.p2pNickname)
+			if err != nil {
+				return err
+			}
+
+			// creating the host
+			h, err := p2p.CreateHost(config.p2pListenAddr, privKey)
+			if err != nil {
+				return err
+			}
+			if err != nil {
+				return err
+			}
+			logger.Info(
+				"created host",
+				"ID",
+				h.ID().String(),
+				"Addresses",
+				h.Addrs(),
+			)
+			// creating the data store
+			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
+
+			// get the bootstrappers
+			var bootstrappers []peer.AddrInfo
+			if config.bootstrappers == "" {
+				bootstrappers = nil
+			} else {
+				bs := strings.Split(config.bootstrappers, ",")
+				bootstrappers, err = helpers.ParseAddrInfos(logger, bs)
+				if err != nil {
+					return err
+				}
+			}
+
+			// creating the dht
+			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, logger)
+			if err != nil {
+				return err
+			}
+
+			// wait for the dht to have some peers
+			err = dht.WaitForPeers(ctx, 2*time.Minute, 10*time.Second, 1)
+			if err != nil {
+				return err
+			}
+
+			// creating the p2p querier
+			p2pQuerier := p2p.NewQuerier(dht, logger)
+			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
 
 			relay := relayer.NewRelayer(
 				tmQuerier,
