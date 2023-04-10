@@ -61,7 +61,7 @@ do
 done
 
 # import keys to deployer
-/bin/qgb deploy keys evm import ecdsa "${PRIVATE_KEY}" --passphrase=123
+/bin/qgb deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm-passphrase=123
 
 echo "deploying QGB contract..."
 
@@ -72,7 +72,7 @@ echo "deploying QGB contract..."
   -z "${EVM_CHAIN_ID}" \
   -n "${STARTING_NONCE}" \
   -e "${EVM_ENDPOINT}" \
-  --passphrase=123 > /opt/output
+  --evm-passphrase=123 > /opt/output
 
 echo $(cat /opt/output)
 
