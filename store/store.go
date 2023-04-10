@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	keystore2 "github.com/ipfs/boxo/keystore"
+
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	"github.com/celestiaorg/orchestrator-relayer/store/fslock"
@@ -17,8 +19,11 @@ type Store struct {
 	// Datastore provides a Datastore - a KV store for dht p2p data to be stored on disk.
 	DataStore datastore.Batching
 
-	// EVMKeyStore provides a keystore for EVM addresses
+	// EVMKeyStore provides a keystore for EVM private keys
 	EVMKeyStore *keystore.KeyStore
+
+	// P2PKeyStore provides a keystore for P2P private keys
+	P2PKeyStore *keystore2.FSKeystore
 
 	// Path the path to the qgb storage root
 	Path string
@@ -74,14 +79,29 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 		}
 	}
 
-	var ks *keystore.KeyStore
+	var evmKs *keystore.KeyStore
 	if options.HasEVMKeyStore {
-		ks = keystore.NewKeyStore(evmKeyStorePath(path), keystore.StandardScryptN, keystore.StandardScryptP)
+		evmKs = keystore.NewKeyStore(evmKeyStorePath(path), keystore.StandardScryptN, keystore.StandardScryptP)
+	}
+
+	var p2pKs *keystore2.FSKeystore
+	if options.HasP2PKeyStore {
+		p2pKs, err = keystore2.NewFSKeystore(p2pKeyStorePath(path))
+		if err != nil {
+			logger.Error("couldn't open p2p keystore", "path", p2pKeyStorePath(path))
+			return nil, err
+		}
 	}
 
 	logger.Info("successfully opened store", "path", path)
 
-	return &Store{dirLock: flock, Path: path, DataStore: ds, EVMKeyStore: ks}, nil
+	return &Store{
+		dirLock:     flock,
+		Path:        path,
+		DataStore:   ds,
+		EVMKeyStore: evmKs,
+		P2PKeyStore: p2pKs,
+	}, nil
 }
 
 // Close closes an opened store and removes the lock file.
