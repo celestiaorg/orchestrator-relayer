@@ -13,6 +13,7 @@ WORKDIR /opt/celestia-app
 RUN sed -i 's#time.Second#time.Millisecond#g' pkg/appconsts/consensus_consts.go
 RUN sed -i 's#10#1#g' pkg/appconsts/consensus_consts.go
 RUN sed -i 's#TimeoutPropose[[:space:]]=[[:space:]]time.Millisecond[[:space:]]\*[[:space:]]1#TimeoutPropose = time.Second#g' pkg/appconsts/consensus_consts.go
+RUN sed -i 's#time.Millisecond#50*time.Millisecond#g' pkg/appconsts/consensus_consts.go
 RUN make build
 
 # final image
