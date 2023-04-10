@@ -34,7 +34,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	)
 	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	cmd.Flags().String(base.FlagHome, "", "The qgb deployer home directory")
-	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd
 }
@@ -87,7 +87,7 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 			return deployConfig{}, err
 		}
 	}
-	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
 	if err != nil {
 		return deployConfig{}, err
 	}
@@ -100,8 +100,8 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 		startingNonce: startingNonce,
 		evmGasLimit:   evmGasLimit,
 		Config: &base.Config{
-			Home:       homeDir,
-			Passphrase: passphrase,
+			Home:          homeDir,
+			EVMPassphrase: passphrase,
 		},
 	}, nil
 }

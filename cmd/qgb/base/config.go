@@ -9,15 +9,15 @@ import (
 )
 
 const (
-	FlagHome       = cli.HomeFlag
-	FlagPassphrase = "passphrase"
+	FlagHome          = cli.HomeFlag
+	FlagEVMPassphrase = "evm-passphrase"
 )
 
 // Config contains the base config that all commands should have.
 // Logger related configuration will be added later.
 type Config struct {
-	Home       string
-	Passphrase string
+	Home          string
+	EVMPassphrase string
 }
 
 // DefaultServicePath constructs the default qgb store path for

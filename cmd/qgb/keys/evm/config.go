@@ -13,7 +13,7 @@ const (
 func keysConfigFlags(cmd *cobra.Command) *cobra.Command {
 	// TODO default value should be given
 	cmd.Flags().String(base.FlagHome, "", "The qgb evm keys home directory")
-	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 	return cmd
 }
 
@@ -33,15 +33,15 @@ func parseKeysConfigFlags(cmd *cobra.Command, serviceName string) (KeysConfig, e
 			return KeysConfig{}, err
 		}
 	}
-	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
 	if err != nil {
 		return KeysConfig{}, err
 	}
 
 	return KeysConfig{
 		Config: &base.Config{
-			Home:       homeDir,
-			Passphrase: passphrase,
+			Home:          homeDir,
+			EVMPassphrase: passphrase,
 		},
 	}, nil
 }
@@ -49,8 +49,8 @@ func parseKeysConfigFlags(cmd *cobra.Command, serviceName string) (KeysConfig, e
 func keysNewPassphraseConfigFlags(cmd *cobra.Command) *cobra.Command {
 	// TODO default value should be given
 	cmd.Flags().String(base.FlagHome, "", "The qgb evm keys home directory")
-	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
-	cmd.Flags().String(FlagNewPassphrase, "", "the account new passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(FlagNewPassphrase, "", "the evm account new passphrase (if not specified as a flag, it will be asked interactively)")
 	return cmd
 }
 
@@ -71,7 +71,7 @@ func parseKeysNewPassphraseConfigFlags(cmd *cobra.Command, serviceName string) (
 			return KeysNewPassphraseConfig{}, err
 		}
 	}
-	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
 	if err != nil {
 		return KeysNewPassphraseConfig{}, err
 	}
@@ -82,7 +82,7 @@ func parseKeysNewPassphraseConfigFlags(cmd *cobra.Command, serviceName string) (
 	}
 
 	return KeysNewPassphraseConfig{
-		Config:        &base.Config{Home: homeDir, Passphrase: passphrase},
+		Config:        &base.Config{Home: homeDir, EVMPassphrase: passphrase},
 		newPassphrase: newPassphrase,
 	}, nil
 }

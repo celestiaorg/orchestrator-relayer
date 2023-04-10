@@ -40,7 +40,7 @@ func addRelayerFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
-	cmd.Flags().String(base.FlagPassphrase, "", "the account passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd
 }
@@ -126,7 +126,7 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 			return Config{}, err
 		}
 	}
-	passphrase, err := cmd.Flags().GetString(base.FlagPassphrase)
+	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
 	if err != nil {
 		return Config{}, err
 	}
@@ -143,8 +143,8 @@ func parseRelayerFlags(cmd *cobra.Command) (Config, error) {
 		p2pListenAddr: p2pListenAddress,
 		p2pIdentity:   identity,
 		Config: &base.Config{
-			Home:       homeDir,
-			Passphrase: passphrase,
+			Home:          homeDir,
+			EVMPassphrase: passphrase,
 		},
 	}, nil
 }
