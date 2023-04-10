@@ -20,7 +20,7 @@ const (
 	evmRPCFlag           = "evm-rpc"
 	contractAddressFlag  = "contract-address"
 	evmGasLimitFlag      = "evm-gas-limit"
-	bootstrappersFlag    = "bootstrappers"
+	bootstrappersFlag    = "p2p-bootstrappers"
 	p2pListenAddressFlag = "p2p-listen-addr"
 	p2pNicknameFlag      = "p2p-nickname"
 )
