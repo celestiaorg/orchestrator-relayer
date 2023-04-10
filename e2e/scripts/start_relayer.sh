@@ -41,7 +41,7 @@ fi
 QGB_CONTRACT=$(cat /opt/qgb_address.txt)
 
 # import keys to relayer
-/bin/qgb relayer keys evm import ecdsa "${PRIVATE_KEY}" --passphrase 123
+/bin/qgb relayer keys evm import ecdsa "${PRIVATE_KEY}" --evm-passphrase 123
 
 # to give time for the bootstrappers to be up
 sleep 5s
@@ -55,4 +55,4 @@ sleep 5s
   -b="${P2P_BOOTSTRAPPERS}" \
   -p="${P2P_IDENTITY}" \
   -q="${P2P_LISTEN}" \
-  --passphrase=123
+  --evm-passphrase=123
