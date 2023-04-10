@@ -66,9 +66,10 @@ func Start() *cobra.Command {
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{
 				NeedDataStore:   true,
 				NeedEVMKeyStore: true,
-				NeedP2PKeyStore: false,
+				NeedP2PKeyStore: true,
 			})
 			if !isInit {
+				logger.Info("please initialize the orchestrator using `qgb orchestrator init` command")
 				return store.ErrNotInited
 			}
 
@@ -269,7 +270,7 @@ func Init() *cobra.Command {
 			initOptions := store.InitOptions{
 				NeedDataStore:   true,
 				NeedEVMKeyStore: true,
-				NeedP2PKeyStore: false,
+				NeedP2PKeyStore: true,
 			}
 			isInit := store.IsInit(logger, config.home, initOptions)
 			if isInit {

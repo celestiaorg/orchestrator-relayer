@@ -6,7 +6,7 @@ import (
 )
 
 func CommandToServiceName(commandUsage string) (string, error) {
-	if strings.Contains(commandUsage, "relayer") {
+	if strings.Contains(commandUsage, "rel") {
 		return "relayer", nil
 	}
 	if strings.Contains(commandUsage, "orch") {

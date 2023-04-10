@@ -34,11 +34,65 @@ import (
 )
 
 func Command() *cobra.Command {
+	orchCmd := &cobra.Command{
+		Use:          "relayer",
+		Aliases:      []string{"rel"},
+		Short:        "QGB relayer that relays signatures to the target EVM chain",
+		SilenceUsage: true,
+	}
+
+	orchCmd.AddCommand(
+		Start(),
+		Init(),
+		keys.Command(),
+	)
+
+	orchCmd.SetHelpCommand(&cobra.Command{})
+
+	return orchCmd
+}
+
+// Init initializes the orchestrator store and creates necessary files.
+func Init() *cobra.Command {
+	cmd := cobra.Command{
+		Use:   "init",
+		Short: "Initialize the QGB relayer store. Passed flags have persisted effect.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parseInitFlags(cmd)
+			if err != nil {
+				return err
+			}
+
+			logger := tmlog.NewTMLogger(os.Stdout)
+
+			initOptions := store.InitOptions{
+				NeedDataStore:   false,
+				NeedEVMKeyStore: true,
+				NeedP2PKeyStore: true,
+			}
+			isInit := store.IsInit(logger, config.home, initOptions)
+			if isInit {
+				logger.Info("provided path is already initiated", "path", config.home)
+				return nil
+			}
+
+			err = store.Init(logger, config.home, initOptions)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	return addInitFlags(&cmd)
+}
+
+func Start() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "relayer <flags>",
+		Use:   "start <flags>",
 		Short: "Runs the QGB relayer to submit attestations to the target EVM chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseRelayerFlags(cmd)
+			config, err := parseRelayerStartFlags(cmd)
 			if err != nil {
 				return err
 			}
@@ -93,7 +147,7 @@ func Command() *cobra.Command {
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true, NeedP2PKeyStore: true})
 			if !isInit {
 				// TODO we don't need to manually initialize the p2p keystore
-				logger.Info("please initialize the EVM keystore using the `relayer keys add/import` command")
+				logger.Info("please initialize the relayer using `qgb relayer init` command")
 				return store.ErrNotInited
 			}
 
@@ -232,6 +286,5 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
-	command.AddCommand(keys.Command())
-	return addRelayerFlags(command)
+	return addRelayerStartFlags(command)
 }
