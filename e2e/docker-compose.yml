@@ -97,7 +97,6 @@ services:
       - TENDERMINT_RPC=tcp://core1:26657
       - CELESTIA_GRPC=core1:9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
-      - P2P_IDENTITY=59502b238724468db87db4db7b60f9597df24f97c979ab3fc5ca68a9a14bcf2e12b58932bcdbaed5e62d1ff8122e48060f7ceeead4340ba0d313e8822d7d7f5f
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
     entrypoint: [
       "/bin/bash"
@@ -152,7 +151,6 @@ services:
       - TENDERMINT_RPC=tcp://core2:26657
       - CELESTIA_GRPC=core2:9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
-      - P2P_IDENTITY=b2d4503afe57d8311096a749161ad13eae407c0ef54b5cfe381949df7a80c8d463f11e56c2fd0fd388cebd9fed8eeb10d90a13c00afb9a4ca31e1f256be42ff7
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
     entrypoint: [
       "/bin/bash"
@@ -207,7 +205,6 @@ services:
       - TENDERMINT_RPC=tcp://core3:26657
       - CELESTIA_GRPC=core3:9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
-      - P2P_IDENTITY=02f11413424260d45059887485959150218f35f5f07cd3060ad32ef4b4477ce67bb69c740bffe6082ab1a8289fd51737d571c49f2724aaff0f812589ab7f0da7
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
     entrypoint: [
       "/bin/bash"
@@ -281,7 +278,6 @@ services:
       - EVM_ENDPOINT=http://ganache:8545
       - STARTING_NONCE=earliest
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
-      - P2P_IDENTITY=b4cc2c01ed9d1413e3bee3366f8f95bceb39e6c6bb25db3e4cba64179913f32cd8c5063b96df7b85a7235ec80888b8dd0690e94d5d4d8afda5dd7a4068d80739
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
 #      set the following environment variable to some value
 #      if you want to relay to an existing QGB contract
