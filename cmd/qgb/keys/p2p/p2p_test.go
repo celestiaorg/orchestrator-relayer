@@ -16,12 +16,12 @@ func TestGetP2PKeyOrGenerateNewOne(t *testing.T) {
 
 	nickname := "test"
 	// test non-existing nickname
-	priv, err := p2p.GetP2PKeyOrGenerateNewOne(ks, nickname)
+	_, err = p2p.GetP2PKeyOrGenerateNewOne(ks, nickname)
 	// because the key is still not added
 	assert.Error(t, err)
 
 	// test empty nickname
-	priv, err = p2p.GetP2PKeyOrGenerateNewOne(ks, "")
+	priv, err := p2p.GetP2PKeyOrGenerateNewOne(ks, "")
 	// should create a new key with nickname 0
 	assert.NoError(t, err)
 	assert.NotNil(t, priv)
