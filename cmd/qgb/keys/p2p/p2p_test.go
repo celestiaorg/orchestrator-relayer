@@ -1,11 +1,12 @@
 package p2p_test
 
 import (
+	"testing"
+
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
 	"github.com/ipfs/boxo/keystore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGetP2PKeyOrGenerateNewOne(t *testing.T) {
