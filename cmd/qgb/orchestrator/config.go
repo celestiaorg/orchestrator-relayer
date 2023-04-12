@@ -1,12 +1,10 @@
 package orchestrator
 
 import (
-	"encoding/hex"
 	"errors"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/spf13/cobra"
 )
 
@@ -15,9 +13,9 @@ const (
 	celestiaGRPCFlag     = "celes-grpc"
 	evmAccAddressFlag    = "evm-address"
 	tendermintRPCFlag    = "celes-http-rpc"
-	bootstrappersFlag    = "bootstrappers"
+	bootstrappersFlag    = "p2p-bootstrappers"
 	p2pListenAddressFlag = "p2p-listen-addr"
-	p2pIdentityFlag      = "p2p-priv-key"
+	p2pNicknameFlag      = "p2p-nickname"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -31,7 +29,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 		"Specify the EVM account address to use for signing (Note: the private key should be in the keystore)",
 	)
 	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
-	cmd.Flags().StringP(p2pIdentityFlag, "p", "", "Ed25519 private key in hex format (without 0x) for the p2p peer identity. Use the generate command to generate a new one")
+	cmd.Flags().StringP(p2pNicknameFlag, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	cmd.Flags().String(base.FlagHome, "", "The qgb orchestrator home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
@@ -44,7 +42,7 @@ type StartConfig struct {
 	celestiaChainID, celesGRPC, tendermintRPC string
 	evmAccAddress                             string
 	bootstrappers, p2pListenAddr              string
-	p2pIdentity                               crypto.PrivKey
+	p2pNickname                               string
 }
 
 func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
@@ -75,15 +73,7 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	if err != nil {
 		return StartConfig{}, err
 	}
-	hexIdentity, err := cmd.Flags().GetString(p2pIdentityFlag)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	bIdentity, err := hex.DecodeString(hexIdentity)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	identity, err := crypto.UnmarshalEd25519PrivateKey(bIdentity)
+	p2pNickname, err := cmd.Flags().GetString(p2pNicknameFlag)
 	if err != nil {
 		return StartConfig{}, err
 	}
@@ -109,7 +99,7 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 		celesGRPC:       celesGRPC,
 		tendermintRPC:   tendermintRPC,
 		bootstrappers:   bootstrappers,
-		p2pIdentity:     identity,
+		p2pNickname:     p2pNickname,
 		p2pListenAddr:   p2pListenAddress,
 		Config: &base.Config{
 			Home:          homeDir,

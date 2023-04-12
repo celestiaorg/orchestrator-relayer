@@ -5,10 +5,10 @@
 # check if environment variables are set
 if [[ -z "${MONIKER}" || -z "${PRIVATE_KEY}" ]] || \
    [[ -z "${TENDERMINT_RPC}" || -z "${CELESTIA_GRPC}" ]] || \
-   [[ -z "${P2P_IDENTITY}" || -z "${P2P_LISTEN}" ]]
+   [[ -z "${P2P_LISTEN}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "MONIKER, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, P2P_IDENTITY, P2P_LISTEN variables"
+  echo "MONIKER, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, P2P_LISTEN variables"
   exit 1
 fi
 
@@ -46,26 +46,27 @@ done
 # start orchestrator
 if [[ -z "${P2P_BOOTSTRAPPERS}" ]]
 then
+  # import the p2p key to use
+  /bin/qgb orchestrator keys p2p import key "${P2P_IDENTITY}"
+
   /bin/qgb orchestrator start \
-    -p=/opt \
     -x=qgb-e2e \
     -d="${EVM_ADDRESS}" \
     -t="${TENDERMINT_RPC}" \
     -c="${CELESTIA_GRPC}" \
-    -p="${P2P_IDENTITY}" \
+    -p=key \
     -q="${P2P_LISTEN}" \
     --evm-passphrase=123
 else
   # to give time for the bootstrappers to be up
   sleep 5s
+
   /bin/qgb orchestrator start \
-    -p=/opt \
     -x=qgb-e2e \
     -d="${EVM_ADDRESS}" \
     -t="${TENDERMINT_RPC}" \
     -c="${CELESTIA_GRPC}" \
     -b="${P2P_BOOTSTRAPPERS}" \
-    -p="${P2P_IDENTITY}" \
     -q="${P2P_LISTEN}"\
     --evm-passphrase=123
 fi

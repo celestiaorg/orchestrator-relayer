@@ -7,10 +7,10 @@
 if [[ -z "${EVM_CHAIN_ID}" || -z "${PRIVATE_KEY}" ]] || \
    [[ -z "${TENDERMINT_RPC}" || -z "${CELESTIA_GRPC}" ]] || \
    [[ -z "${EVM_ENDPOINT}" || -z "${P2P_BOOTSTRAPPERS}" ]] || \
-   [[ -z "${P2P_IDENTITY}" || -z "${P2P_LISTEN}" ]]
+   [[ -z "${P2P_LISTEN}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "EVM_CHAIN_ID, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, EVM_ENDPOINT, P2P_BOOTSTRAPPERS, P2P_IDENTITY, P2P_LISTEN variables"
+  echo "EVM_CHAIN_ID, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, EVM_ENDPOINT, P2P_BOOTSTRAPPERS, P2P_LISTEN variables"
   exit 1
 fi
 
@@ -40,12 +40,15 @@ fi
 # get the address from the `qgb_address.txt` file
 QGB_CONTRACT=$(cat /opt/qgb_address.txt)
 
+# init the relayer
+/bin/qgb relayer init
+
 # import keys to relayer
 /bin/qgb relayer keys evm import ecdsa "${PRIVATE_KEY}" --evm-passphrase 123
 
 # to give time for the bootstrappers to be up
 sleep 5s
-/bin/qgb relayer \
+/bin/qgb relayer start \
   -d="${EVM_ADDRESS}" \
   -t="${TENDERMINT_RPC}" \
   -c="${CELESTIA_GRPC}" \
@@ -53,6 +56,5 @@ sleep 5s
   -e="${EVM_ENDPOINT}" \
   -a="${QGB_CONTRACT}" \
   -b="${P2P_BOOTSTRAPPERS}" \
-  -p="${P2P_IDENTITY}" \
   -q="${P2P_LISTEN}" \
   --evm-passphrase=123

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
@@ -64,9 +66,10 @@ func Start() *cobra.Command {
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{
 				NeedDataStore:   true,
 				NeedEVMKeyStore: true,
-				NeedP2PKeyStore: false,
+				NeedP2PKeyStore: true,
 			})
 			if !isInit {
+				logger.Info("please initialize the orchestrator using `qgb orchestrator init` command")
 				return store.ErrNotInited
 			}
 
@@ -105,25 +108,12 @@ func Start() *cobra.Command {
 				}
 			}()
 
-			// creating the host
-			h, err := p2p.CreateHost(config.p2pListenAddr, config.p2pIdentity)
-			if err != nil {
-				return err
-			}
-			logger.Info(
-				"created host",
-				"ID",
-				h.ID().String(),
-				"Addresses",
-				h.Addrs(),
-			)
-
 			// creating the data store
 			openOptions := store.OpenOptions{
 				HasDataStore:   true,
 				BadgerOptions:  store.DefaultBadgerOptions(config.Home),
 				HasEVMKeyStore: true,
-				HasP2PKeyStore: false,
+				HasP2PKeyStore: true,
 			}
 			s, err := store.OpenStore(logger, config.Home, openOptions)
 			if err != nil {
@@ -136,6 +126,25 @@ func Start() *cobra.Command {
 				}
 			}(s, logger)
 			dataStore := dssync.MutexWrap(s.DataStore)
+
+			// get the p2p private key or generate a new one
+			privKey, err := common2.GetP2PKeyOrGenerateNewOne(s.P2PKeyStore, config.p2pNickname)
+			if err != nil {
+				return err
+			}
+
+			// creating the host
+			h, err := p2p.CreateHost(config.p2pListenAddr, privKey)
+			if err != nil {
+				return err
+			}
+			logger.Info(
+				"created host",
+				"ID",
+				h.ID().String(),
+				"Addresses",
+				h.Addrs(),
+			)
 
 			// get the bootstrappers
 			var bootstrappers []peer.AddrInfo
@@ -261,7 +270,7 @@ func Init() *cobra.Command {
 			initOptions := store.InitOptions{
 				NeedDataStore:   true,
 				NeedEVMKeyStore: true,
-				NeedP2PKeyStore: false,
+				NeedP2PKeyStore: true,
 			}
 			isInit := store.IsInit(logger, config.home, initOptions)
 			if isInit {

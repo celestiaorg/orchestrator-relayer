@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -33,11 +34,65 @@ import (
 )
 
 func Command() *cobra.Command {
+	orchCmd := &cobra.Command{
+		Use:          "relayer",
+		Aliases:      []string{"rel"},
+		Short:        "QGB relayer that relays signatures to the target EVM chain",
+		SilenceUsage: true,
+	}
+
+	orchCmd.AddCommand(
+		Start(),
+		Init(),
+		keys.Command(),
+	)
+
+	orchCmd.SetHelpCommand(&cobra.Command{})
+
+	return orchCmd
+}
+
+// Init initializes the orchestrator store and creates necessary files.
+func Init() *cobra.Command {
+	cmd := cobra.Command{
+		Use:   "init",
+		Short: "Initialize the QGB relayer store. Passed flags have persisted effect.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parseInitFlags(cmd)
+			if err != nil {
+				return err
+			}
+
+			logger := tmlog.NewTMLogger(os.Stdout)
+
+			initOptions := store.InitOptions{
+				NeedDataStore:   false,
+				NeedEVMKeyStore: true,
+				NeedP2PKeyStore: true,
+			}
+			isInit := store.IsInit(logger, config.home, initOptions)
+			if isInit {
+				logger.Info("provided path is already initiated", "path", config.home)
+				return nil
+			}
+
+			err = store.Init(logger, config.home, initOptions)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		},
+	}
+	return addInitFlags(&cmd)
+}
+
+func Start() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "relayer <flags>",
+		Use:   "start <flags>",
 		Short: "Runs the QGB relayer to submit attestations to the target EVM chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseRelayerFlags(cmd)
+			config, err := parseRelayerStartFlags(cmd)
 			if err != nil {
 				return err
 			}
@@ -88,61 +143,16 @@ func Command() *cobra.Command {
 				}
 			}()
 
-			// creating the host
-			h, err := p2p.CreateHost(config.p2pListenAddr, config.p2pIdentity)
-			if err != nil {
-				return err
-			}
-			if err != nil {
-				return err
-			}
-			logger.Info(
-				"created host",
-				"ID",
-				h.ID().String(),
-				"Addresses",
-				h.Addrs(),
-			)
-			// creating the data store
-			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
-
-			// get the bootstrappers
-			var bootstrappers []peer.AddrInfo
-			if config.bootstrappers == "" {
-				bootstrappers = nil
-			} else {
-				bs := strings.Split(config.bootstrappers, ",")
-				bootstrappers, err = helpers.ParseAddrInfos(logger, bs)
-				if err != nil {
-					return err
-				}
-			}
-
-			// creating the dht
-			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, logger)
-			if err != nil {
-				return err
-			}
-
-			// wait for the dht to have some peers
-			err = dht.WaitForPeers(ctx, 2*time.Minute, 10*time.Second, 1)
-			if err != nil {
-				return err
-			}
-
-			// creating the p2p querier
-			p2pQuerier := p2p.NewQuerier(dht, logger)
-			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
-
 			// checking if the provided home is already initiated
-			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
+			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true, NeedP2PKeyStore: true})
 			if !isInit {
-				logger.Info("please initialize the EVM keystore using the `relayer keys add/import` command")
+				// TODO we don't need to manually initialize the p2p keystore
+				logger.Info("please initialize the relayer using `qgb relayer init` command")
 				return store.ErrNotInited
 			}
 
 			// creating the data store
-			openOptions := store.OpenOptions{HasEVMKeyStore: true}
+			openOptions := store.OpenOptions{HasEVMKeyStore: true, HasP2PKeyStore: true}
 			s, err := store.OpenStore(logger, config.Home, openOptions)
 			if err != nil {
 				return err
@@ -197,6 +207,58 @@ func Command() *cobra.Command {
 				}
 			}(s.EVMKeyStore, acc.Address)
 
+			// get the p2p private key or generate a new one
+			privKey, err := common2.GetP2PKeyOrGenerateNewOne(s.P2PKeyStore, config.p2pNickname)
+			if err != nil {
+				return err
+			}
+
+			// creating the host
+			h, err := p2p.CreateHost(config.p2pListenAddr, privKey)
+			if err != nil {
+				return err
+			}
+			if err != nil {
+				return err
+			}
+			logger.Info(
+				"created host",
+				"ID",
+				h.ID().String(),
+				"Addresses",
+				h.Addrs(),
+			)
+			// creating the data store
+			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
+
+			// get the bootstrappers
+			var bootstrappers []peer.AddrInfo
+			if config.bootstrappers == "" {
+				bootstrappers = nil
+			} else {
+				bs := strings.Split(config.bootstrappers, ",")
+				bootstrappers, err = helpers.ParseAddrInfos(logger, bs)
+				if err != nil {
+					return err
+				}
+			}
+
+			// creating the dht
+			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, logger)
+			if err != nil {
+				return err
+			}
+
+			// wait for the dht to have some peers
+			err = dht.WaitForPeers(ctx, 2*time.Minute, 10*time.Second, 1)
+			if err != nil {
+				return err
+			}
+
+			// creating the p2p querier
+			p2pQuerier := p2p.NewQuerier(dht, logger)
+			retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
+
 			relay := relayer.NewRelayer(
 				tmQuerier,
 				appQuerier,
@@ -224,6 +286,5 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
-	command.AddCommand(keys.Command())
-	return addRelayerFlags(command)
+	return addRelayerStartFlags(command)
 }
