@@ -37,10 +37,10 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 
 type StartConfig struct {
 	*base.Config
-	celestiaChainID, celesGRPC, tendermintRPC string
-	evmAccAddress                             string
-	bootstrappers, p2pListenAddr              string
-	p2pNickname                               string
+	celesGRPC, tendermintRPC     string
+	evmAccAddress                string
+	bootstrappers, p2pListenAddr string
+	p2pNickname                  string
 }
 
 func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
