@@ -80,7 +80,7 @@ func Add() *cobra.Command {
 			}(s, logger)
 
 			passphrase := config.EVMPassphrase
-			// if the new passphrase is not specified as a flag, ask for it.
+			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
 				passphrase, err = GetNewPassphrase()
 				if err != nil {
