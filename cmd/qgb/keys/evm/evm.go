@@ -512,7 +512,7 @@ func GetNewPassphrase() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		if bytes.Compare(bzPassphrase, bzPassphraseConfirm) == 0 {
+		if bytes.Equal(bzPassphrase, bzPassphraseConfirm) {
 			break
 		}
 	}
