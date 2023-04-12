@@ -2,15 +2,13 @@ package deploy
 
 import (
 	"context"
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 	"os"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
-	"golang.org/x/term"
-
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
@@ -38,7 +36,7 @@ func Command() *cobra.Command {
 			// checking if the provided home is already initiated
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
 			if !isInit {
-				logger.Info("please initialize the EVM keystore using the `deploy keys add/import` command")
+				logger.Info("please initialize the EVM keystore using the `qgb deploy keys add/import` command")
 				return store.ErrNotInited
 			}
 
@@ -77,40 +75,25 @@ func Command() *cobra.Command {
 				}
 			}(s, logger)
 
-			if !common.IsHexAddress(config.evmAccAddress) {
-				logger.Error("provided address is not a correct EVM address", "address", config.evmAccAddress)
-				return nil // should we return errors in these cases?
-			}
+			logger.Info("loading EVM account", "address", config.evmAccAddress)
 
-			addr := common.HexToAddress(config.evmAccAddress)
-			if !s.EVMKeyStore.HasAddress(addr) {
-				logger.Info("account not found in keystore", "address", config.evmAccAddress)
-				return nil
-			}
-
-			logger.Info("loading EVM account", "address", addr.String())
-
-			var acc accounts.Account
-			for _, storeAcc := range s.EVMKeyStore.Accounts() {
-				if storeAcc.Address.String() == addr.String() {
-					acc = storeAcc
-				}
+			acc, err := evm2.GetAccountFromStore(s.EVMKeyStore, config.evmAccAddress)
+			if err != nil {
+				return err
 			}
 
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
-				logger.Info("please provide the account passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				passphrase, err = evm2.GetPassphrase()
 				if err != nil {
 					return err
 				}
-				passphrase = string(bzPassphrase)
 			}
 
 			err = s.EVMKeyStore.Unlock(acc, passphrase)
 			if err != nil {
-				logger.Error("unable to load the EVM private key")
+				logger.Error("unable to unlock the EVM private key")
 				return err
 			}
 			defer func(EVMKeyStore *keystore.KeyStore, addr common.Address) {
