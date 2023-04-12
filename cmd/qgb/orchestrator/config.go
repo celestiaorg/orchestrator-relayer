@@ -9,7 +9,6 @@ import (
 )
 
 const (
-	celestiaChainIDFlag  = "celes-chain-id"
 	celestiaGRPCFlag     = "celes-grpc"
 	evmAccAddressFlag    = "evm-address"
 	tendermintRPCFlag    = "celes-http-rpc"
@@ -19,7 +18,6 @@ const (
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(celestiaChainIDFlag, "x", "user", "Specify the celestia chain id")
 	cmd.Flags().StringP(tendermintRPCFlag, "t", "http://localhost:26657", "Specify the rest rpc address")
 	cmd.Flags().StringP(celestiaGRPCFlag, "c", "localhost:9090", "Specify the grpc address")
 	cmd.Flags().StringP(
@@ -52,10 +50,6 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	}
 	if evmAccAddr == "" {
 		return StartConfig{}, errors.New("the evm account address should be specified")
-	}
-	chainID, err := cmd.Flags().GetString(celestiaChainIDFlag)
-	if err != nil {
-		return StartConfig{}, err
 	}
 	tendermintRPC, err := cmd.Flags().GetString(tendermintRPCFlag)
 	if err != nil {
@@ -94,13 +88,12 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	}
 
 	return StartConfig{
-		evmAccAddress:   evmAccAddr,
-		celestiaChainID: chainID,
-		celesGRPC:       celesGRPC,
-		tendermintRPC:   tendermintRPC,
-		bootstrappers:   bootstrappers,
-		p2pNickname:     p2pNickname,
-		p2pListenAddr:   p2pListenAddress,
+		evmAccAddress: evmAccAddr,
+		celesGRPC:     celesGRPC,
+		tendermintRPC: tendermintRPC,
+		bootstrappers: bootstrappers,
+		p2pNickname:   p2pNickname,
+		p2pListenAddr: p2pListenAddress,
 		Config: &base.Config{
 			Home:          homeDir,
 			EVMPassphrase: passphrase,
