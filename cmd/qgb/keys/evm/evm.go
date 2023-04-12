@@ -3,9 +3,10 @@ package evm
 import (
 	"bytes"
 	"fmt"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"io"
 	"os"
+
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"

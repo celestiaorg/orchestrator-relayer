@@ -2,9 +2,10 @@ package deploy
 
 import (
 	"context"
-	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 	"os"
 	"strconv"
+
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
 	"github.com/ethereum/go-ethereum/accounts/keystore"

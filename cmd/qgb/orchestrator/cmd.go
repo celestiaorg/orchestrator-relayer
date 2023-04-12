@@ -2,10 +2,11 @@ package orchestrator
 
 import (
 	"context"
-	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 	"os"
 	"strings"
 	"time"
+
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 
 	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
 
