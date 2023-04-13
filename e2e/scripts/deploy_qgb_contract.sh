@@ -69,7 +69,6 @@ echo "deploying QGB contract..."
   -z "${EVM_CHAIN_ID}" \
   -d "${EVM_ADDRESS}" \
   -c "${CELESTIA_GRPC}" \
-  -z "${EVM_CHAIN_ID}" \
   -n "${STARTING_NONCE}" \
   -e "${EVM_ENDPOINT}" \
   --evm-passphrase=123 > /opt/output
