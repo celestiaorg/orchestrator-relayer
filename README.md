@@ -27,7 +27,7 @@ qgb --help
 
 If you are a Celestia-app validator, all you need to do is run the orchestrator. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/orchestrator.md) for more details.
 
-If you want to run a relayer or target a new EVM chain, you will need to deploy a new QGB contract and run a relayer. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) for relayer docs and [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for how to deploy a new QGB contract.
+If you want to post commitments on an EVM chain, you will need to deploy a new QGB contract and run a relayer. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) for relayer docs and [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for how to deploy a new QGB contract.
 
 ## Contributing
 
