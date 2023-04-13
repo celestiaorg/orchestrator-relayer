@@ -27,7 +27,6 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/ethclient"
-	ds "github.com/ipfs/go-datastore"
 	dssync "github.com/ipfs/go-datastore/sync"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -66,7 +65,7 @@ func Init() *cobra.Command {
 			logger := tmlog.NewTMLogger(os.Stdout)
 
 			initOptions := store.InitOptions{
-				NeedDataStore:   false,
+				NeedDataStore:   true,
 				NeedEVMKeyStore: true,
 				NeedP2PKeyStore: true,
 			}
@@ -144,7 +143,7 @@ func Start() *cobra.Command {
 			}()
 
 			// checking if the provided home is already initiated
-			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true, NeedP2PKeyStore: true})
+			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedDataStore: true, NeedEVMKeyStore: true, NeedP2PKeyStore: true})
 			if !isInit {
 				// TODO we don't need to manually initialize the p2p keystore
 				logger.Info("please initialize the relayer using `qgb relayer init` command")
@@ -152,7 +151,12 @@ func Start() *cobra.Command {
 			}
 
 			// creating the data store
-			openOptions := store.OpenOptions{HasEVMKeyStore: true, HasP2PKeyStore: true}
+			openOptions := store.OpenOptions{
+				HasDataStore:   true,
+				BadgerOptions:  store.DefaultBadgerOptions(config.Home),
+				HasEVMKeyStore: true,
+				HasP2PKeyStore: true,
+			}
 			s, err := store.OpenStore(logger, config.Home, openOptions)
 			if err != nil {
 				return err
@@ -229,7 +233,7 @@ func Start() *cobra.Command {
 				h.Addrs(),
 			)
 			// creating the data store
-			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
+			dataStore := dssync.MutexWrap(s.DataStore)
 
 			// get the bootstrappers
 			var bootstrappers []peer.AddrInfo
