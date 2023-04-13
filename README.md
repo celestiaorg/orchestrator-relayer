@@ -35,8 +35,6 @@ If you want to run a relayer or target a new EVM chain, you will need to deploy 
 
 1. Install [golangci-lint](https://golangci-lint.run/usage/install/)
 2. Install [markdownlint](https://github.com/DavidAnson/markdownlint)
-3. Install [hadolint](https://github.com/hadolint/hadolint)
-4. Install [yamllint](https://yamllint.readthedocs.io/en/stable/quickstart.html)
 
 ### Helpful Commands
 
