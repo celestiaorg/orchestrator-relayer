@@ -279,6 +279,12 @@ func Delete() *cobra.Command {
 
 			logger.Info("deleting Ed25519 private key", "nickname", args[0])
 
+			confirm := common.ConfirmDeletePrivateKey(logger)
+			if !confirm {
+				logger.Info("deletion of private key has been cancelled", "nickname", args[0])
+				return nil
+			}
+
 			err = s.P2PKeyStore.Delete(args[0])
 			if err != nil {
 				return err
@@ -291,8 +297,8 @@ func Delete() *cobra.Command {
 	return keysConfigFlags(&cmd)
 }
 
-// GetP2PKeyOrGenerateNewOne takes a nickname and either returns its corresponding private key, if it
-// doesn't exist, return the first key in the store, if it doesn't exist, create a new key, store it in the
+// GetP2PKeyOrGenerateNewOne takes a nickname and either returns its corresponding private key if it
+// doesn't exist, return the first key in the store if it doesn't exist, create a new key, store it in the
 // keystore, then return it.
 func GetP2PKeyOrGenerateNewOne(ks *keystore.FSKeystore, nickname string) (crypto.PrivKey, error) {
 	// if the key name is not empty, then we try to get its corresponding key
