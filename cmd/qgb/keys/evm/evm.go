@@ -202,10 +202,23 @@ func Delete() *cobra.Command {
 				}
 			}
 
+			err = s.EVMKeyStore.Unlock(acc, passphrase)
+			if err != nil {
+				return err
+			}
+
+			confirm := common2.ConfirmDeletePrivateKey(logger)
+			if !confirm {
+				logger.Info("deletion of private key has been cancelled", "address", acc.Address.String())
+				return nil
+			}
+
 			err = s.EVMKeyStore.Delete(acc, passphrase)
 			if err != nil {
 				return err
 			}
+
+			logger.Info("private key has been deleted successfully", "address", acc.Address.String())
 
 			return nil
 		},

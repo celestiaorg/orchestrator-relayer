@@ -50,7 +50,6 @@ then
   /bin/qgb orchestrator keys p2p import key "${P2P_IDENTITY}"
 
   /bin/qgb orchestrator start \
-    -x=qgb-e2e \
     -d="${EVM_ADDRESS}" \
     -t="${TENDERMINT_RPC}" \
     -c="${CELESTIA_GRPC}" \
@@ -62,7 +61,6 @@ else
   sleep 5s
 
   /bin/qgb orchestrator start \
-    -x=qgb-e2e \
     -d="${EVM_ADDRESS}" \
     -t="${TENDERMINT_RPC}" \
     -c="${CELESTIA_GRPC}" \
