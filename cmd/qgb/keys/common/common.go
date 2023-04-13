@@ -31,8 +31,5 @@ func ConfirmDeletePrivateKey(logger tmlog.Logger) bool {
 	scanner.Scan()
 	input := scanner.Text()
 
-	if input == "yes" {
-		return true
-	}
-	return false
+	return input == "yes"
 }
