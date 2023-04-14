@@ -233,7 +233,7 @@ Use "qgb orchestrator keys evm import [command] --help" for more information abo
 
 #### EVM: Import ECDSA
 
-For the first one, it takes as argument the private key in plaintext. Then, it prompts for the passphrase to use when encrypting the key and saving it to the keystore. The passphrase could be passed as a flag using the `--passphrase`, but it's advised not to.
+For the first one, it takes as argument the private key in plaintext. Then, it prompts for the passphrase to use when encrypting the key and saving it to the keystore. The passphrase could be passed as a flag using the `--evm-passphrase`, but it's advised not to.
 
 Example:
 
