@@ -191,4 +191,4 @@ Now, you can verify that the EVM address has been updated using the following co
 celestia-appd query staking validator <validator_valoper_address>
 ```
 
-Now, you can restart the relayer, and it should start signing.
+Now, you can restart the orchestrator, and it should start signing.
