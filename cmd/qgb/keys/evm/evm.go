@@ -1,8 +1,12 @@
 package evm
 
 import (
+	"bytes"
+	"fmt"
 	"io"
 	"os"
+
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 
 	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"
@@ -78,12 +82,10 @@ func Add() *cobra.Command {
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
-				logger.Info("please provide a passphrase for your account")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				passphrase, err = GetNewPassphrase()
 				if err != nil {
 					return err
 				}
-				passphrase = string(bzPassphrase)
 			}
 
 			account, err := s.EVMKeyStore.NewAccount(passphrase)
@@ -184,35 +186,20 @@ func Delete() *cobra.Command {
 				}
 			}(s, logger)
 
-			if !common.IsHexAddress(args[0]) {
-				logger.Error("provided address is not a correct EVM address", "address", args[0])
-				return nil // should we return errors in these cases?
-			}
-
-			addr := common.HexToAddress(args[0])
-			if !s.EVMKeyStore.HasAddress(addr) {
-				logger.Info("account not found in keystore", "address", args[0])
-				return nil
-			}
-
 			logger.Info("deleting account", "address", args[0])
 
-			var acc accounts.Account
-			for _, storeAcc := range s.EVMKeyStore.Accounts() {
-				if storeAcc.Address.String() == addr.String() {
-					acc = storeAcc
-				}
+			acc, err := GetAccountFromStore(s.EVMKeyStore, args[0])
+			if err != nil {
+				return err
 			}
 
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
-				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				passphrase, err = GetPassphrase()
 				if err != nil {
 					return err
 				}
-				passphrase = string(bzPassphrase)
 			}
 
 			err = s.EVMKeyStore.Unlock(acc, passphrase)
@@ -321,23 +308,19 @@ func ImportFile() *cobra.Command {
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
-				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				passphrase, err = GetPassphrase()
 				if err != nil {
 					return err
 				}
-				passphrase = string(bzPassphrase)
 			}
 
 			newPassphrase := config.newPassphrase
 			// if the new passphrase is not specified as a flag, ask for it.
 			if newPassphrase == "" {
-				logger.Info("please provide the address new passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				newPassphrase, err = GetNewPassphrase()
 				if err != nil {
 					return err
 				}
-				newPassphrase = string(bzPassphrase)
 			}
 
 			account, err := s.EVMKeyStore.Import(fileBz, passphrase, newPassphrase)
@@ -399,12 +382,10 @@ func ImportECDSA() *cobra.Command {
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
-				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				passphrase, err = GetNewPassphrase()
 				if err != nil {
 					return err
 				}
-				passphrase = string(bzPassphrase)
 			}
 
 			ethPrivKey, err := ethcrypto.HexToECDSA(args[0])
@@ -463,46 +444,29 @@ func Update() *cobra.Command {
 				}
 			}(s, logger)
 
-			if !common.IsHexAddress(args[0]) {
-				logger.Error("provided address is not a correct EVM address", "address", args[0])
-				return nil // should we return errors in these cases?
-			}
+			logger.Info("updating account", "address", args[0])
 
-			addr := common.HexToAddress(args[0])
-			if !s.EVMKeyStore.HasAddress(addr) {
-				logger.Info("account not found in keystore", "address", args[0])
-				return nil
-			}
-
-			logger.Info("updating account", "address", addr.String())
-
-			var acc accounts.Account
-			for _, storeAcc := range s.EVMKeyStore.Accounts() {
-				if storeAcc.Address.String() == addr.String() {
-					acc = storeAcc
-				}
+			acc, err := GetAccountFromStore(s.EVMKeyStore, args[0])
+			if err != nil {
+				return err
 			}
 
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
-				logger.Info("please provide the address passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				passphrase, err = GetPassphrase()
 				if err != nil {
 					return err
 				}
-				passphrase = string(bzPassphrase)
 			}
 
 			newPassphrase := config.newPassphrase
 			// if the new passphrase is not specified as a flag, ask for it.
 			if newPassphrase == "" {
-				logger.Info("please provide the address new passphrase")
-				bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+				newPassphrase, err = GetNewPassphrase()
 				if err != nil {
 					return err
 				}
-				newPassphrase = string(bzPassphrase)
 			}
 
 			err = s.EVMKeyStore.Update(acc, passphrase, newPassphrase)
@@ -515,4 +479,80 @@ func Update() *cobra.Command {
 		},
 	}
 	return keysNewPassphraseConfigFlags(&cmd)
+}
+
+// GetAccountFromStoreAndUnlockIt takes an EVM store and an EVM address and loads the corresponding account from it
+// then unlocks it.
+func GetAccountFromStoreAndUnlockIt(ks *keystore.KeyStore, evmAddr string, evmPassphrase string) (accounts.Account, error) {
+	acc, err := GetAccountFromStore(ks, evmAddr)
+	if err != nil {
+		return accounts.Account{}, err
+	}
+
+	passphrase := evmPassphrase
+	// if the passphrase is not specified as a flag, ask for it.
+	if passphrase == "" {
+		passphrase, err = GetPassphrase()
+		if err != nil {
+			return accounts.Account{}, err
+		}
+	}
+
+	err = ks.Unlock(acc, passphrase)
+	if err != nil {
+		return accounts.Account{}, fmt.Errorf("unable to unlock the EVM private key: %s", err.Error())
+	}
+
+	return acc, nil
+}
+
+// GetAccountFromStore takes an EVM store and an EVM address and loads the corresponding account from it.
+func GetAccountFromStore(ks *keystore.KeyStore, evmAddr string) (accounts.Account, error) {
+	if !common.IsHexAddress(evmAddr) {
+		return accounts.Account{}, fmt.Errorf("provided address is not a correct EVM address %s", evmAddr)
+	}
+
+	addr := common.HexToAddress(evmAddr)
+	if !ks.HasAddress(addr) {
+		return accounts.Account{}, fmt.Errorf("account not found in keystore %s", evmAddr)
+	}
+
+	var acc accounts.Account
+	for _, storeAcc := range ks.Accounts() {
+		if storeAcc.Address.String() == addr.String() {
+			acc = storeAcc
+		}
+	}
+
+	return acc, nil
+}
+
+func GetPassphrase() (string, error) {
+	fmt.Print("please provide the account passphrase: ")
+	bzPassphrase, err := term.ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return "", err
+	}
+	return string(bzPassphrase), nil
+}
+
+func GetNewPassphrase() (string, error) {
+	var err error
+	var bzPassphrase []byte
+	for {
+		fmt.Print("please provide the account new passphrase: ")
+		bzPassphrase, err = term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return "", err
+		}
+		fmt.Print("enter the same passphrase again: ")
+		bzPassphraseConfirm, err := term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return "", err
+		}
+		if bytes.Equal(bzPassphrase, bzPassphraseConfirm) {
+			break
+		}
+	}
+	return string(bzPassphrase), nil
 }
