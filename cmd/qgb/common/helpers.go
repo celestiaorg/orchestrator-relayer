@@ -42,7 +42,7 @@ func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC str
 	appQuerier := rpc.NewAppQuerier(logger, celesGRPC, encCfg)
 	err = appQuerier.Start()
 	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, stopFuncs, err
 	}
 	stopFuncs = append(stopFuncs, func() error {
 		err = appQuerier.Stop()
