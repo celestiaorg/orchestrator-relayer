@@ -94,7 +94,7 @@ Flags:
   -b, --p2p-bootstrappers string   Comma-separated multiaddresses of p2p peers to connect to
   -q, --p2p-listen-addr string     MultiAddr for the p2p peer to listen on (default "/ip4/0.0.0.0/tcp/30000")
   -p, --p2p-nickname string        Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)
-      --passphrase string          the account passphrase (if not specified as a flag, it will be asked interactively)
+      --evm-passphrase string          the account passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 To start the orchestrator in the default home directory, run the following:
