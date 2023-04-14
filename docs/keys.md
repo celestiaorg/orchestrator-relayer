@@ -137,7 +137,7 @@ Usage:
 Flags:
   -h, --help                help for delete
       --home string         The qgb evm keys home directory
-      --passphrase string   the account passphrase (if not specified as a flag, it will be asked interactively)
+      --evm-passphrase string   the account passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 The provided address should be a `0x` prefixed EVM address.
