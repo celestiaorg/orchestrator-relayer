@@ -110,10 +110,11 @@ func Start() *cobra.Command {
 					}
 				}
 			}()
-			tmQuerier, appQuerier, err := cmdcommon.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC, stopFuncs)
+			tmQuerier, appQuerier, stops, err := cmdcommon.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC)
 			if err != nil {
 				return err
 			}
+			stopFuncs = append(stopFuncs, stops...)
 
 			// checking if the provided home is already initiated
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedDataStore: true, NeedEVMKeyStore: true, NeedP2PKeyStore: true})

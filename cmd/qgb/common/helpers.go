@@ -19,7 +19,7 @@ import (
 
 // NewTmAndAppQuerier helper function that creates a new TmQuerier and AppQuerier and registers their stop functions in the
 // stopFuncs slice.
-func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC string, stopFuncs []func() error) (*rpc.TmQuerier, *rpc.AppQuerier, error) {
+func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC string) (*rpc.TmQuerier, *rpc.AppQuerier, []func() error, error) {
 	// load app encoding configuration
 	encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
@@ -27,8 +27,9 @@ func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC str
 	tmQuerier := rpc.NewTmQuerier(tendermintRPC, logger)
 	err := tmQuerier.Start()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
+	stopFuncs := make([]func() error, 0)
 	stopFuncs = append(stopFuncs, func() error {
 		err := tmQuerier.Stop()
 		if err != nil {
@@ -41,7 +42,7 @@ func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC str
 	appQuerier := rpc.NewAppQuerier(logger, celesGRPC, encCfg)
 	err = appQuerier.Start()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	stopFuncs = append(stopFuncs, func() error {
 		err = appQuerier.Stop()
@@ -51,7 +52,7 @@ func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC str
 		return nil
 	})
 
-	return tmQuerier, appQuerier, nil
+	return tmQuerier, appQuerier, stopFuncs, nil
 }
 
 // CreateDHTAndWaitForPeers helper function that creates a new QGB DHT and waits for some peers to connect to it.
