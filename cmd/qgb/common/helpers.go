@@ -5,6 +5,12 @@ import (
 	"strings"
 	"time"
 
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
+	"github.com/celestiaorg/orchestrator-relayer/store"
+	"github.com/ethereum/go-ethereum/accounts"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	dssync "github.com/ipfs/go-datastore/sync"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
@@ -108,4 +114,61 @@ func CreateDHTAndWaitForPeers(
 		return nil, err
 	}
 	return dht, nil
+}
+
+// InitBase initializes the base components for the orchestrator and relayer.
+func InitBase(
+	ctx context.Context,
+	logger tmlog.Logger,
+	tendermintRPC, celesGRPC, home, evmAccAddress, evmPassphrase, p2pNickname, p2pListenAddr, bootstrappers string,
+) (*rpc.TmQuerier, *rpc.AppQuerier, *p2p.Querier, *helpers.Retrier, *keystore.KeyStore, *accounts.Account, []func() error, error) {
+	stopFuncs := make([]func() error, 0)
+
+	tmQuerier, appQuerier, stops, err := NewTmAndAppQuerier(logger, tendermintRPC, celesGRPC)
+	stopFuncs = append(stopFuncs, stops...)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, stopFuncs, err
+	}
+
+	// checking if the provided home is already initiated
+	isInit := store.IsInit(logger, home, store.InitOptions{NeedDataStore: true, NeedEVMKeyStore: true, NeedP2PKeyStore: true})
+	if !isInit {
+		return nil, nil, nil, nil, nil, nil, stopFuncs, store.ErrNotInited
+	}
+
+	// creating the data store
+	openOptions := store.OpenOptions{
+		HasDataStore:   true,
+		BadgerOptions:  store.DefaultBadgerOptions(home),
+		HasEVMKeyStore: true,
+		HasP2PKeyStore: true,
+	}
+	s, err := store.OpenStore(logger, home, openOptions)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, stopFuncs, err
+	}
+	stopFuncs = append(stopFuncs, func() error { return s.Close(logger, openOptions) })
+
+	logger.Info("loading EVM account", "address", evmAccAddress)
+
+	acc, err := evm2.GetAccountFromStoreAndUnlockIt(s.EVMKeyStore, evmAccAddress, evmPassphrase)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, stopFuncs, err
+	}
+	stopFuncs = append(stopFuncs, func() error { return s.EVMKeyStore.Lock(acc.Address) })
+
+	// creating the data store
+	dataStore := dssync.MutexWrap(s.DataStore)
+
+	dht, err := CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, p2pNickname, p2pListenAddr, bootstrappers, dataStore)
+	if err != nil {
+		return nil, nil, nil, nil, nil, nil, stopFuncs, err
+	}
+	stopFuncs = append(stopFuncs, func() error { return dht.Close() })
+
+	// creating the p2p querier
+	p2pQuerier := p2p.NewQuerier(dht, logger)
+	retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
+
+	return tmQuerier, appQuerier, p2pQuerier, retrier, s.EVMKeyStore, &acc, stopFuncs, nil
 }
