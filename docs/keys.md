@@ -106,7 +106,7 @@ Usage:
 Flags:
   -h, --help                help for add
       --home string         The qgb evm keys home directory
-      --passphrase string   the account passphrase (if not specified as a flag, it will be asked interactively)
+      --evm-passphrase string   the account passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 The passphrase of the key encryption can be passed as a flag. But it is advised not to pass it as plain text and instead enter it when prompted interactively.
