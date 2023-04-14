@@ -481,6 +481,31 @@ func Update() *cobra.Command {
 	return keysNewPassphraseConfigFlags(&cmd)
 }
 
+// GetAccountFromStoreAndUnlockIt takes an EVM store and an EVM address and loads the corresponding account from it
+// then unlocks it.
+func GetAccountFromStoreAndUnlockIt(ks *keystore.KeyStore, evmAddr string, evmPassphrase string) (accounts.Account, error) {
+	acc, err := GetAccountFromStore(ks, evmAddr)
+	if err != nil {
+		return accounts.Account{}, err
+	}
+
+	passphrase := evmPassphrase
+	// if the passphrase is not specified as a flag, ask for it.
+	if passphrase == "" {
+		passphrase, err = GetPassphrase()
+		if err != nil {
+			return accounts.Account{}, err
+		}
+	}
+
+	err = ks.Unlock(acc, passphrase)
+	if err != nil {
+		return accounts.Account{}, fmt.Errorf("unable to unlock the EVM private key: %s", err.Error())
+	}
+
+	return acc, nil
+}
+
 // GetAccountFromStore takes an EVM store and an EVM address and loads the corresponding account from it.
 func GetAccountFromStore(ks *keystore.KeyStore, evmAddr string) (accounts.Account, error) {
 	if !common.IsHexAddress(evmAddr) {

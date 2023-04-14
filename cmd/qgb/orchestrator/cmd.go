@@ -3,27 +3,19 @@ package orchestrator
 import (
 	"context"
 	"os"
-	"strings"
 	"time"
+
+	cmdcommon "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/common"
 
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 
-	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
-
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/ethereum/go-ethereum/common"
-
 	"github.com/celestiaorg/orchestrator-relayer/store"
 
-	"github.com/celestiaorg/celestia-app/app"
-	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
-	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	dssync "github.com/ipfs/go-datastore/sync"
-	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
@@ -75,37 +67,19 @@ func Start() *cobra.Command {
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
-			// load app encoding configuration
-			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
-
-			// creating tendermint querier
-			tmQuerier := rpc.NewTmQuerier(config.tendermintRPC, logger)
-			if err != nil {
-				return err
-			}
-			err = tmQuerier.Start()
-			if err != nil {
-				return err
-			}
+			stopFuncs := make([]func() error, 0)
 			defer func() {
-				err := tmQuerier.Stop()
-				if err != nil {
-					logger.Error(err.Error())
+				for _, f := range stopFuncs {
+					err := f()
+					if err != nil {
+						logger.Error(err.Error())
+					}
 				}
 			}()
-
-			// creating the application querier
-			appQuerier := rpc.NewAppQuerier(logger, config.celesGRPC, encCfg)
-			err = appQuerier.Start()
+			tmQuerier, appQuerier, err := cmdcommon.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC, stopFuncs)
 			if err != nil {
 				return err
 			}
-			defer func() {
-				err := appQuerier.Stop()
-				if err != nil {
-					logger.Error(err.Error())
-				}
-			}()
 
 			// creating the data store
 			openOptions := store.OpenOptions{
@@ -118,53 +92,10 @@ func Start() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			defer func(s *store.Store, log tmlog.Logger) {
-				err := s.Close(log, openOptions)
-				if err != nil {
-					logger.Error(err.Error())
-				}
-			}(s, logger)
+			stopFuncs = append(stopFuncs, func() error { return s.Close(logger, openOptions) })
 			dataStore := dssync.MutexWrap(s.DataStore)
 
-			// get the p2p private key or generate a new one
-			privKey, err := common2.GetP2PKeyOrGenerateNewOne(s.P2PKeyStore, config.p2pNickname)
-			if err != nil {
-				return err
-			}
-
-			// creating the host
-			h, err := p2p.CreateHost(config.p2pListenAddr, privKey)
-			if err != nil {
-				return err
-			}
-			logger.Info(
-				"created host",
-				"ID",
-				h.ID().String(),
-				"Addresses",
-				h.Addrs(),
-			)
-
-			// get the bootstrappers
-			var bootstrappers []peer.AddrInfo
-			if config.bootstrappers == "" {
-				bootstrappers = nil
-			} else {
-				bs := strings.Split(config.bootstrappers, ",")
-				bootstrappers, err = helpers.ParseAddrInfos(logger, bs)
-				if err != nil {
-					return err
-				}
-			}
-
-			// creating the dht
-			dht, err := p2p.NewQgbDHT(cmd.Context(), h, dataStore, bootstrappers, logger)
-			if err != nil {
-				return err
-			}
-
-			// wait for the dht to have some peers
-			err = dht.WaitForPeers(cmd.Context(), 5*time.Minute, 10*time.Second, 1)
+			dht, err := cmdcommon.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.p2pListenAddr, config.bootstrappers, dataStore)
 			if err != nil {
 				return err
 			}
@@ -183,31 +114,12 @@ func Start() *cobra.Command {
 
 			logger.Info("loading EVM account", "address", config.evmAccAddress)
 
-			acc, err := evm2.GetAccountFromStore(s.EVMKeyStore, config.evmAccAddress)
+			acc, err := evm2.GetAccountFromStoreAndUnlockIt(s.EVMKeyStore, config.evmAccAddress, config.EVMPassphrase)
 			if err != nil {
 				return err
 			}
 
-			passphrase := config.EVMPassphrase
-			// if the passphrase is not specified as a flag, ask for it.
-			if passphrase == "" {
-				passphrase, err = evm2.GetPassphrase()
-				if err != nil {
-					return err
-				}
-			}
-
-			err = s.EVMKeyStore.Unlock(acc, passphrase)
-			if err != nil {
-				logger.Error("unable to unlock the EVM private key")
-				return err
-			}
-			defer func(EVMKeyStore *keystore.KeyStore, addr common.Address) {
-				err := EVMKeyStore.Lock(addr)
-				if err != nil {
-					panic(err)
-				}
-			}(s.EVMKeyStore, acc.Address)
+			stopFuncs = append(stopFuncs, func() error { return s.EVMKeyStore.Lock(acc.Address) })
 
 			// creating the orchestrator
 			orch := orchestrator.New(
@@ -221,12 +133,12 @@ func Start() *cobra.Command {
 				&acc,
 			)
 			if err != nil {
-				panic(err)
+				return err
 			}
 
 			logger.Debug("starting orchestrator")
 
-			// Listen for and trap any OS signal to gracefully shutdown and exit
+			// Listen for and trap any OS signal to graceful shutdown and exit
 			go helpers.TrapSignal(logger, cancel)
 
 			// starting the orchestrator

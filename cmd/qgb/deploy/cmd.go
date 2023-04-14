@@ -78,25 +78,11 @@ func Command() *cobra.Command {
 
 			logger.Info("loading EVM account", "address", config.evmAccAddress)
 
-			acc, err := evm2.GetAccountFromStore(s.EVMKeyStore, config.evmAccAddress)
+			acc, err := evm2.GetAccountFromStoreAndUnlockIt(s.EVMKeyStore, config.evmAccAddress, config.EVMPassphrase)
 			if err != nil {
 				return err
 			}
 
-			passphrase := config.EVMPassphrase
-			// if the passphrase is not specified as a flag, ask for it.
-			if passphrase == "" {
-				passphrase, err = evm2.GetPassphrase()
-				if err != nil {
-					return err
-				}
-			}
-
-			err = s.EVMKeyStore.Unlock(acc, passphrase)
-			if err != nil {
-				logger.Error("unable to unlock the EVM private key")
-				return err
-			}
 			defer func(EVMKeyStore *keystore.KeyStore, addr common.Address) {
 				err := EVMKeyStore.Lock(addr)
 				if err != nil {
@@ -124,13 +110,7 @@ func Command() *cobra.Command {
 			}
 			defer backend.Close()
 
-			address, tx, _, err := evmClient.DeployQGBContract(
-				txOpts,
-				backend,
-				*vs,
-				vs.Nonce,
-				false,
-			)
+			address, tx, _, err := evmClient.DeployQGBContract(txOpts, backend, *vs, vs.Nonce, false)
 			if err != nil {
 				logger.Error("failed to deploy QGB contract")
 				return err
