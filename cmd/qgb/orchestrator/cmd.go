@@ -77,10 +77,10 @@ func Start() *cobra.Command {
 				}
 			}()
 			tmQuerier, appQuerier, stops, err := cmdcommon.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC)
+			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
 			}
-			stopFuncs = append(stopFuncs, stops...)
 
 			// creating the data store
 			openOptions := store.OpenOptions{
