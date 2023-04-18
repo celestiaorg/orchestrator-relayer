@@ -33,7 +33,10 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, blockTime time.Durati
 		// Thus, we can skip them as the races detected are not related to this repo.
 		t.Skip("skipping tests in short mode.")
 	}
-	accounts, clientContext := celestiatestnode.DefaultNetwork(t, blockTime)
+	cleanup, accounts, clientContext := celestiatestnode.DefaultNetwork(t, blockTime)
+	t.Cleanup(func() {
+		require.NoError(t, cleanup())
+	})
 	appRPC := clientContext.GRPCClient.Target()
 	status, err := clientContext.Client.Status(ctx)
 	require.NoError(t, err)

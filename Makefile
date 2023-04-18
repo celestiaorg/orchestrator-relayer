@@ -47,14 +47,14 @@ fmt:
 
 test:
 	@echo "--> Running unit tests"
-	@go test -mod=readonly ./...
+	@go test -p 1 -mod=readonly ./...
 .PHONY: test
 
 test-all: test-race test-cover
 
 test-race:
 	@echo "--> Running tests with -race"
-	@VERSION=$(VERSION) go test -mod=readonly -race -test.short ./...
+	@VERSION=$(VERSION) go test -p 1 -mod=readonly -race -test.short ./...
 .PHONY: test-race
 
 test-cover:
