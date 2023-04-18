@@ -1,4 +1,4 @@
-# QGB Orchestrator
+# Orchestrator
 
 <!-- markdownlint-disable MD013 -->
 

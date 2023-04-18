@@ -1,4 +1,4 @@
-# QGB keys subcommand
+# Keys subcommand
 
 <!-- markdownlint-disable MD013 -->
 
