@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/root"
 	"os"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/root"
 )
 
 func main() {
