@@ -1,4 +1,4 @@
-# Keys subcommand
+# Keys management
 
 <!-- markdownlint-disable MD013 -->
 
