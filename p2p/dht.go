@@ -29,8 +29,8 @@ type QgbDHT struct {
 // NewQgbDHT create a new IPFS DHT using a suitable configuration for the QGB.
 // If nil is passed for bootstrappers, the DHT will not try to connect to any existing peer.
 func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo, logger tmlog.Logger) (*QgbDHT, error) {
-	// this value is set to 23 days, which is the unbonding period. We want to have the signatures
-	// available for this whole period.
+	// this value is set to 23 days, which is the unbonding period.
+	// we want to have the signatures available for this whole period.
 	providers.ProvideValidity = time.Hour * 24 * 23
 
 	router, err := dht.New(
@@ -39,7 +39,6 @@ func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrapper
 		dht.Datastore(store),
 		dht.Mode(dht.ModeServer),
 		dht.ProtocolPrefix(ProtocolPrefix),
-		dht.RoutingTableRefreshPeriod(time.Minute),
 		dht.NamespacedValidator(DataCommitmentConfirmNamespace, DataCommitmentConfirmValidator{}),
 		dht.NamespacedValidator(ValsetConfirmNamespace, ValsetConfirmValidator{}),
 		dht.BootstrapPeers(bootstrappers...),
