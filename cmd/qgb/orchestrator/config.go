@@ -9,26 +9,26 @@ import (
 )
 
 const (
-	celestiaGRPCFlag     = "celes-grpc"
-	evmAccAddressFlag    = "evm-address"
-	tendermintRPCFlag    = "celes-http-rpc"
-	bootstrappersFlag    = "p2p-bootstrappers"
-	p2pListenAddressFlag = "p2p-listen-addr"
-	p2pNicknameFlag      = "p2p-nickname"
+	FlagCelestiaGRPC     = "celes-grpc"
+	FlagEVMAccAddress    = "evm-address"
+	FlagTendermintRPC    = "celes-http-rpc"
+	FlagBootstrappers    = "p2p-bootstrappers"
+	FlagP2PListenAddress = "p2p-listen-addr"
+	FlagP2PNickname      = "p2p-nickname"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(tendermintRPCFlag, "t", "http://localhost:26657", "Specify the rest rpc address")
-	cmd.Flags().StringP(celestiaGRPCFlag, "c", "localhost:9090", "Specify the grpc address")
+	cmd.Flags().StringP(FlagTendermintRPC, "t", "http://localhost:26657", "Specify the rest rpc address")
+	cmd.Flags().StringP(FlagCelestiaGRPC, "c", "localhost:9090", "Specify the grpc address")
 	cmd.Flags().StringP(
-		evmAccAddressFlag,
+		FlagEVMAccAddress,
 		"d",
 		"",
 		"Specify the EVM account address to use for signing (Note: the private key should be in the keystore)",
 	)
-	cmd.Flags().StringP(bootstrappersFlag, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
-	cmd.Flags().StringP(p2pNicknameFlag, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
-	cmd.Flags().StringP(p2pListenAddressFlag, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
+	cmd.Flags().StringP(FlagBootstrappers, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
+	cmd.Flags().StringP(FlagP2PNickname, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
+	cmd.Flags().StringP(FlagP2PListenAddress, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	cmd.Flags().String(base.FlagHome, "", "The qgb orchestrator home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
@@ -44,30 +44,30 @@ type StartConfig struct {
 }
 
 func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
-	evmAccAddr, err := cmd.Flags().GetString(evmAccAddressFlag)
+	evmAccAddr, err := cmd.Flags().GetString(FlagEVMAccAddress)
 	if err != nil {
 		return StartConfig{}, err
 	}
 	if evmAccAddr == "" {
 		return StartConfig{}, errors.New("the evm account address should be specified")
 	}
-	tendermintRPC, err := cmd.Flags().GetString(tendermintRPCFlag)
+	tendermintRPC, err := cmd.Flags().GetString(FlagTendermintRPC)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	celesGRPC, err := cmd.Flags().GetString(celestiaGRPCFlag)
+	celesGRPC, err := cmd.Flags().GetString(FlagCelestiaGRPC)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	bootstrappers, err := cmd.Flags().GetString(bootstrappersFlag)
+	bootstrappers, err := cmd.Flags().GetString(FlagBootstrappers)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	p2pListenAddress, err := cmd.Flags().GetString(p2pListenAddressFlag)
+	p2pListenAddress, err := cmd.Flags().GetString(FlagP2PListenAddress)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	p2pNickname, err := cmd.Flags().GetString(p2pNicknameFlag)
+	p2pNickname, err := cmd.Flags().GetString(FlagP2PNickname)
 	if err != nil {
 		return StartConfig{}, err
 	}
