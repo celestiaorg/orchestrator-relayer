@@ -545,7 +545,7 @@ func GetNewPassphrase() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		fmt.Print("enter the same passphrase again: ")
+		fmt.Print("\nenter the same passphrase again: ")
 		bzPassphraseConfirm, err := term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			return "", err
