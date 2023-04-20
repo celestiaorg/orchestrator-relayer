@@ -10,21 +10,21 @@ import (
 )
 
 const (
-	evmAccAddressFlag = "evm-address"
-	evmChainIDFlag    = "evm-chain-id"
-	celesGRPCFlag     = "celes-grpc"
-	evmRPCFlag        = "evm-rpc"
-	startingNonceFlag = "starting-nonce"
-	evmGasLimitFlag   = "evm-gas-limit"
+	FlagEVMAccAddress = "evm-address"
+	FlagEVMChainID    = "evm-chain-id"
+	FlagCelesGRPC     = "celes-grpc"
+	FlagEVMRPC        = "evm-rpc"
+	FlagStartingNonce = "starting-nonce"
+	FlagEVMGasLimit   = "evm-gas-limit"
 )
 
 func addDeployFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(evmAccAddressFlag, "d", "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
-	cmd.Flags().Uint64P(evmChainIDFlag, "z", 5, "Specify the evm chain id")
-	cmd.Flags().StringP(celesGRPCFlag, "c", "localhost:9090", "Specify the grpc address")
-	cmd.Flags().StringP(evmRPCFlag, "e", "http://localhost:8545", "Specify the ethereum rpc address")
+	cmd.Flags().StringP(FlagEVMAccAddress, "d", "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
+	cmd.Flags().Uint64P(FlagEVMChainID, "z", 5, "Specify the evm chain id")
+	cmd.Flags().StringP(FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address")
+	cmd.Flags().StringP(FlagEVMRPC, "e", "http://localhost:8545", "Specify the ethereum rpc address")
 	cmd.Flags().StringP(
-		startingNonceFlag,
+		FlagStartingNonce,
 		"n",
 		"latest",
 		"Specify the nonce to start the QGB contract from. "+
@@ -32,7 +32,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 			"\"latest\": for latest valset nonce, "+
 			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
 	)
-	cmd.Flags().Uint64P(evmGasLimitFlag, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
+	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	cmd.Flags().String(base.FlagHome, "", "The qgb deployer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
@@ -49,30 +49,30 @@ type deployConfig struct {
 }
 
 func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
-	evmAccAddr, err := cmd.Flags().GetString(evmAccAddressFlag)
+	evmAccAddr, err := cmd.Flags().GetString(FlagEVMAccAddress)
 	if err != nil {
 		return deployConfig{}, err
 	}
 	if evmAccAddr == "" {
 		return deployConfig{}, errors.New("the evm account address should be specified")
 	}
-	evmChainID, err := cmd.Flags().GetUint64(evmChainIDFlag)
+	evmChainID, err := cmd.Flags().GetUint64(FlagEVMChainID)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	celesGRPC, err := cmd.Flags().GetString(celesGRPCFlag)
+	celesGRPC, err := cmd.Flags().GetString(FlagCelesGRPC)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	evmRPC, err := cmd.Flags().GetString(evmRPCFlag)
+	evmRPC, err := cmd.Flags().GetString(FlagEVMRPC)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	startingNonce, err := cmd.Flags().GetString(startingNonceFlag)
+	startingNonce, err := cmd.Flags().GetString(FlagStartingNonce)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	evmGasLimit, err := cmd.Flags().GetUint64(evmGasLimitFlag)
+	evmGasLimit, err := cmd.Flags().GetUint64(FlagEVMGasLimit)
 	if err != nil {
 		return deployConfig{}, err
 	}
