@@ -6,7 +6,7 @@ require (
 	github.com/celestiaorg/celestia-app v0.14.0-rc0.0.20230404075739-41ebe6b1f208
 	github.com/celestiaorg/nmt v0.15.0 // indirect
 	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
-	github.com/ethereum/go-ethereum v1.11.5
+	github.com/ethereum/go-ethereum v1.11.6
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0
@@ -129,7 +129,7 @@ require (
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
+	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
@@ -155,7 +155,7 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
-	github.com/holiman/uint256 v1.2.0 // indirect
+	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
 	github.com/huin/goupnp v1.0.3 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -280,11 +280,11 @@ require (
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/exp v0.0.0-20230213192124-5e25df0256eb // indirect
-	golang.org/x/mod v0.8.0 // indirect
+	golang.org/x/mod v0.9.0 // indirect
 	golang.org/x/oauth2 v0.4.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
-	golang.org/x/tools v0.6.0 // indirect
+	golang.org/x/tools v0.7.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	gonum.org/v1/gonum v0.11.0 // indirect
 	google.golang.org/api v0.103.0 // indirect
