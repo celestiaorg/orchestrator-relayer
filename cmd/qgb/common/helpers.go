@@ -168,7 +168,7 @@ func InitBase(
 
 	// creating the p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, logger)
-	retrier := helpers.NewRetrier(logger, 5, 15*time.Second)
+	retrier := helpers.NewRetrier(logger, 6, time.Minute)
 
 	return tmQuerier, appQuerier, p2pQuerier, retrier, s.EVMKeyStore, &acc, stopFuncs, nil
 }
