@@ -199,19 +199,14 @@ func (orch Orchestrator) EnqueueMissingEvents(
 		return err
 	}
 
-	lastUnbondingHeight, err := orch.AppQuerier.QueryLastUnbondingHeight(ctx)
-	if err != nil {
-		return err
-	}
-
-	orch.Logger.Info("syncing missing nonces", "latest_nonce", latestNonce, "last_unbonding_height", lastUnbondingHeight)
+	orch.Logger.Info("syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", 1)
 
 	// To accommodate the delay that might happen between starting the two go routines above.
 	// Probably, it would be a good idea to further refactor the orchestrator to the relayer style
 	// as it is entirely synchronous. Probably, enqueuing separately old nonces and new ones, is not
 	// the best design.
 	// TODO decide on this later
-	for i := uint64(lastUnbondingHeight); i < latestNonce; i++ {
+	for i := uint64(0); i < latestNonce; i++ {
 		select {
 		case <-signalChan:
 			return ErrSignalChanNotif
@@ -228,7 +223,7 @@ func (orch Orchestrator) EnqueueMissingEvents(
 			}
 		}
 	}
-	orch.Logger.Info("finished syncing missing nonces", "latest_nonce", latestNonce, "last_unbonding_height", lastUnbondingHeight)
+	orch.Logger.Info("finished syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", 1)
 	return nil
 }
 
