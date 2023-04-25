@@ -96,7 +96,7 @@ func Signers() *cobra.Command {
 					logger.Debug("connected to target node")
 					break
 				}
-				time.Sleep(time.Second)
+				time.Sleep(5 * time.Second)
 			}
 
 			// creating the data store
