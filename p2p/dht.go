@@ -42,6 +42,7 @@ func NewQgbDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrapper
 		dht.NamespacedValidator(DataCommitmentConfirmNamespace, DataCommitmentConfirmValidator{}),
 		dht.NamespacedValidator(ValsetConfirmNamespace, ValsetConfirmValidator{}),
 		dht.BootstrapPeers(bootstrappers...),
+		dht.DisableProviders(),
 	)
 	if err != nil {
 		return nil, err
