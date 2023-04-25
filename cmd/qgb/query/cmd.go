@@ -48,7 +48,7 @@ func Signers() *cobra.Command {
 			" will query signatures for. It should be either a specific nonce starting from 2 and on." +
 			" Or, use 'latest' as argument to check the latest attestation nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseQueryFlags(cmd)
+			config, err := parseFlags(cmd)
 			if err != nil {
 				return err
 			}
@@ -126,7 +126,7 @@ func Signers() *cobra.Command {
 			return nil
 		},
 	}
-	return addQueryFlags(command)
+	return addFlags(command)
 }
 
 func getSignaturesAndPrintThem(ctx context.Context, logger tmlog.Logger, appQuerier *rpc.AppQuerier, tmQuerier *rpc.TmQuerier, p2pQuerier *p2p.Querier, nonce uint64) error {
