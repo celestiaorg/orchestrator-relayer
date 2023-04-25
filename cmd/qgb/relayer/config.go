@@ -18,7 +18,7 @@ const (
 	FlagEVMAccAddress    = "evm-address"
 	FlagEVMChainID       = "evm-chain-id"
 	FlagCelesGRPC        = "celes-grpc"
-	FlagTendermintRPC    = "celes-http-rpc"
+	FlagTendermintRPC    = "celes-rpc"
 	FlagEVMRPC           = "evm-rpc"
 	FlagContractAddress  = "contract-address"
 	FlagEVMGasLimit      = "evm-gas-limit"
@@ -30,8 +30,8 @@ const (
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(FlagEVMAccAddress, "d", "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
 	cmd.Flags().Uint64P(FlagEVMChainID, "z", 5, "Specify the evm chain id")
-	cmd.Flags().StringP(FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address")
-	cmd.Flags().StringP(FlagTendermintRPC, "t", "http://localhost:26657", "Specify the rest rpc address")
+	cmd.Flags().StringP(FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address (without the protocol prefix)")
+	cmd.Flags().StringP(FlagTendermintRPC, "t", "tcp://localhost:26657", "Specify the rest rpc address")
 	cmd.Flags().StringP(FlagEVMRPC, "e", "http://localhost:8545", "Specify the ethereum rpc address")
 	cmd.Flags().StringP(FlagContractAddress, "a", "", "Specify the contract at which the qgb is deployed")
 	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")

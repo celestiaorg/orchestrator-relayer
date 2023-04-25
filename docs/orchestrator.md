@@ -88,8 +88,8 @@ Usage:
   qgb orchestrator start <flags> [flags]
 
 Flags:
-  -c, --celes-grpc string          Specify the grpc address (default "localhost:9090")
-  -t, --celes-http-rpc string      Specify the rest rpc address (default "http://localhost:26657")
+  -c, --celes-grpc string          Specify the grpc address without the protocol prefix (default "localhost:9090")
+  -t, --celes-rpc string           Specify the rest rpc address (default "tcp://localhost:26657")
   -d, --evm-address string         Specify the EVM account address to use for signing (Note: the private key should be in the keystore)
   -h, --help                       help for start
       --home string                The qgb orchestrator home directory
