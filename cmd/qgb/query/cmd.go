@@ -225,6 +225,5 @@ func printConfirms(logger tmlog.Logger, confirmsMap map[string]string, valset *c
 	logger.Info("orchestrators that missed signing the attestation", "count", len(missingSigners))
 	for i, addr := range missingSigners {
 		logger.Info(addr, "number", i)
-		i++
 	}
 }
