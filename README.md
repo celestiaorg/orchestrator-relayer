@@ -8,7 +8,7 @@ For a high-level overview of how the QGB works, check [here](https://github.com/
 
 ## Install
 
-1. [Install Go](https://go.dev/doc/install) 1.19
+1. [Install Go](https://go.dev/doc/install) 1.20.2
 2. Clone this repo
 3. Install the QGB CLI
 
