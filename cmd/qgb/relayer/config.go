@@ -141,54 +141,6 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 	}, nil
 }
 
-func addRelayerQueryFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address")
-	cmd.Flags().StringP(FlagTendermintRPC, "t", "http://localhost:26657", "Specify the rest rpc address")
-	cmd.Flags().StringP(FlagP2PNode, "n", "", "P2P target node multiaddress (eg. /ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn)")
-	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
-
-	return cmd
-}
-
-type QueryConfig struct {
-	home                     string
-	celesGRPC, tendermintRPC string
-	targetNode               string
-}
-
-func parseRelayerQueryFlags(cmd *cobra.Command) (QueryConfig, error) {
-	tendermintRPC, err := cmd.Flags().GetString(FlagTendermintRPC)
-	if err != nil {
-		return QueryConfig{}, err
-	}
-	celesGRPC, err := cmd.Flags().GetString(FlagCelesGRPC)
-	if err != nil {
-		return QueryConfig{}, err
-	}
-	targetNode, err := cmd.Flags().GetString(FlagP2PNode)
-	if err != nil {
-		return QueryConfig{}, err
-	}
-	homeDir, err := cmd.Flags().GetString(base.FlagHome)
-	if err != nil {
-		return QueryConfig{}, err
-	}
-	if homeDir == "" {
-		var err error
-		homeDir, err = base.DefaultServicePath("relayer")
-		if err != nil {
-			return QueryConfig{}, err
-		}
-	}
-
-	return QueryConfig{
-		celesGRPC:     celesGRPC,
-		tendermintRPC: tendermintRPC,
-		targetNode:    targetNode,
-		home:          homeDir,
-	}, nil
-}
-
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
 	return cmd
