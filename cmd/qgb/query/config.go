@@ -5,10 +5,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const FlagP2PNode = "p2p-node"
+
 func addQueryFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(relayer.FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address")
 	cmd.Flags().StringP(relayer.FlagTendermintRPC, "t", "http://localhost:26657", "Specify the rest rpc address")
-	cmd.Flags().StringP(relayer.FlagP2PNode, "n", "", "P2P target node multiaddress (eg. /ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn)")
+	cmd.Flags().StringP(FlagP2PNode, "n", "", "P2P target node multiaddress (eg. /ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn)")
 
 	return cmd
 }
@@ -27,7 +29,7 @@ func parseQueryFlags(cmd *cobra.Command) (QueryConfig, error) {
 	if err != nil {
 		return QueryConfig{}, err
 	}
-	targetNode, err := cmd.Flags().GetString(relayer.FlagP2PNode)
+	targetNode, err := cmd.Flags().GetString(FlagP2PNode)
 	if err != nil {
 		return QueryConfig{}, err
 	}

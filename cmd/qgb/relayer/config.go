@@ -25,7 +25,6 @@ const (
 	FlagBootstrappers    = "p2p-bootstrappers"
 	FlagP2PListenAddress = "p2p-listen-addr"
 	FlagP2PNickname      = "p2p-nickname"
-	FlagP2PNode          = "p2p-node"
 )
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
