@@ -18,22 +18,22 @@ import (
 )
 
 func Command() *cobra.Command {
-	orchCmd := &cobra.Command{
+	relCmd := &cobra.Command{
 		Use:          "relayer",
 		Aliases:      []string{"rel"},
 		Short:        "QGB relayer that relays signatures to the target EVM chain",
 		SilenceUsage: true,
 	}
 
-	orchCmd.AddCommand(
+	relCmd.AddCommand(
 		Start(),
 		Init(),
 		keys.Command("relayer"),
 	)
 
-	orchCmd.SetHelpCommand(&cobra.Command{})
+	relCmd.SetHelpCommand(&cobra.Command{})
 
-	return orchCmd
+	return relCmd
 }
 
 // Init initializes the orchestrator store and creates necessary files.

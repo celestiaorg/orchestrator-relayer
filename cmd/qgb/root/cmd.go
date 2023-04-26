@@ -2,6 +2,7 @@ package root
 
 import (
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/generate"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/query"
 
 	"github.com/celestiaorg/celestia-app/x/qgb/client"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/deploy"
@@ -26,6 +27,7 @@ func Cmd() *cobra.Command {
 		deploy.Command(),
 		client.VerifyCmd(),
 		generate.Command(),
+		query.Command(),
 	)
 
 	rootCmd.SetHelpCommand(&cobra.Command{})
