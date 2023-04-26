@@ -18,7 +18,7 @@ import (
 	"golang.org/x/term"
 )
 
-func Root() *cobra.Command {
+func Root(serviceName string) *cobra.Command {
 	evmCmd := &cobra.Command{
 		Use:          "evm",
 		Short:        "QGB EVM keys manager",
@@ -26,11 +26,11 @@ func Root() *cobra.Command {
 	}
 
 	evmCmd.AddCommand(
-		Add(),
-		List(),
-		Delete(),
-		Import(),
-		Update(),
+		Add(serviceName),
+		List(serviceName),
+		Delete(serviceName),
+		Import(serviceName),
+		Update(serviceName),
 	)
 
 	evmCmd.SetHelpCommand(&cobra.Command{})
@@ -38,16 +38,11 @@ func Root() *cobra.Command {
 	return evmCmd
 }
 
-func Add() *cobra.Command {
+func Add(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "add",
 		Short: "create a new EVM address",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common2.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -96,19 +91,14 @@ func Add() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
-func List() *cobra.Command {
+func List(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "list",
 		Short: "list EVM addresses in key store",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common2.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -145,20 +135,15 @@ func List() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
-func Delete() *cobra.Command {
+func Delete(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "delete <account address in hex>",
 		Args:  cobra.ExactArgs(1),
 		Short: "delete an EVM addresses from the key store",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common2.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -223,11 +208,10 @@ func Delete() *cobra.Command {
 			return nil
 		},
 	}
-
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
-func Import() *cobra.Command {
+func Import(serviceName string) *cobra.Command {
 	importCmd := &cobra.Command{
 		Use:          "import",
 		Short:        "import evm keys to the keystore",
@@ -235,8 +219,8 @@ func Import() *cobra.Command {
 	}
 
 	importCmd.AddCommand(
-		ImportFile(),
-		ImportECDSA(),
+		ImportFile(serviceName),
+		ImportECDSA(serviceName),
 	)
 
 	importCmd.SetHelpCommand(&cobra.Command{})
@@ -244,17 +228,12 @@ func Import() *cobra.Command {
 	return importCmd
 }
 
-func ImportFile() *cobra.Command {
+func ImportFile(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "file <path to key file>",
 		Args:  cobra.ExactArgs(1),
 		Short: "import an EVM address from a file",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Parent().Use
-			serviceName, err := common2.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysNewPassphraseConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -332,20 +311,15 @@ func ImportFile() *cobra.Command {
 			return nil
 		},
 	}
-	return keysNewPassphraseConfigFlags(&cmd)
+	return keysNewPassphraseConfigFlags(&cmd, serviceName)
 }
 
-func ImportECDSA() *cobra.Command {
+func ImportECDSA(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "ecdsa <private key in hex format>",
 		Args:  cobra.ExactArgs(1),
 		Short: "import an EVM address from an ECDSA private key",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Parent().Use
-			serviceName, err := common2.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -402,20 +376,15 @@ func ImportECDSA() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
-func Update() *cobra.Command {
+func Update(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "update <account address in hex>",
 		Args:  cobra.ExactArgs(1),
 		Short: "update an EVM account passphrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common2.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysNewPassphraseConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -478,7 +447,7 @@ func Update() *cobra.Command {
 			return nil
 		},
 	}
-	return keysNewPassphraseConfigFlags(&cmd)
+	return keysNewPassphraseConfigFlags(&cmd, serviceName)
 }
 
 // GetAccountFromStoreAndUnlockIt takes an EVM store and an EVM address and loads the corresponding account from it

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Command() *cobra.Command {
+func Command(serviceName string) *cobra.Command {
 	keysCmd := &cobra.Command{
 		Use:          "keys",
 		Short:        "QGB keys manager",
@@ -14,8 +14,8 @@ func Command() *cobra.Command {
 	}
 
 	keysCmd.AddCommand(
-		evm.Root(),
-		p2p.Root(),
+		evm.Root(serviceName),
+		p2p.Root(serviceName),
 	)
 
 	keysCmd.SetHelpCommand(&cobra.Command{})
