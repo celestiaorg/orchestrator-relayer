@@ -522,6 +522,7 @@ func GetNewPassphrase() (string, error) {
 		if bytes.Equal(bzPassphrase, bzPassphraseConfirm) {
 			break
 		}
+		fmt.Print("\npassphrase and confirmation mismatch.\n")
 	}
 	return string(bzPassphrase), nil
 }
