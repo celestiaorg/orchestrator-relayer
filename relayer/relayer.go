@@ -120,7 +120,8 @@ func (r *Relayer) Start(ctx context.Context) error {
 				processFunc,
 			)
 			if err != nil {
-				// if an error occurs, retry few times before exiting
+				// if an error occurs, retry a few times before exiting
+				r.logger.Error(err.Error())
 				err = r.Retrier.Retry(ctx, processFunc)
 				if err != nil {
 					return err
