@@ -11,15 +11,15 @@ import (
 const (
 	FlagCelestiaGRPC     = "celes-grpc"
 	FlagEVMAccAddress    = "evm-address"
-	FlagTendermintRPC    = "celes-http-rpc"
+	FlagTendermintRPC    = "celes-rpc"
 	FlagBootstrappers    = "p2p-bootstrappers"
 	FlagP2PListenAddress = "p2p-listen-addr"
 	FlagP2PNickname      = "p2p-nickname"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(FlagTendermintRPC, "t", "http://localhost:26657", "Specify the rest rpc address")
-	cmd.Flags().StringP(FlagCelestiaGRPC, "c", "localhost:9090", "Specify the grpc address")
+	cmd.Flags().StringP(FlagTendermintRPC, "t", "tcp://localhost:26657", "Specify the rest rpc address")
+	cmd.Flags().StringP(FlagCelestiaGRPC, "c", "localhost:9090", "Specify the grpc address (without the protocol prefix)")
 	cmd.Flags().StringP(
 		FlagEVMAccAddress,
 		"d",
