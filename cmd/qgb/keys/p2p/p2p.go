@@ -15,7 +15,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-func Root() *cobra.Command {
+func Root(serviceName string) *cobra.Command {
 	p2pCmd := &cobra.Command{
 		Use:          "p2p",
 		Short:        "QGB p2p keys manager",
@@ -24,26 +24,21 @@ func Root() *cobra.Command {
 
 	p2pCmd.SetHelpCommand(&cobra.Command{})
 	p2pCmd.AddCommand(
-		Add(),
-		List(),
-		Import(),
-		Delete(),
+		Add(serviceName),
+		List(serviceName),
+		Import(serviceName),
+		Delete(serviceName),
 	)
 
 	return p2pCmd
 }
 
-func Add() *cobra.Command {
+func Add(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "add <nickname>",
 		Short: "create a new Ed25519 P2P address",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -102,7 +97,7 @@ func Add() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
 func GenerateNewEd25519() (crypto.PrivKey, error) {
@@ -114,17 +109,12 @@ func GenerateNewEd25519() (crypto.PrivKey, error) {
 	return priv, nil
 }
 
-func List() *cobra.Command {
+func List(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "list",
 		Short: "list existing p2p addresses",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -168,20 +158,15 @@ func List() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
-func Import() *cobra.Command {
+func Import(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "import <nickname> <private_key_in_hex_without_0x>",
 		Short: "import an existing p2p private key",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -232,20 +217,15 @@ func Import() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
-func Delete() *cobra.Command {
+func Delete(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "delete <nickname>",
 		Short: "delete an Ed25519 P2P private key from store",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			grandParentName := cmd.Parent().Parent().Parent().Use
-			serviceName, err := common.CommandToServiceName(grandParentName)
-			if err != nil {
-				return err
-			}
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
 				return err
@@ -294,7 +274,7 @@ func Delete() *cobra.Command {
 			return nil
 		},
 	}
-	return keysConfigFlags(&cmd)
+	return keysConfigFlags(&cmd, serviceName)
 }
 
 // GetP2PKeyOrGenerateNewOne takes a nickname and either returns its corresponding private key if it

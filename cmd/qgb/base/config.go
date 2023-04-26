@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	"github.com/tendermint/tendermint/libs/cli"
 )
 
@@ -32,7 +34,7 @@ func DefaultServicePath(serviceName string) (string, error) {
 		var err error
 		home, err = os.UserHomeDir()
 		if err != nil {
-			return "", err
+			return "", errors.Wrap(err, "error getting user home directory. please either setup a home directory for the user correctly or set the '<SERVICE_NAME>_HOME' environment variable.")
 		}
 	}
 	return fmt.Sprintf("%s/.%s", home, strings.ToLower(serviceName)), nil

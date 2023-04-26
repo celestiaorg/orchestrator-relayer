@@ -38,7 +38,11 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(FlagBootstrappers, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	cmd.Flags().StringP(FlagP2PNickname, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 	cmd.Flags().StringP(FlagP2PListenAddress, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
-	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
+	homeDir, err := base.DefaultServicePath("relayer")
+	if err != nil {
+		panic(err)
+	}
+	cmd.Flags().String(base.FlagHome, homeDir, "The qgb relayer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd
@@ -141,7 +145,11 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().String(base.FlagHome, "", "The qgb relayer home directory")
+	homeDir, err := base.DefaultServicePath("relayer")
+	if err != nil {
+		panic(err)
+	}
+	cmd.Flags().String(base.FlagHome, homeDir, "The qgb relayer home directory")
 	return cmd
 }
 

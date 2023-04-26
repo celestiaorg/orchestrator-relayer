@@ -33,7 +33,11 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
 	)
 	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
-	cmd.Flags().String(base.FlagHome, "", "The qgb deployer home directory")
+	homeDir, err := base.DefaultServicePath("deployer")
+	if err != nil {
+		panic(err)
+	}
+	cmd.Flags().String(base.FlagHome, homeDir, "The qgb deployer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd

@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 	orchCmd.AddCommand(
 		Start(),
 		Init(),
-		keys.Command(),
+		keys.Command("relayer"),
 	)
 
 	orchCmd.SetHelpCommand(&cobra.Command{})

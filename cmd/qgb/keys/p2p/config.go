@@ -6,9 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func keysConfigFlags(cmd *cobra.Command) *cobra.Command {
-	// TODO default value should be given
-	cmd.Flags().String(base.FlagHome, "", "The qgb p2p keys home directory")
+func keysConfigFlags(cmd *cobra.Command, service string) *cobra.Command {
+	homeDir, err := base.DefaultServicePath(service)
+	if err != nil {
+		panic(err)
+	}
+	cmd.Flags().String(base.FlagHome, homeDir, "The qgb p2p keys home directory")
 	return cmd
 }
 
