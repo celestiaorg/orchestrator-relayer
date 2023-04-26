@@ -1,4 +1,4 @@
-# QGB Relayer
+# Relayer
 
 <!-- markdownlint-disable MD013 -->
 
