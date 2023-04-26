@@ -11,31 +11,31 @@ import (
 type Retrier struct {
 	logger        tmlog.Logger
 	retriesNumber int
-	delay         time.Duration
+	baseDelay     time.Duration
 }
 
-// DefaultRetrierDelay default retrier delay
+// DefaultRetrierDelay default retrier baseDelay
 const DefaultRetrierDelay = 10 * time.Second
 
-func NewRetrier(logger tmlog.Logger, retriesNumber int, delay time.Duration) *Retrier {
+func NewRetrier(logger tmlog.Logger, retriesNumber int, baseDelay time.Duration) *Retrier {
 	return &Retrier{
 		logger:        logger,
 		retriesNumber: retriesNumber,
-		delay:         delay,
+		baseDelay:     baseDelay,
 	}
 }
 
-// Retry retries the `retryMethod` for `r.retriesNumber` times, separated by a delay equal to `r.delay`.
+// Retry retries the `retryMethod` for `r.retriesNumber` times, separated by an exponential delay
+// calculated using the `NextTick(retryCount)` method.
 // Returns the final execution error if all retries failed.
 func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 	var err error
-	ticker := time.NewTicker(r.delay)
 	for i := 0; i < r.retriesNumber; i++ {
-		// We can implement some exponential backoff in here
+		nextTick := time.NewTimer(r.NextTick(i))
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-ticker.C:
+		case <-nextTick.C:
 			r.logger.Info("retrying", "retry_number", i, "retries_left", r.retriesNumber-i)
 			err = retryMethod()
 			if err == nil {
@@ -54,4 +54,10 @@ func (r Retrier) RetryThenFail(ctx context.Context, retryMethod func() error) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+// NextTick calculates the next exponential tick based on the provided retry count
+// and the initialized base delay.
+func (r Retrier) NextTick(retryCount int) time.Duration {
+	return 1 << retryCount * r.baseDelay
 }

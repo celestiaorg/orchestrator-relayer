@@ -194,6 +194,11 @@ func (orch Orchestrator) EnqueueMissingEvents(
 	queue chan<- uint64,
 	signalChan <-chan struct{},
 ) error {
+	err := orch.TmQuerier.WaitForHeight(ctx, 1)
+	if err != nil {
+		return err
+	}
+
 	latestNonce, err := orch.AppQuerier.QueryLatestAttestationNonce(ctx)
 	if err != nil {
 		return err

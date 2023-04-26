@@ -2,13 +2,15 @@ package rpc
 
 import (
 	"context"
-
-	"github.com/tendermint/tendermint/rpc/client/http"
+	"fmt"
+	"time"
 
 	"github.com/tendermint/tendermint/libs/bytes"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client"
+	"github.com/tendermint/tendermint/rpc/client/http"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+	"github.com/tendermint/tendermint/types"
 )
 
 // TmQuerier queries tendermint for commitments and events.
@@ -60,6 +62,54 @@ func (tq *TmQuerier) QueryCommitment(ctx context.Context, beginBlock uint64, end
 		return nil, err
 	}
 	return dcResp.DataCommitment, nil
+}
+
+func (tq *TmQuerier) QueryHeight(ctx context.Context) (int64, error) {
+	status, err := tq.clientConn.Status(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return status.SyncInfo.LatestBlockHeight, nil
+}
+
+func (tq *TmQuerier) WaitForHeight(ctx context.Context, height int64) error {
+	currentHeight, err := tq.QueryHeight(ctx)
+	if err != nil {
+		return err
+	}
+	if currentHeight >= height {
+		return nil
+	}
+
+	query := fmt.Sprintf("%s='%s'", types.EventTypeKey, types.EventNewBlock)
+	results, err := tq.SubscribeEvents(ctx, "sub-height", query)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err := tq.UnsubscribeEvents(ctx, "sub-height", query)
+		if err != nil {
+			tq.logger.Error(err.Error())
+		}
+	}()
+
+	timeout := time.NewTimer(time.Minute)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-timeout.C:
+			return ErrCouldntReachSpecifiedHeight
+		case <-results:
+			currentHeight, err := tq.QueryHeight(ctx)
+			if err != nil {
+				return err
+			}
+			if currentHeight >= height {
+				return nil
+			}
+		}
+	}
 }
 
 func (tq *TmQuerier) SubscribeEvents(ctx context.Context, subscriptionName string, query string) (<-chan coretypes.ResultEvent, error) {
