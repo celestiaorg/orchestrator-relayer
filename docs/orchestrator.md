@@ -235,3 +235,5 @@ celestia-appd query staking validator <validator_valoper_address>
 ```
 
 Now, you can restart the orchestrator, and it should start signing.
+
+Note: A validator set change is triggered if more than 5% of the total staking power of the network changes. This means that even if you change your EVM address, and you don't see your orchestrator signing, it's alright. Just wait until the validator set changes, and then your orchestrator will automatically start signing.
