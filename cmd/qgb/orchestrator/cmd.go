@@ -25,7 +25,7 @@ func Command() *cobra.Command {
 	orchCmd.AddCommand(
 		Start(),
 		Init(),
-		keys.Command("orchestrator"),
+		keys.Command(ServiceNameOrchestrator),
 	)
 
 	orchCmd.SetHelpCommand(&cobra.Command{})
