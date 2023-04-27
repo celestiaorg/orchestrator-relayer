@@ -14,6 +14,16 @@ The orchestrator does the following:
 4. Then, the orchestrator pushes its signature to the P2P network it is connected to, via adding it as a DHT value.
 5. Listen for new attestations and go back to step 2.
 
+The orchestrator connects to a separate P2P network than the consensus or the data availability one. So, we will provide bootstrappers for that one.
+
+This means that even if the consensus node is already connected to the consensus network, if the orchestrator doesn't start with a list of bootstrapper to its specific network, then, it will not work and will output the following logs:
+
+```text
+I[2023-04-26|00:04:08.175] waiting for routing table to populate        targetnumberofpeers=1 currentcount=0
+I[2023-04-26|00:04:18.175] waiting for routing table to populate        targetnumberofpeers=1 currentcount=0
+I[2023-04-26|00:04:28.175] waiting for routing table to populate        targetnumberofpeers=1 currentcount=0
+```
+
 ## How to run
 
 ### Install the QGB binary
