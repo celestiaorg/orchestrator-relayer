@@ -25,6 +25,7 @@ const (
 	FlagBootstrappers    = "p2p-bootstrappers"
 	FlagP2PListenAddress = "p2p-listen-addr"
 	FlagP2PNickname      = "p2p-nickname"
+	ServiceNameRelayer   = "relayer"
 )
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
@@ -38,7 +39,7 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(FlagBootstrappers, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	cmd.Flags().StringP(FlagP2PNickname, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 	cmd.Flags().StringP(FlagP2PListenAddress, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
-	homeDir, err := base.DefaultServicePath("relayer")
+	homeDir, err := base.DefaultServicePath(ServiceNameRelayer)
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +117,7 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = base.DefaultServicePath("relayer")
+		homeDir, err = base.DefaultServicePath(ServiceNameRelayer)
 		if err != nil {
 			return StartConfig{}, err
 		}
@@ -145,7 +146,7 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
-	homeDir, err := base.DefaultServicePath("relayer")
+	homeDir, err := base.DefaultServicePath(ServiceNameRelayer)
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +165,7 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = base.DefaultServicePath("relayer")
+		homeDir, err = base.DefaultServicePath(ServiceNameRelayer)
 		if err != nil {
 			return InitConfig{}, err
 		}
