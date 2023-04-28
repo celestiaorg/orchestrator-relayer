@@ -60,7 +60,7 @@ func Signers() *cobra.Command {
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
-			stopFuncs := make([]func() error, 0)
+			stopFuncs := make([]func() error, 0, 1)
 			defer func() {
 				for _, f := range stopFuncs {
 					err := f()
