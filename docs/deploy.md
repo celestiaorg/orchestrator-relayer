@@ -34,7 +34,7 @@ Use "qgb deploy [command] --help" for more information about a command.
 
 ### Install the QGB binary
 
-Make sure to have the QGB binary installed. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/README.md) for more details.
+Make sure to have the QGB binary installed. Check [here](https://docs.celestia.org/nodes/qgb-binary) for more details.
 
 ### Add keys
 
