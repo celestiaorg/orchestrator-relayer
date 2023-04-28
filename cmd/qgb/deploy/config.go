@@ -10,12 +10,13 @@ import (
 )
 
 const (
-	FlagEVMAccAddress = "evm-address"
-	FlagEVMChainID    = "evm-chain-id"
-	FlagCelesGRPC     = "celes-grpc"
-	FlagEVMRPC        = "evm-rpc"
-	FlagStartingNonce = "starting-nonce"
-	FlagEVMGasLimit   = "evm-gas-limit"
+	FlagEVMAccAddress   = "evm-address"
+	FlagEVMChainID      = "evm-chain-id"
+	FlagCelesGRPC       = "celes-grpc"
+	FlagEVMRPC          = "evm-rpc"
+	FlagStartingNonce   = "starting-nonce"
+	FlagEVMGasLimit     = "evm-gas-limit"
+	ServiceNameDeployer = "deployer"
 )
 
 func addDeployFlags(cmd *cobra.Command) *cobra.Command {
@@ -33,7 +34,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
 	)
 	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
-	homeDir, err := base.DefaultServicePath("deployer")
+	homeDir, err := base.DefaultServicePath(ServiceNameDeployer)
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +87,7 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = base.DefaultServicePath("deployer")
+		homeDir, err = base.DefaultServicePath(ServiceNameDeployer)
 		if err != nil {
 			return deployConfig{}, err
 		}

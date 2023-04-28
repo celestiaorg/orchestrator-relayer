@@ -28,7 +28,7 @@ func Command() *cobra.Command {
 	relCmd.AddCommand(
 		Start(),
 		Init(),
-		keys.Command("relayer"),
+		keys.Command(ServiceNameRelayer),
 	)
 
 	relCmd.SetHelpCommand(&cobra.Command{})

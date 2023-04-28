@@ -124,7 +124,7 @@ func Command() *cobra.Command {
 			return nil
 		},
 	}
-	command.AddCommand(keys.Command("deployer"))
+	command.AddCommand(keys.Command(ServiceNameDeployer))
 	return addDeployFlags(command)
 }
 

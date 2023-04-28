@@ -9,12 +9,13 @@ import (
 )
 
 const (
-	FlagCelestiaGRPC     = "celes-grpc"
-	FlagEVMAccAddress    = "evm-address"
-	FlagTendermintRPC    = "celes-rpc"
-	FlagBootstrappers    = "p2p-bootstrappers"
-	FlagP2PListenAddress = "p2p-listen-addr"
-	FlagP2PNickname      = "p2p-nickname"
+	FlagCelestiaGRPC        = "celes-grpc"
+	FlagEVMAccAddress       = "evm-address"
+	FlagTendermintRPC       = "celes-rpc"
+	FlagBootstrappers       = "p2p-bootstrappers"
+	FlagP2PListenAddress    = "p2p-listen-addr"
+	FlagP2PNickname         = "p2p-nickname"
+	ServiceNameOrchestrator = "orchestrator"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -29,7 +30,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(FlagBootstrappers, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
 	cmd.Flags().StringP(FlagP2PNickname, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 	cmd.Flags().StringP(FlagP2PListenAddress, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
-	homeDir, err := base.DefaultServicePath("orchestrator")
+	homeDir, err := base.DefaultServicePath(ServiceNameOrchestrator)
 	if err != nil {
 		panic(err)
 	}
@@ -81,7 +82,7 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = base.DefaultServicePath("orchestrator")
+		homeDir, err = base.DefaultServicePath(ServiceNameOrchestrator)
 		if err != nil {
 			return StartConfig{}, err
 		}
@@ -106,7 +107,7 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
-	homeDir, err := base.DefaultServicePath("orchestrator")
+	homeDir, err := base.DefaultServicePath(ServiceNameOrchestrator)
 	if err != nil {
 		panic(err)
 	}
@@ -125,7 +126,7 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	}
 	if homeDir == "" {
 		var err error
-		homeDir, err = base.DefaultServicePath("orchestrator")
+		homeDir, err = base.DefaultServicePath(ServiceNameOrchestrator)
 		if err != nil {
 			return InitConfig{}, err
 		}
