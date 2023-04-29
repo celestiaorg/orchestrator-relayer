@@ -175,7 +175,7 @@ func getSignaturesAndPrintThem(
 		if outputFile == "" {
 			printConfirms(logger, confirmsMap, lastValset)
 		} else {
-			err := writeConfirmsToJsonFile(logger, confirmsMap, lastValset, outputFile)
+			err := writeConfirmsToJSONFile(logger, confirmsMap, lastValset, outputFile)
 			if err != nil {
 				return err
 			}
@@ -205,7 +205,7 @@ func getSignaturesAndPrintThem(
 		if outputFile == "" {
 			printConfirms(logger, confirmsMap, lastValset)
 		} else {
-			err := writeConfirmsToJsonFile(logger, confirmsMap, lastValset, outputFile)
+			err := writeConfirmsToJSONFile(logger, confirmsMap, lastValset, outputFile)
 			if err != nil {
 				return err
 			}
@@ -240,13 +240,13 @@ func printConfirms(logger tmlog.Logger, confirmsMap map[string]string, valset *c
 	}
 }
 
-func writeConfirmsToJsonFile(logger tmlog.Logger, confirmsMap map[string]string, valset *celestiatypes.Valset, outputFile string) error {
+func writeConfirmsToJSONFile(logger tmlog.Logger, confirmsMap map[string]string, valset *celestiatypes.Valset, outputFile string) error {
 	signers, missingSigners := getSignersAndMissingSigners(confirmsMap, valset)
 	logger.Info("writing confirms json file", "path", outputFile)
 
 	file, err := os.Create(outputFile)
 	if err != nil {
-		return errors.Wrap(err, "Error creating file:")
+		return errors.Wrap(err, "error creating file:")
 	}
 	defer func(file *os.File) {
 		err := file.Close()
