@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"os"
@@ -119,7 +120,7 @@ func Signers() *cobra.Command {
 				return fmt.Errorf("nonce 1 doesn't need to be signed. signatures start from nonce 2")
 			}
 
-			err = getSignaturesAndPrintThem(ctx, logger, appQuerier, tmQuerier, p2pQuerier, nonce)
+			err = getSignaturesAndPrintThem(ctx, logger, appQuerier, tmQuerier, p2pQuerier, nonce, config.outputFile)
 			if err != nil {
 				return err
 			}
@@ -129,7 +130,15 @@ func Signers() *cobra.Command {
 	return addFlags(command)
 }
 
-func getSignaturesAndPrintThem(ctx context.Context, logger tmlog.Logger, appQuerier *rpc.AppQuerier, tmQuerier *rpc.TmQuerier, p2pQuerier *p2p.Querier, nonce uint64) error {
+func getSignaturesAndPrintThem(
+	ctx context.Context,
+	logger tmlog.Logger,
+	appQuerier *rpc.AppQuerier,
+	tmQuerier *rpc.TmQuerier,
+	p2pQuerier *p2p.Querier,
+	nonce uint64,
+	outputFile string,
+) error {
 	logger.Info("getting signatures for nonce", "nonce", nonce)
 
 	lastValset, err := appQuerier.QueryLastValsetBeforeNonce(ctx, nonce)
@@ -163,7 +172,14 @@ func getSignaturesAndPrintThem(ctx context.Context, logger tmlog.Logger, appQuer
 		for _, confirm := range confirms {
 			confirmsMap[confirm.EthAddress] = confirm.Signature
 		}
-		printConfirms(logger, confirmsMap, lastValset)
+		if outputFile == "" {
+			printConfirms(logger, confirmsMap, lastValset)
+		} else {
+			err := writeConfirmsToJsonFile(logger, confirmsMap, lastValset, outputFile)
+			if err != nil {
+				return err
+			}
+		}
 	case celestiatypes.DataCommitmentRequestType:
 		dc, ok := att.(*celestiatypes.DataCommitment)
 		if !ok {
@@ -186,7 +202,14 @@ func getSignaturesAndPrintThem(ctx context.Context, logger tmlog.Logger, appQuer
 		for _, confirm := range confirms {
 			confirmsMap[confirm.EthAddress] = confirm.Signature
 		}
-		printConfirms(logger, confirmsMap, lastValset)
+		if outputFile == "" {
+			printConfirms(logger, confirmsMap, lastValset)
+		} else {
+			err := writeConfirmsToJsonFile(logger, confirmsMap, lastValset, outputFile)
+			if err != nil {
+				return err
+			}
+		}
 	default:
 		return errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(nonce, 10))
 	}
@@ -203,18 +226,7 @@ func parseNonce(ctx context.Context, querier *rpc.AppQuerier, nonce string) (uin
 }
 
 func printConfirms(logger tmlog.Logger, confirmsMap map[string]string, valset *celestiatypes.Valset) {
-	signers := make(map[string]string)
-	missingSigners := make([]string, 0)
-
-	for _, validator := range valset.Members {
-		val, ok := confirmsMap[validator.EvmAddress]
-		if ok {
-			signers[validator.EvmAddress] = val
-			continue
-		}
-		missingSigners = append(missingSigners, validator.EvmAddress)
-	}
-
+	signers, missingSigners := getSignersAndMissingSigners(confirmsMap, valset)
 	logger.Info("orchestrators that signed the attestation", "count", len(signers))
 	i := 0
 	for addr, sig := range signers {
@@ -226,4 +238,64 @@ func printConfirms(logger tmlog.Logger, confirmsMap map[string]string, valset *c
 	for i, addr := range missingSigners {
 		logger.Info(addr, "number", i)
 	}
+}
+
+func writeConfirmsToJsonFile(logger tmlog.Logger, confirmsMap map[string]string, valset *celestiatypes.Valset, outputFile string) error {
+	signers, missingSigners := getSignersAndMissingSigners(confirmsMap, valset)
+	logger.Info("writing confirms json file", "path", outputFile)
+
+	file, err := os.Create(outputFile)
+	if err != nil {
+		return errors.Wrap(err, "Error creating file:")
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(file)
+
+	type output struct {
+		EvmAddress string `json:"evmAddress"`
+		Signature  string `json:"signature"`
+		Signed     bool   `json:"signed"`
+	}
+	jsonOutput := make([]output, 0)
+	for key, val := range signers {
+		jsonOutput = append(jsonOutput, output{
+			Signed:     true,
+			EvmAddress: key,
+			Signature:  val,
+		})
+	}
+	for _, val := range missingSigners {
+		jsonOutput = append(jsonOutput, output{
+			Signed:     false,
+			EvmAddress: val,
+		})
+	}
+
+	encoder := json.NewEncoder(file)
+	err = encoder.Encode(jsonOutput)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("output written to file successfully", "path", outputFile)
+	return nil
+}
+
+func getSignersAndMissingSigners(confirmsMap map[string]string, valset *celestiatypes.Valset) (map[string]string, []string) {
+	signers := make(map[string]string)
+	missingSigners := make([]string, 0)
+
+	for _, validator := range valset.Members {
+		val, ok := confirmsMap[validator.EvmAddress]
+		if ok {
+			signers[validator.EvmAddress] = val
+			continue
+		}
+		missingSigners = append(missingSigners, validator.EvmAddress)
+	}
+	return signers, missingSigners
 }
