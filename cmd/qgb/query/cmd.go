@@ -246,7 +246,7 @@ func writeConfirmsToJSONFile(logger tmlog.Logger, confirmsMap map[string]string,
 
 	file, err := os.Create(outputFile)
 	if err != nil {
-		return errors.Wrap(err, "error creating file:")
+		return errors.Wrap(err, "error creating file")
 	}
 	defer func(file *os.File) {
 		err := file.Close()
