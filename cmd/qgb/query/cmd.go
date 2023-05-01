@@ -251,7 +251,7 @@ func writeConfirmsToJSONFile(logger tmlog.Logger, confirmsMap map[string]string,
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			fmt.Println(err)
+			logger.Error("failed to close file", "err", err.Error())
 		}
 	}(file)
 
