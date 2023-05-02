@@ -285,11 +285,11 @@ func printConfirms(logger tmlog.Logger, qOutput queryOutput) {
 		"query output",
 		"nonce",
 		qOutput.Nonce,
-		"majority threshold",
+		"majority_threshold",
 		qOutput.MajorityThreshold,
-		"current threshold",
+		"current_threshold",
 		qOutput.CurrentThreshold,
-		"can relay",
+		"can_relay",
 		qOutput.CanRelay,
 	)
 	logger.Info("orchestrators that signed the attestation")
