@@ -130,6 +130,19 @@ func Signers() *cobra.Command {
 	return addFlags(command)
 }
 
+type signature struct {
+	EvmAddress string `json:"evmAddress"`
+	Signature  string `json:"signature"`
+	Signed     bool   `json:"signed"`
+}
+type queryOutput struct {
+	Signatures        []signature `json:"signatures"`
+	Nonce             uint64      `json:"nonce"`
+	MajorityThreshold uint64      `json:"majority_threshold"`
+	CurrentThreshold  uint64      `json:"current_threshold"`
+	CanRelay          bool        `json:"can_relay"`
+}
+
 func getSignaturesAndPrintThem(
 	ctx context.Context,
 	logger tmlog.Logger,
@@ -168,14 +181,11 @@ func getSignaturesAndPrintThem(
 		if err != nil {
 			return err
 		}
-		confirmsMap := make(map[string]string)
-		for _, confirm := range confirms {
-			confirmsMap[confirm.EthAddress] = confirm.Signature
-		}
+		qOutput := toQueryOutput(toValsetConfirmsMap(confirms), nonce, *lastValset)
 		if outputFile == "" {
-			printConfirms(logger, confirmsMap, lastValset)
+			printConfirms(logger, qOutput)
 		} else {
-			err := writeConfirmsToJSONFile(logger, confirmsMap, lastValset, outputFile)
+			err := writeConfirmsToJSONFile(logger, qOutput, outputFile)
 			if err != nil {
 				return err
 			}
@@ -198,14 +208,11 @@ func getSignaturesAndPrintThem(
 		if err != nil {
 			return err
 		}
-		confirmsMap := make(map[string]string)
-		for _, confirm := range confirms {
-			confirmsMap[confirm.EthAddress] = confirm.Signature
-		}
+		qOutput := toQueryOutput(toDataCommitmentConfirmsMap(confirms), nonce, *lastValset)
 		if outputFile == "" {
-			printConfirms(logger, confirmsMap, lastValset)
+			printConfirms(logger, qOutput)
 		} else {
-			err := writeConfirmsToJSONFile(logger, confirmsMap, lastValset, outputFile)
+			err := writeConfirmsToJSONFile(logger, qOutput, outputFile)
 			if err != nil {
 				return err
 			}
@@ -225,28 +232,86 @@ func parseNonce(ctx context.Context, querier *rpc.AppQuerier, nonce string) (uin
 	}
 }
 
-func printConfirms(logger tmlog.Logger, confirmsMap map[string]string, valset *celestiatypes.Valset) {
-	signers, missingSigners := getSignersAndMissingSigners(confirmsMap, valset)
-	logger.Info("orchestrators that signed the attestation", "count", len(signers))
-	i := 0
-	for addr, sig := range signers {
-		logger.Info(addr, "number", i, "signature", sig)
-		i++
+func toValsetConfirmsMap(confirms []types.ValsetConfirm) map[string]string {
+	// create a map for the signatures to get them easily
+	confirmsMap := make(map[string]string)
+	for _, confirm := range confirms {
+		confirmsMap[confirm.EthAddress] = confirm.Signature
 	}
+	return confirmsMap
+}
 
-	logger.Info("orchestrators that missed signing the attestation", "count", len(missingSigners))
-	for i, addr := range missingSigners {
-		logger.Info(addr, "number", i)
+func toDataCommitmentConfirmsMap(confirms []types.DataCommitmentConfirm) map[string]string {
+	// create a map for the signatures to get them easily
+	confirmsMap := make(map[string]string)
+	for _, confirm := range confirms {
+		confirmsMap[confirm.EthAddress] = confirm.Signature
+	}
+	return confirmsMap
+}
+
+func toQueryOutput(confirmsMap map[string]string, nonce uint64, lastValset celestiatypes.Valset) queryOutput {
+	currThreshold := uint64(0)
+	signatures := make([]signature, len(lastValset.Members))
+	// create the signature slice to be used for outputting the data
+	for key, val := range lastValset.Members {
+		sig, found := confirmsMap[val.EvmAddress]
+		if found {
+			signatures[key] = signature{
+				EvmAddress: val.EvmAddress,
+				Signature:  sig,
+				Signed:     true,
+			}
+			currThreshold += val.Power
+		} else {
+			signatures[key] = signature{
+				EvmAddress: val.EvmAddress,
+				Signature:  "",
+				Signed:     false,
+			}
+		}
+	}
+	return queryOutput{
+		Signatures:        signatures,
+		Nonce:             nonce,
+		MajorityThreshold: lastValset.TwoThirdsThreshold(),
+		CurrentThreshold:  currThreshold,
+		CanRelay:          lastValset.TwoThirdsThreshold() <= currThreshold,
 	}
 }
 
-func writeConfirmsToJSONFile(logger tmlog.Logger, confirmsMap map[string]string, valset *celestiatypes.Valset, outputFile string) error {
-	signers, missingSigners := getSignersAndMissingSigners(confirmsMap, valset)
+func printConfirms(logger tmlog.Logger, qOutput queryOutput) {
+	logger.Info(
+		"query output",
+		"nonce",
+		qOutput.Nonce,
+		"majority threshold",
+		qOutput.MajorityThreshold,
+		"current threshold",
+		qOutput.CurrentThreshold,
+		"can relay",
+		qOutput.CanRelay,
+	)
+	logger.Info("orchestrators that signed the attestation")
+	for _, sig := range qOutput.Signatures {
+		if sig.Signed {
+			logger.Info(sig.EvmAddress, "signed", sig.Signed, "signature", sig)
+		}
+	}
+	logger.Info("orchestrators that missed signing the attestation")
+	for _, sig := range qOutput.Signatures {
+		if !sig.Signed {
+			logger.Info(sig.EvmAddress, "signed", sig.Signed)
+		}
+	}
+}
+
+func writeConfirmsToJSONFile(logger tmlog.Logger, qOutput queryOutput, outputFile string) error {
 	logger.Info("writing confirms json file", "path", outputFile)
 
-	file, err := os.Create(outputFile)
+	file, err := os.OpenFile(outputFile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o644)
 	if err != nil {
-		return errors.Wrap(err, "error creating file")
+		return err
 	}
 	defer func(file *os.File) {
 		err := file.Close()
@@ -255,28 +320,8 @@ func writeConfirmsToJSONFile(logger tmlog.Logger, confirmsMap map[string]string,
 		}
 	}(file)
 
-	type output struct {
-		EvmAddress string `json:"evmAddress"`
-		Signature  string `json:"signature"`
-		Signed     bool   `json:"signed"`
-	}
-	jsonOutput := make([]output, 0)
-	for key, val := range signers {
-		jsonOutput = append(jsonOutput, output{
-			Signed:     true,
-			EvmAddress: key,
-			Signature:  val,
-		})
-	}
-	for _, val := range missingSigners {
-		jsonOutput = append(jsonOutput, output{
-			Signed:     false,
-			EvmAddress: val,
-		})
-	}
-
 	encoder := json.NewEncoder(file)
-	err = encoder.Encode(jsonOutput)
+	err = encoder.Encode(qOutput)
 	if err != nil {
 		return err
 	}
