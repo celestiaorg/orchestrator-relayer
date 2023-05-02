@@ -329,18 +329,3 @@ func writeConfirmsToJSONFile(logger tmlog.Logger, qOutput queryOutput, outputFil
 	logger.Info("output written to file successfully", "path", outputFile)
 	return nil
 }
-
-func getSignersAndMissingSigners(confirmsMap map[string]string, valset *celestiatypes.Valset) (map[string]string, []string) {
-	signers := make(map[string]string)
-	missingSigners := make([]string, 0)
-
-	for _, validator := range valset.Members {
-		val, ok := confirmsMap[validator.EvmAddress]
-		if ok {
-			signers[validator.EvmAddress] = val
-			continue
-		}
-		missingSigners = append(missingSigners, validator.EvmAddress)
-	}
-	return signers, missingSigners
-}
