@@ -304,6 +304,7 @@ func printConfirms(logger tmlog.Logger, qOutput queryOutput) {
 			logger.Info(sig.EvmAddress, "signed", sig.Signed)
 		}
 	}
+	logger.Info("done")
 }
 
 func writeConfirmsToJSONFile(logger tmlog.Logger, qOutput queryOutput, outputFile string) error {
