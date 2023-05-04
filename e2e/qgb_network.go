@@ -660,6 +660,9 @@ func (network QGBNetwork) GetDataCommitmentConfirmByHeight(
 	if err != nil {
 		return nil, err
 	}
+	if attestation.BeginBlock == 0 {
+		attestation.BeginBlock = 1
+	}
 	dcConfirm, err := network.GetDataCommitmentConfirm(_ctx, dht, attestation.Nonce, evmAddr)
 	if err != nil {
 		return nil, err
