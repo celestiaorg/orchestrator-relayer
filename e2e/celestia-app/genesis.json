@@ -138,7 +138,9 @@
     },
     "blob": {
       "params": {
-        "gas_per_blob_byte": 8
+        "gas_per_blob_byte": 8,
+        "min_square_size": 1,
+        "max_square_size": 128
       }
     },
     "capability": {
