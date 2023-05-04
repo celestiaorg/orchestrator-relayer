@@ -468,6 +468,9 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 					if !ok {
 						continue
 					}
+					if dc.BeginBlock == 0 {
+						dc.BeginBlock = 1
+					}
 					commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
 					if err != nil {
 						continue
@@ -660,6 +663,9 @@ func (network QGBNetwork) GetDataCommitmentConfirmByHeight(
 	if err != nil {
 		return nil, err
 	}
+	if attestation.BeginBlock == 0 {
+		attestation.BeginBlock = 1
+	}
 	dcConfirm, err := network.GetDataCommitmentConfirm(_ctx, dht, attestation.Nonce, evmAddr)
 	if err != nil {
 		return nil, err
@@ -747,6 +753,9 @@ func (network QGBNetwork) WasAttestationSigned(
 				dc, ok := att.(*types.DataCommitment)
 				if !ok {
 					continue
+				}
+				if dc.BeginBlock == 0 {
+					dc.BeginBlock = 1
 				}
 				commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
 				if err != nil {

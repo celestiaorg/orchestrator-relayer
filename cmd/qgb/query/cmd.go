@@ -195,6 +195,9 @@ func getSignaturesAndPrintThem(
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
 		}
+		if dc.BeginBlock == 0 {
+			dc.BeginBlock = 1
+		}
 		commitment, err := tmQuerier.QueryCommitment(
 			ctx,
 			dc.BeginBlock,
