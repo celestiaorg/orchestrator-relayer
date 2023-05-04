@@ -336,6 +336,9 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
 		}
+		if dc.BeginBlock == 0 {
+			dc.BeginBlock = 1
+		}
 		commitment, err := orch.TmQuerier.QueryCommitment(
 			ctx,
 			dc.BeginBlock,
