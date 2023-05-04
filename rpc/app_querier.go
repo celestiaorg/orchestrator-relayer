@@ -97,6 +97,9 @@ func (aq *AppQuerier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint
 		return nil, types.ErrAttestationNotDataCommitmentRequest
 	}
 
+	if dcc.BeginBlock == 0 {
+		dcc.BeginBlock = 1
+	}
 	return dcc, nil
 }
 
