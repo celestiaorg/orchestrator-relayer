@@ -160,6 +160,9 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if !ok {
 			return nil, ErrAttestationNotDataCommitmentRequest
 		}
+		if dc.BeginBlock == 0 {
+			dc.BeginBlock = 1
+		}
 		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
 		if err != nil {
 			return nil, err
