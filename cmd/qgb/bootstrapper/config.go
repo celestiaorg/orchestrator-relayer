@@ -1,4 +1,4 @@
-package bootsrapper
+package bootstrapper
 
 import (
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"

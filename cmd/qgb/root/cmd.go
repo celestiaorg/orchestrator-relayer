@@ -1,7 +1,7 @@
 package root
 
 import (
-	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/bootsrapper"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/bootstrapper"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/generate"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/query"
 
@@ -29,7 +29,7 @@ func Cmd() *cobra.Command {
 		client.VerifyCmd(),
 		generate.Command(),
 		query.Command(),
-		bootsrapper.Command(),
+		bootstrapper.Command(),
 	)
 
 	rootCmd.SetHelpCommand(&cobra.Command{})

@@ -1,4 +1,4 @@
-package bootsrapper
+package bootstrapper
 
 import (
 	"context"
@@ -17,22 +17,22 @@ import (
 )
 
 func Command() *cobra.Command {
-	orchCmd := &cobra.Command{
+	bsCmd := &cobra.Command{
 		Use:          "bootstrapper",
 		Aliases:      []string{"bs"},
 		Short:        "QGB P2P network bootstrapper command",
 		SilenceUsage: true,
 	}
 
-	orchCmd.AddCommand(
+	bsCmd.AddCommand(
 		Start(),
 		Init(),
 		p2pcmd.Root(ServiceNameBootstrapper),
 	)
 
-	orchCmd.SetHelpCommand(&cobra.Command{})
+	bsCmd.SetHelpCommand(&cobra.Command{})
 
-	return orchCmd
+	return bsCmd
 }
 
 func Start() *cobra.Command {
