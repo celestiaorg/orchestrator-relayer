@@ -15,17 +15,14 @@ import (
 )
 
 const (
-	FlagEVMAccAddress    = "evm-address"
-	FlagEVMChainID       = "evm-chain-id"
-	FlagCelesGRPC        = "celes-grpc"
-	FlagTendermintRPC    = "celes-rpc"
-	FlagEVMRPC           = "evm-rpc"
-	FlagContractAddress  = "contract-address"
-	FlagEVMGasLimit      = "evm-gas-limit"
-	FlagBootstrappers    = "p2p-bootstrappers"
-	FlagP2PListenAddress = "p2p-listen-addr"
-	FlagP2PNickname      = "p2p-nickname"
-	ServiceNameRelayer   = "relayer"
+	FlagEVMAccAddress   = "evm-address"
+	FlagEVMChainID      = "evm-chain-id"
+	FlagCelesGRPC       = "celes-grpc"
+	FlagTendermintRPC   = "celes-rpc"
+	FlagEVMRPC          = "evm-rpc"
+	FlagContractAddress = "contract-address"
+	FlagEVMGasLimit     = "evm-gas-limit"
+	ServiceNameRelayer  = "relayer"
 )
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
@@ -36,15 +33,15 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().StringP(FlagEVMRPC, "e", "http://localhost:8545", "Specify the ethereum rpc address")
 	cmd.Flags().StringP(FlagContractAddress, "a", "", "Specify the contract at which the qgb is deployed")
 	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
-	cmd.Flags().StringP(FlagBootstrappers, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
-	cmd.Flags().StringP(FlagP2PNickname, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
-	cmd.Flags().StringP(FlagP2PListenAddress, "q", "/ip4/127.0.0.1/tcp/30000", "MultiAddr for the p2p peer to listen on")
 	homeDir, err := base.DefaultServicePath(ServiceNameRelayer)
 	if err != nil {
 		panic(err)
 	}
 	cmd.Flags().String(base.FlagHome, homeDir, "The qgb relayer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
+	base.AddP2PNicknameFlag(cmd)
+	base.AddP2PListenAddressFlag(cmd)
+	base.AddBootstrappersFlag(cmd)
 
 	return cmd
 }
@@ -99,15 +96,15 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 	if err != nil {
 		return StartConfig{}, err
 	}
-	bootstrappers, err := cmd.Flags().GetString(FlagBootstrappers)
+	bootstrappers, err := cmd.Flags().GetString(base.FlagBootstrappers)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	p2pListenAddress, err := cmd.Flags().GetString(FlagP2PListenAddress)
+	p2pListenAddress, err := cmd.Flags().GetString(base.FlagP2PListenAddress)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	p2pNickname, err := cmd.Flags().GetString(FlagP2PNickname)
+	p2pNickname, err := cmd.Flags().GetString(base.FlagP2PNickname)
 	if err != nil {
 		return StartConfig{}, err
 	}
