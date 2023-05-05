@@ -3,6 +3,7 @@ package bootstrapper
 import (
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	p2pcmd "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/p2p"
@@ -37,8 +38,9 @@ func Command() *cobra.Command {
 
 func Start() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "start",
-		Short: "Starts the bootstrapper node using the provided home",
+		Use: "start",
+		Short: "Starts the bootstrapper node using the provided home. " +
+			"Could be connected to other bootstrappers via the `-b` flag.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseStartFlags(cmd)
 			if err != nil {
@@ -95,8 +97,20 @@ func Start() *cobra.Command {
 			// creating the data store
 			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
 
+			// get the bootstrappers
+			var aIBootstrappers []peer.AddrInfo
+			if config.bootstrappers == "" {
+				aIBootstrappers = nil
+			} else {
+				bs := strings.Split(config.bootstrappers, ",")
+				aIBootstrappers, err = helpers.ParseAddrInfos(logger, bs)
+				if err != nil {
+					return err
+				}
+			}
+
 			// creating the dht
-			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, []peer.AddrInfo{}, logger)
+			dht, err := p2p.NewQgbDHT(ctx, h, dataStore, aIBootstrappers, logger)
 			if err != nil {
 				return err
 			}

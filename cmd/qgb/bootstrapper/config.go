@@ -5,7 +5,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const ServiceNameBootstrapper = "bootstrapper"
+const (
+	ServiceNameBootstrapper = "bootstrapper"
+)
 
 func addStartFlags(cmd *cobra.Command) *cobra.Command {
 	homeDir, err := base.DefaultServicePath(ServiceNameBootstrapper)
@@ -15,12 +17,14 @@ func addStartFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(base.FlagHome, homeDir, "The qgb bootstrappers home directory")
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
+	base.AddBootstrappersFlag(cmd)
 	return cmd
 }
 
 type StartConfig struct {
 	home                       string
 	p2pListenAddr, p2pNickname string
+	bootstrappers              string
 }
 
 func parseStartFlags(cmd *cobra.Command) (StartConfig, error) {
@@ -43,11 +47,16 @@ func parseStartFlags(cmd *cobra.Command) (StartConfig, error) {
 			return StartConfig{}, err
 		}
 	}
+	bootstrappers, err := cmd.Flags().GetString(base.FlagBootstrappers)
+	if err != nil {
+		return StartConfig{}, err
+	}
 
 	return StartConfig{
 		p2pNickname:   p2pNickname,
 		p2pListenAddr: p2pListenAddress,
 		home:          homeDir,
+		bootstrappers: bootstrappers,
 	}, nil
 }
 
