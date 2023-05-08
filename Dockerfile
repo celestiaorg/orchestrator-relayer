@@ -5,14 +5,15 @@ COPY . /orchestrator-relayer
 WORKDIR /orchestrator-relayer
 RUN make build
 
-# stage 2
-FROM alpine:3.17.3
+# final image
+FROM alpine:3.17.2
 # hadolint ignore=DL3018
 RUN apk update && apk --no-cache add bash
 
 COPY --from=builder /orchestrator-relayer/build/qgb /bin/qgb
+COPY --chown=${USER_NAME}:${USER_NAME} docker/entrypoint.sh /opt/entrypoint.sh
 
 # p2p port
 EXPOSE 30000
 
-ENTRYPOINT [ "/bin/qgb" ]
+ENTRYPOINT [ "/bin/bash", "/opt/entrypoint.sh" ]
