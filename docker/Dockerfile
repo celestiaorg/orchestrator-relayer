@@ -11,8 +11,9 @@ FROM alpine:3.17.2
 RUN apk update && apk --no-cache add bash
 
 COPY --from=builder /orchestrator-relayer/build/qgb /bin/qgb
+COPY --chown=${USER_NAME}:${USER_NAME} docker/entrypoint.sh /opt/entrypoint.sh
 
 # p2p port
 EXPOSE 30000
 
-CMD [ "/bin/qgb" ]
+ENTRYPOINT [ "/bin/bash", "/opt/entrypoint.sh" ]
