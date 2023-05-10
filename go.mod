@@ -1,6 +1,6 @@
 module github.com/celestiaorg/orchestrator-relayer
 
-go 1.19
+go 1.20
 
 require (
 	github.com/celestiaorg/celestia-app v0.14.0-rc0.0.20230404075739-41ebe6b1f208
