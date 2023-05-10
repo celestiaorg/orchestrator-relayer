@@ -16,7 +16,7 @@ go.sum: mod
 
 mod:
 	@echo "--> Updating go.mod"
-	@go mod tidy -compat=1.18
+	@go mod tidy -compat=1.19
 
 pre-build:
 	@echo "--> Fetching latest git tags"
