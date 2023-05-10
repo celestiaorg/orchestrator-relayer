@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -214,6 +215,10 @@ func (orch Orchestrator) EnqueueMissingEvents(
 	} else {
 		dc, err := orch.AppQuerier.QueryDataCommitmentForHeight(ctx, uint64(lastUnbondingHeight))
 		if err != nil {
+			if strings.Contains(err.Error(), "no data commitment has been generated for the provided height") {
+				orch.Logger.Info("finished syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", latestNonce)
+				return nil
+			}
 			return err
 		}
 		startingValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
