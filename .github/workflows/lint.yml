@@ -18,6 +18,8 @@ jobs:
     name: golangci-lint
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    env:
+      GO111MODULE: on
     steps:
       - uses: actions/setup-go@v4
         with:
