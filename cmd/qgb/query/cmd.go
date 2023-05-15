@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	common2 "github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"os"
 	"strconv"
 	"time"
+
+	common2 "github.com/ethereum/go-ethereum/common"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/common"
