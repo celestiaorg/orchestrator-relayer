@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	common2 "github.com/ethereum/go-ethereum/common"
+
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/common"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
@@ -33,6 +35,7 @@ func Command() *cobra.Command {
 
 	queryCmd.AddCommand(
 		Signers(),
+		Signature(),
 	)
 
 	queryCmd.SetHelpCommand(&cobra.Command{})
@@ -328,5 +331,166 @@ func writeConfirmsToJSONFile(logger tmlog.Logger, qOutput queryOutput, outputFil
 	}
 
 	logger.Info("output written to file successfully", "path", outputFile)
+	return nil
+}
+
+func Signature() *cobra.Command {
+	command := &cobra.Command{
+		Use:   "signature <nonce> <evm_address>",
+		Args:  cobra.ExactArgs(2),
+		Short: "Queries a specific signature referenced by an EVM address and a nonce",
+		Long: "Queries a specific signature referenced by an EVM address and a nonce. The nonce is the attestation" +
+			" nonce that the command will query signatures for. The EVM address is the address registered by the validator " +
+			"in the staking module.",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parseFlags(cmd)
+			if err != nil {
+				return err
+			}
+
+			// creating the logger
+			logger := tmlog.NewTMLogger(os.Stdout)
+			logger.Debug("initializing queriers")
+
+			ctx, cancel := context.WithCancel(cmd.Context())
+			defer cancel()
+
+			stopFuncs := make([]func() error, 0, 1)
+			defer func() {
+				for _, f := range stopFuncs {
+					err := f()
+					if err != nil {
+						logger.Error(err.Error())
+					}
+				}
+			}()
+
+			// create tm querier and app querier
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC)
+			stopFuncs = append(stopFuncs, stops...)
+			if err != nil {
+				return err
+			}
+
+			// creating the host
+			h, err := libp2p.New()
+			if err != nil {
+				return err
+			}
+			addrInfo, err := peer.AddrInfoFromString(config.targetNode)
+			if err != nil {
+				return err
+			}
+			for i := 0; i < 5; i++ {
+				logger.Debug("connecting to target node...")
+				err := h.Connect(ctx, *addrInfo)
+				if err != nil {
+					logger.Error("couldn't connect to target node", "err", err.Error())
+				}
+				if err == nil {
+					logger.Debug("connected to target node")
+					break
+				}
+				time.Sleep(5 * time.Second)
+			}
+
+			// creating the data store
+			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
+
+			// creating the dht
+			dht, err := p2p.NewQgbDHT(cmd.Context(), h, dataStore, []peer.AddrInfo{}, logger)
+			if err != nil {
+				return err
+			}
+
+			// creating the p2p querier
+			p2pQuerier := p2p.NewQuerier(dht, logger)
+
+			nonce, err := parseNonce(ctx, appQuerier, args[0])
+			if err != nil {
+				return err
+			}
+			if nonce == 1 {
+				return fmt.Errorf("nonce 1 doesn't need to be signed. signatures start from nonce 2")
+			}
+
+			if !common2.IsHexAddress(args[1]) {
+				return fmt.Errorf("invalid EVM address provided")
+			}
+
+			err = getSignatureAndPrintIt(ctx, logger, appQuerier, tmQuerier, p2pQuerier, args[1], nonce)
+			if err != nil {
+				return err
+			}
+			return nil
+		},
+	}
+	return addFlags(command)
+}
+
+func getSignatureAndPrintIt(
+	ctx context.Context,
+	logger tmlog.Logger,
+	appQuerier *rpc.AppQuerier,
+	tmQuerier *rpc.TmQuerier,
+	p2pQuerier *p2p.Querier,
+	evmAddress string,
+	nonce uint64,
+) error {
+	logger.Info("getting signature for address and nonce", "nonce", nonce, "evm_address", evmAddress)
+
+	att, err := appQuerier.QueryAttestationByNonce(ctx, nonce)
+	if err != nil {
+		return err
+	}
+	if att == nil {
+		return celestiatypes.ErrAttestationNotFound
+	}
+
+	switch att.Type() {
+	case celestiatypes.ValsetRequestType:
+		vs, ok := att.(*celestiatypes.Valset)
+		if !ok {
+			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
+		}
+		signBytes, err := vs.SignBytes()
+		if err != nil {
+			return err
+		}
+		confirm, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, evmAddress, signBytes.Hex())
+		if err != nil {
+			return err
+		}
+		if confirm == nil {
+			logger.Info("couldn't find orchestrator signature", "nonce", nonce, "evm_address", evmAddress)
+		} else {
+			logger.Info("found orchestrator signature", "nonce", nonce, "evm_address", evmAddress, "signature", confirm.Signature)
+		}
+	case celestiatypes.DataCommitmentRequestType:
+		dc, ok := att.(*celestiatypes.DataCommitment)
+		if !ok {
+			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
+		}
+		commitment, err := tmQuerier.QueryCommitment(
+			ctx,
+			dc.BeginBlock,
+			dc.EndBlock,
+		)
+		if err != nil {
+			return err
+		}
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+		confirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, nonce, evmAddress, dataRootHash.Hex())
+		if err != nil {
+			return err
+		}
+		if confirm == nil {
+			logger.Info("couldn't find orchestrator signature", "nonce", nonce, "evm_address", evmAddress)
+		} else {
+			logger.Info("found orchestrator signature", "nonce", nonce, "evm_address", evmAddress, "signature", confirm.Signature)
+		}
+	default:
+		return errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(nonce, 10))
+	}
 	return nil
 }
