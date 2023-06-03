@@ -217,6 +217,7 @@ services:
       - ${PWD}/scripts/start_orchestrator_after_validator_created.sh:/opt/start_orchestrator_after_validator_created.sh:ro
 
   ganache:
+    container_name: ganache
     image: trufflesuite/ganache-cli
     command: [
       "--port=8545",
