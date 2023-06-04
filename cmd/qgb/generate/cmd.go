@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	util "github.com/ipfs/go-ipfs-util"
+	util "github.com/ipfs/boxo/util"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/spf13/cobra"
 )

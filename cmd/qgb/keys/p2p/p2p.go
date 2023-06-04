@@ -9,7 +9,7 @@ import (
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"
-	util "github.com/ipfs/go-ipfs-util"
+	util "github.com/ipfs/boxo/util"
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
