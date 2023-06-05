@@ -163,7 +163,7 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	// to release resources after tests
 	defer network.DeleteAll() //nolint:errcheck
 
-	// start full network with four validatorS
+	// start full network with four validators
 	err = network.StartAll()
 	HandleNetworkError(t, network, err, false)
 
