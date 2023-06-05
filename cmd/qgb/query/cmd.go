@@ -170,8 +170,8 @@ func getSignaturesAndPrintThem(
 		return celestiatypes.ErrAttestationNotFound
 	}
 
-	switch att.Type() {
-	case celestiatypes.ValsetRequestType:
+	switch att.(type) {
+	case *celestiatypes.Valset:
 		vs, ok := att.(*celestiatypes.Valset)
 		if !ok {
 			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
@@ -193,7 +193,7 @@ func getSignaturesAndPrintThem(
 				return err
 			}
 		}
-	case celestiatypes.DataCommitmentRequestType:
+	case *celestiatypes.DataCommitment:
 		dc, ok := att.(*celestiatypes.DataCommitment)
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
@@ -447,8 +447,8 @@ func getSignatureAndPrintIt(
 		return celestiatypes.ErrAttestationNotFound
 	}
 
-	switch att.Type() {
-	case celestiatypes.ValsetRequestType:
+	switch att.(type) {
+	case *celestiatypes.Valset:
 		vs, ok := att.(*celestiatypes.Valset)
 		if !ok {
 			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
@@ -466,7 +466,7 @@ func getSignatureAndPrintIt(
 		} else {
 			logger.Info("found orchestrator signature", "nonce", nonce, "evm_address", evmAddress, "signature", confirm.Signature)
 		}
-	case celestiatypes.DataCommitmentRequestType:
+	case *celestiatypes.DataCommitment:
 		dc, ok := att.(*celestiatypes.DataCommitment)
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))

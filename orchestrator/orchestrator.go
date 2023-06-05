@@ -307,8 +307,8 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
 		return nil
 	}
-	switch att.Type() {
-	case celestiatypes.ValsetRequestType:
+	switch att.(type) {
+	case *celestiatypes.Valset:
 		vs, ok := att.(*celestiatypes.Valset)
 		if !ok {
 			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
@@ -331,7 +331,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		}
 		return nil
 
-	case celestiatypes.DataCommitmentRequestType:
+	case *celestiatypes.DataCommitment:
 		dc, ok := att.(*celestiatypes.DataCommitment)
 		if !ok {
 			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))

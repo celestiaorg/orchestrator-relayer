@@ -448,8 +448,8 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 				if err != nil {
 					continue
 				}
-				switch att.Type() {
-				case types.ValsetRequestType:
+				switch att.(type) {
+				case *types.Valset:
 					vs, ok := att.(*types.Valset)
 					if !ok {
 						continue
@@ -463,7 +463,7 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 						cancel()
 						return nil
 					}
-				case types.DataCommitmentRequestType:
+				case *types.DataCommitment:
 					dc, ok := att.(*types.DataCommitment)
 					if !ok {
 						continue
@@ -727,8 +727,8 @@ func (network QGBNetwork) WasAttestationSigned(
 			if err != nil || att == nil {
 				continue
 			}
-			switch att.Type() {
-			case types.ValsetRequestType:
+			switch att.(type) {
+			case *types.Valset:
 				vs, ok := att.(*types.Valset)
 				if !ok {
 					continue
@@ -743,7 +743,7 @@ func (network QGBNetwork) WasAttestationSigned(
 					return true, nil
 				}
 
-			case types.DataCommitmentRequestType:
+			case *types.DataCommitment:
 				dc, ok := att.(*types.DataCommitment)
 				if !ok {
 					continue

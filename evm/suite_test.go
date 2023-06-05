@@ -3,6 +3,7 @@ package evm_test
 import (
 	"crypto/ecdsa"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
@@ -44,6 +45,7 @@ func (s *EVMTestSuite) SetupTest() {
 			Power:      1000,
 			EVMAddress: ethcmn.HexToAddress("0x9c2B12b5a07FC6D719Ed7646e5041A7E85758329"),
 		}},
+		time.Now(),
 	)
 	require.NoError(t, err)
 }

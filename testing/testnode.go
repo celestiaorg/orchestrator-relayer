@@ -3,9 +3,8 @@ package testing
 import (
 	"context"
 	"testing"
-	"time"
 
-	celestiatestnode "github.com/celestiaorg/celestia-app/testutil/testnode"
+	celestiatestnode "github.com/celestiaorg/celestia-app/test/util/testnode"
 )
 
 // TestNode contains a DHTNetwork along with a test Celestia network and a simulated EVM chain.
@@ -17,7 +16,7 @@ type TestNode struct {
 }
 
 func NewTestNode(ctx context.Context, t *testing.T) *TestNode {
-	celestiaNetwork := NewCelestiaNetwork(ctx, t, time.Millisecond)
+	celestiaNetwork := NewCelestiaNetwork(ctx, t)
 	dhtNetwork := NewDHTNetwork(ctx, 2)
 
 	evmChain := NewEVMChain(celestiatestnode.NodeEVMPrivateKey)

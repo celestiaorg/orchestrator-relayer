@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
@@ -132,8 +135,8 @@ func (r *Relayer) Start(ctx context.Context) error {
 }
 
 func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, att celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
-	var tx *coregethtypes.Transaction
-	if att.Type() == celestiatypes.ValsetRequestType {
+	switch att.(type) {
+	case *celestiatypes.Valset:
 		vs, ok := att.(*celestiatypes.Valset)
 		if !ok {
 			return nil, ErrAttestationNotValsetRequest
@@ -150,12 +153,12 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if err != nil {
 			return nil, err
 		}
-
-		tx, err = r.UpdateValidatorSet(ctx, opts, *vs, vs.TwoThirdsThreshold(), confirms)
+		tx, err := r.UpdateValidatorSet(ctx, opts, *vs, vs.TwoThirdsThreshold(), confirms)
 		if err != nil {
 			return nil, err
 		}
-	} else {
+		return tx, nil
+	case *celestiatypes.DataCommitment:
 		dc, ok := att.(*celestiatypes.DataCommitment)
 		if !ok {
 			return nil, ErrAttestationNotDataCommitmentRequest
@@ -173,13 +176,14 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if err != nil {
 			return nil, err
 		}
-
-		tx, err = r.SubmitDataRootTupleRoot(opts, *dc, *valset, commitment.String(), confirms)
+		tx, err := r.SubmitDataRootTupleRoot(opts, *dc, *valset, commitment.String(), confirms)
 		if err != nil {
 			return nil, err
 		}
+		return tx, nil
+	default:
+		return nil, errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(att.GetNonce(), 10))
 	}
-	return tx, nil
 }
 
 func (r *Relayer) UpdateValidatorSet(

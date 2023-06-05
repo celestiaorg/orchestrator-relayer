@@ -156,11 +156,8 @@ func getStartingValset(ctx context.Context, querier *rpc.AppQuerier, startingNon
 		if attestation == nil {
 			return nil, types.ErrNilAttestation
 		}
-		if attestation.Type() == types.ValsetRequestType {
-			value, ok := attestation.(*types.Valset)
-			if !ok {
-				return nil, ErrUnmarshallValset
-			}
+		value, ok := attestation.(*types.Valset)
+		if ok {
 			return value, nil
 		}
 		return querier.QueryLastValsetBeforeNonce(ctx, nonce)
