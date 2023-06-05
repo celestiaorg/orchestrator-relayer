@@ -23,7 +23,7 @@ import (
 	"github.com/google/uuid"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	"github.com/tendermint/tendermint/rpc/client/http"
-	"github.com/testcontainers/testcontainers-go"
+	testcontainers "github.com/testcontainers/testcontainers-go/modules/compose"
 )
 
 type QGBNetwork struct {
@@ -47,7 +47,7 @@ type QGBNetwork struct {
 func NewQGBNetwork() (*QGBNetwork, error) {
 	id := strings.ToLower(uuid.New().String())
 	paths := []string{"./docker-compose.yml"}
-	instance := testcontainers.NewLocalDockerCompose(paths, id)
+	instance := testcontainers.NewLocalDockerCompose(paths, id) //nolint:staticcheck
 	stopChan := make(chan struct{})
 	// given an initial capacity to avoid blocking in case multiple services failed
 	// and wanted to notify the moderator.
@@ -189,7 +189,7 @@ func (network QGBNetwork) Start(service Service) error {
 }
 
 // DeployQGBContract uses the Deployer service to deploy a new QGB contract
-// based on the existing running network. If no Celestia-app or ganache are
+// based on the existing running network. If no Celestia-app nor ganache is
 // started, it creates them automatically.
 func (network QGBNetwork) DeployQGBContract() error {
 	fmt.Println("building images...")

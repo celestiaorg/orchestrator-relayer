@@ -24,7 +24,7 @@ func HandleNetworkError(t *testing.T, network *QGBNetwork, err error, expectErro
 		network.PrintLogs()
 		assert.NoError(t, err)
 		if errors.Is(err, ErrNetworkStopped) {
-			// if some other error orrured, we notify.
+			// if some other error occurred, we notify.
 			network.toStopChan <- struct{}{}
 		}
 		t.FailNow()

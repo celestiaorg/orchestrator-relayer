@@ -49,8 +49,8 @@ const (
 
 var BOOTSTRAPPERS = []string{"/ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn"}
 
-func (n Service) toString() (string, error) {
-	switch n {
+func (s Service) toString() (string, error) {
+	switch s {
 	case Core0:
 		return CORE0, nil
 	case Core0Orch:
