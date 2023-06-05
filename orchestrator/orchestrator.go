@@ -307,13 +307,9 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
 		return nil
 	}
-	switch att.(type) {
+	switch castedAtt := att.(type) {
 	case *celestiatypes.Valset:
-		vs, ok := att.(*celestiatypes.Valset)
-		if !ok {
-			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
-		}
-		signBytes, err := vs.SignBytes()
+		signBytes, err := castedAtt.SignBytes()
 		if err != nil {
 			return err
 		}
@@ -325,29 +321,25 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			orch.Logger.Debug("already signed valset", "nonce", nonce, "signature", resp.Signature)
 			return nil
 		}
-		err = orch.ProcessValsetEvent(ctx, *vs)
+		err = orch.ProcessValsetEvent(ctx, *castedAtt)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
 		return nil
 
 	case *celestiatypes.DataCommitment:
-		dc, ok := att.(*celestiatypes.DataCommitment)
-		if !ok {
-			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
-		}
 		commitment, err := orch.TmQuerier.QueryCommitment(
 			ctx,
-			dc.BeginBlock,
-			dc.EndBlock,
+			castedAtt.BeginBlock,
+			castedAtt.EndBlock,
 		)
 		if err != nil {
 			return err
 		}
-		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByEVMAddress(
 			ctx,
-			dc.Nonce,
+			castedAtt.Nonce,
 			orch.EvmAccount.Address.Hex(),
 			dataRootHash.Hex(),
 		)
@@ -355,10 +347,10 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", dc.BeginBlock, "end_block", dc.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
+			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", castedAtt.BeginBlock, "end_block", castedAtt.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
 			return nil
 		}
-		err = orch.ProcessDataCommitmentEvent(ctx, *dc, dataRootHash)
+		err = orch.ProcessDataCommitmentEvent(ctx, *castedAtt, dataRootHash)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}

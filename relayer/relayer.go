@@ -135,48 +135,40 @@ func (r *Relayer) Start(ctx context.Context) error {
 }
 
 func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, att celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
-	switch att.(type) {
+	switch castedAtt := att.(type) {
 	case *celestiatypes.Valset:
-		vs, ok := att.(*celestiatypes.Valset)
-		if !ok {
-			return nil, ErrAttestationNotValsetRequest
-		}
-		previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, vs.Nonce)
+		previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, castedAtt.Nonce)
 		if err != nil {
 			return nil, err
 		}
-		signBytes, err := vs.SignBytes()
+		signBytes, err := castedAtt.SignBytes()
 		if err != nil {
 			return nil, err
 		}
-		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, vs.Nonce, *previousValset, signBytes.Hex())
+		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, castedAtt.Nonce, *previousValset, signBytes.Hex())
 		if err != nil {
 			return nil, err
 		}
-		tx, err := r.UpdateValidatorSet(ctx, opts, *vs, vs.TwoThirdsThreshold(), confirms)
+		tx, err := r.UpdateValidatorSet(ctx, opts, *castedAtt, castedAtt.TwoThirdsThreshold(), confirms)
 		if err != nil {
 			return nil, err
 		}
 		return tx, nil
 	case *celestiatypes.DataCommitment:
-		dc, ok := att.(*celestiatypes.DataCommitment)
-		if !ok {
-			return nil, ErrAttestationNotDataCommitmentRequest
-		}
-		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
+		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, castedAtt.Nonce)
 		if err != nil {
 			return nil, err
 		}
-		commitment, err := r.TmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+		commitment, err := r.TmQuerier.QueryCommitment(ctx, castedAtt.BeginBlock, castedAtt.EndBlock)
 		if err != nil {
 			return nil, err
 		}
-		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
-		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, dc.Nonce, dataRootHash.Hex())
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, castedAtt.Nonce, dataRootHash.Hex())
 		if err != nil {
 			return nil, err
 		}
-		tx, err := r.SubmitDataRootTupleRoot(opts, *dc, *valset, commitment.String(), confirms)
+		tx, err := r.SubmitDataRootTupleRoot(opts, *castedAtt, *valset, commitment.String(), confirms)
 		if err != nil {
 			return nil, err
 		}

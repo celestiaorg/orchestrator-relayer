@@ -61,6 +61,9 @@
         }
       ]
     },
+    "authz": {
+      "authorization": []
+    },
     "bank": {
       "params": {
         "send_enabled": [],
@@ -251,7 +254,7 @@
       "deposit_params": {
         "min_deposit": [
           {
-            "denom": "stake",
+            "denom": "utia",
             "amount": "10000000"
           }
         ],

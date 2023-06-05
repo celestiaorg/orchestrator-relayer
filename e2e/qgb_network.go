@@ -448,13 +448,9 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 				if err != nil {
 					continue
 				}
-				switch att.(type) {
+				switch castedAtt := att.(type) {
 				case *types.Valset:
-					vs, ok := att.(*types.Valset)
-					if !ok {
-						continue
-					}
-					signBytes, err := vs.SignBytes()
+					signBytes, err := castedAtt.SignBytes()
 					if err != nil {
 						continue
 					}
@@ -464,15 +460,11 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 						return nil
 					}
 				case *types.DataCommitment:
-					dc, ok := att.(*types.DataCommitment)
-					if !ok {
-						continue
-					}
-					commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+					commitment, err := tmQuerier.QueryCommitment(ctx, castedAtt.BeginBlock, castedAtt.EndBlock)
 					if err != nil {
 						continue
 					}
-					dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+					dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 					dcConfirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, lastNonce-i, evmAddr, dataRootTupleRoot.Hex())
 					if err == nil && dcConfirm != nil {
 						cancel()
@@ -727,13 +719,9 @@ func (network QGBNetwork) WasAttestationSigned(
 			if err != nil || att == nil {
 				continue
 			}
-			switch att.(type) {
+			switch castedAtt := att.(type) {
 			case *types.Valset:
-				vs, ok := att.(*types.Valset)
-				if !ok {
-					continue
-				}
-				signBytes, err := vs.SignBytes()
+				signBytes, err := castedAtt.SignBytes()
 				if err != nil {
 					continue
 				}
@@ -744,18 +732,14 @@ func (network QGBNetwork) WasAttestationSigned(
 				}
 
 			case *types.DataCommitment:
-				dc, ok := att.(*types.DataCommitment)
-				if !ok {
-					continue
-				}
-				commitment, err := tmQuerier.QueryCommitment(ctx, dc.BeginBlock, dc.EndBlock)
+				commitment, err := tmQuerier.QueryCommitment(ctx, castedAtt.BeginBlock, castedAtt.EndBlock)
 				if err != nil {
 					continue
 				}
-				dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+				dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 				resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(
 					ctx,
-					dc.Nonce,
+					castedAtt.Nonce,
 					evmAddress,
 					dataRootTupleRoot.Hex(),
 				)
