@@ -57,7 +57,7 @@ apk add curl
       --evm-address=${EVM_ADDRESS} \
       --home=${CELESTIA_HOME} \
       --broadcast-mode=block \
-      --fees="300utia" \
+      --fees="300000utia" \
       --yes
     output=$(celestia-appd query staking validator ${VAL_ADDRESS} 2>/dev/null)
     if [[ -n "${output}" ]] ; then

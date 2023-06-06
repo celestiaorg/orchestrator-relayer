@@ -3,7 +3,7 @@
 
 # NOTE: Any path below can be absolute (e.g. "/var/myawesomeapp/data") or
 # relative to the home directory (e.g. "data"). The home directory is
-# "$HOME/.tendermint" by default, but could be changed via $TMHOME env variable
+# "$HOME/.cometbft" by default, but could be changed via $CMTHOME env variable
 # or --home cmd flag.
 
 #######################################################################
@@ -11,7 +11,7 @@
 #######################################################################
 
 # TCP or UNIX socket address of the ABCI application,
-# or the name of an ABCI application compiled in with the Tendermint binary
+# or the name of an ABCI application compiled in with the CometBFT binary
 proxy_app = "tcp://127.0.0.1:26658"
 
 # A custom human readable name for this node
@@ -63,7 +63,7 @@ priv_validator_key_file = "config/priv_validator_key.json"
 # Path to the JSON file containing the last sign state of a validator
 priv_validator_state_file = "data/priv_validator_state.json"
 
-# TCP or UNIX socket address for Tendermint to listen on for
+# TCP or UNIX socket address for CometBFT to listen on for
 # connections from an external PrivValidator process
 priv_validator_laddr = ""
 
@@ -176,17 +176,17 @@ max_body_bytes = 8388608
 max_header_bytes = 1048576
 
 # The path to a file containing certificate that is used to create the HTTPS server.
-# Might be either absolute path or path related to Tendermint's config directory.
+# Might be either absolute path or path related to CometBFT's config directory.
 # If the certificate is signed by a certificate authority,
 # the certFile should be the concatenation of the server's certificate, any intermediates,
 # and the CA's certificate.
-# NOTE: both tls_cert_file and tls_key_file must be present for Tendermint to create HTTPS server.
+# NOTE: both tls_cert_file and tls_key_file must be present for CometBFT to create HTTPS server.
 # Otherwise, HTTP server is run.
 tls_cert_file = ""
 
 # The path to a file containing matching private key that is used to create the HTTPS server.
-# Might be either absolute path or path related to Tendermint's config directory.
-# NOTE: both tls-cert-file and tls-key-file must be present for Tendermint to create HTTPS server.
+# Might be either absolute path or path related to CometBFT's config directory.
+# NOTE: both tls-cert-file and tls-key-file must be present for CometBFT to create HTTPS server.
 # Otherwise, HTTP server is run.
 tls_key_file = ""
 
@@ -273,10 +273,16 @@ dial_timeout = "3s"
 [mempool]
 
 # Mempool version to use:
-#   1) "v0" - (default) FIFO mempool.
-#   2) "v1" - prioritized mempool.
+#   1) "v0" - FIFO mempool.
+#   2) "v1" - (default) prioritized mempool.
+#   3) "v2" - content addressable transaction pool
 version = "v1"
 
+# Recheck (default: true) defines whether CometBFT should recheck the
+# validity for all remaining transaction in the mempool after a block.
+# Since a block affects the application state, some transactions in the
+# mempool may become invalid. If this does not apply to your application,
+# you can disable rechecking.
 recheck = true
 broadcast = true
 wal_dir = ""
@@ -388,10 +394,10 @@ timeout_prevote_delta = "1ms"
 timeout_precommit = "10ms"
 # How much the timeout_precommit increases with each round
 timeout_precommit_delta = "1ms"
-# How long we wait after committing a block, before starting on the new
-# height (this gives us a chance to receive some more precommits, even
-# though we already have +2/3).
-timeout_commit = "10s"
+# TargetHeigtDuration is used to determine how long we wait after a
+# block is committed. If this time is shorter than the actual time to reach
+# consensus for that height, then we do not wait at all.
+target_height_duration = "1ms"
 
 # How many blocks to look back to check existence of the node's consensus votes before joining consensus
 # When non-zero, the node will panic upon restart
@@ -432,7 +438,7 @@ discard_abci_responses = false
 # to decide which txs to index based on configuration set in the application.
 #
 # Options:
-#   1) "null"
+#   1) "kv"
 #   2) "kv" (default) - the simplest possible indexer, backed by key-value storage (defaults to levelDB; see DBBackend).
 # 		- When "kv" is chosen "tx.height" and "tx.hash" will always be indexed.
 #   3) "psql" - the indexer services backed by PostgreSQL.
@@ -463,4 +469,20 @@ prometheus_listen_addr = ":26660"
 max_open_connections = 3
 
 # Instrumentation namespace
-namespace = "tendermint"
+namespace = "cometbft"
+
+# The URL of the influxdb instance to use for remote event
+# collection. If empty, remote event collection is disabled.
+influx_url = ""
+
+# The influxdb token to use for remote event collection.
+influx_token = ""
+
+# The influxdb bucket to use for remote event collection.
+influx_bucket = "e2e"
+
+# The influxdb org to use for event remote collection.
+influx_org = "celestia"
+
+# The size of the batches that are sent to the database.
+influx_batch_size = 20
