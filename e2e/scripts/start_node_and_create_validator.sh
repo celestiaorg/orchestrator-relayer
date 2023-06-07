@@ -10,13 +10,6 @@ then
   exit 1
 fi
 
-# install needed dependencies
-apk add curl jq coreutils
-
-# set the genesis time to current time for pruning to work properly
-new_time=$(date -u +"%Y-%m-%dT%H:%M:%S.%N")"Z"
-jq --arg new_time "$new_time" '.genesis_time = $new_time' "${CELESTIA_HOME}"/config/genesis_template.json > "${CELESTIA_HOME}"/config/genesis.json
-
 # create necessary structure if doesn't exist
 if [[ ! -f ${CELESTIA_HOME}/data/priv_validator_state.json ]]
 then
@@ -29,6 +22,9 @@ then
 }
 EOF
 fi
+
+# install needed dependencies
+apk add curl
 
 {
   # wait for the node to get up and running

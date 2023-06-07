@@ -1,6 +1,7 @@
 version: '3'
 
 services:
+  # core0 always needs to start first for the E2E suite to work correctly
   core0:
     container_name: core0
     build:
@@ -23,6 +24,7 @@ services:
       - ${PWD}/celestia-app/core0/keyring-test:/opt/keyring-test:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
       - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:rw
       - ${PWD}/scripts/start_core0.sh:/opt/start_core0.sh:ro
 
   core0-orch:
@@ -80,6 +82,7 @@ services:
       - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
       - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
 
   core1-orch:
     container_name: core1-orch
@@ -134,6 +137,7 @@ services:
       - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
       - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
 
   core2-orch:
     container_name: core2-orch
@@ -188,6 +192,7 @@ services:
       - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
       - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
+      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
 
   core3-orch:
     container_name: core3-orch
