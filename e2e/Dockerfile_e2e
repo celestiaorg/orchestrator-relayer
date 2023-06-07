@@ -20,7 +20,7 @@ RUN make build
 # final image
 FROM alpine:3.18.0
 # hadolint ignore=DL3018
-RUN apk update && apk --no-cache add bash
+RUN apk update && apk --no-cache add bash jq coreutils curl
 
 COPY --from=builder /orchestrator-relayer/build/qgb /bin/qgb
 COPY --from=builder /opt/celestia-app/build/celestia-appd /bin/celestia-appd
