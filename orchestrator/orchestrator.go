@@ -210,17 +210,34 @@ func (orch Orchestrator) EnqueueMissingEvents(
 	}
 	var startingNonce uint64
 	if lastUnbondingHeight == 0 {
+		// chain startup case
 		startingNonce = 1
 	} else {
-		dc, err := orch.AppQuerier.QueryDataCommitmentForHeight(ctx, uint64(lastUnbondingHeight))
+		lastDc, err := orch.AppQuerier.QueryLatestDataCommitment(ctx)
 		if err != nil {
 			return err
 		}
-		startingValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
-		if err != nil {
-			return err
+		if lastUnbondingHeight >= int64(lastDc.EndBlock) {
+			// if no data commitment has committed to the last unbonding height,
+			// then, the orchestrator should start signing at the latest valset
+			vs, err := orch.AppQuerier.QueryLatestValset(ctx)
+			if err != nil {
+				return err
+			}
+			startingNonce = vs.Nonce
+		} else {
+			// some data commitment has committed to the last unbonding height,
+			// so, we start signing from the valset that attests to that one
+			dc, err := orch.AppQuerier.QueryDataCommitmentForHeight(ctx, uint64(lastUnbondingHeight))
+			if err != nil {
+				return err
+			}
+			startingValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
+			if err != nil {
+				return err
+			}
+			startingNonce = startingValset.Nonce
 		}
-		startingNonce = startingValset.Nonce
 	}
 
 	orch.Logger.Info("syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", startingNonce)
