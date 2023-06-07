@@ -170,13 +170,9 @@ func getSignaturesAndPrintThem(
 		return celestiatypes.ErrAttestationNotFound
 	}
 
-	switch att.Type() {
-	case celestiatypes.ValsetRequestType:
-		vs, ok := att.(*celestiatypes.Valset)
-		if !ok {
-			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
-		}
-		signBytes, err := vs.SignBytes()
+	switch castedAtt := att.(type) {
+	case *celestiatypes.Valset:
+		signBytes, err := castedAtt.SignBytes()
 		if err != nil {
 			return err
 		}
@@ -193,20 +189,16 @@ func getSignaturesAndPrintThem(
 				return err
 			}
 		}
-	case celestiatypes.DataCommitmentRequestType:
-		dc, ok := att.(*celestiatypes.DataCommitment)
-		if !ok {
-			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
-		}
+	case *celestiatypes.DataCommitment:
 		commitment, err := tmQuerier.QueryCommitment(
 			ctx,
-			dc.BeginBlock,
-			dc.EndBlock,
+			castedAtt.BeginBlock,
+			castedAtt.EndBlock,
 		)
 		if err != nil {
 			return err
 		}
-		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 		confirms, err := p2pQuerier.QueryDataCommitmentConfirms(ctx, *lastValset, nonce, dataRootHash.Hex())
 		if err != nil {
 			return err
@@ -447,13 +439,9 @@ func getSignatureAndPrintIt(
 		return celestiatypes.ErrAttestationNotFound
 	}
 
-	switch att.Type() {
-	case celestiatypes.ValsetRequestType:
-		vs, ok := att.(*celestiatypes.Valset)
-		if !ok {
-			return errors.Wrap(celestiatypes.ErrAttestationNotValsetRequest, strconv.FormatUint(nonce, 10))
-		}
-		signBytes, err := vs.SignBytes()
+	switch castedAtt := att.(type) {
+	case *celestiatypes.Valset:
+		signBytes, err := castedAtt.SignBytes()
 		if err != nil {
 			return err
 		}
@@ -466,20 +454,16 @@ func getSignatureAndPrintIt(
 		} else {
 			logger.Info("found orchestrator signature", "nonce", nonce, "evm_address", evmAddress, "signature", confirm.Signature)
 		}
-	case celestiatypes.DataCommitmentRequestType:
-		dc, ok := att.(*celestiatypes.DataCommitment)
-		if !ok {
-			return errors.Wrap(types.ErrAttestationNotDataCommitmentRequest, strconv.FormatUint(nonce, 10))
-		}
+	case *celestiatypes.DataCommitment:
 		commitment, err := tmQuerier.QueryCommitment(
 			ctx,
-			dc.BeginBlock,
-			dc.EndBlock,
+			castedAtt.BeginBlock,
+			castedAtt.EndBlock,
 		)
 		if err != nil {
 			return err
 		}
-		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(dc.Nonce)), commitment)
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 		confirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, nonce, evmAddress, dataRootHash.Hex())
 		if err != nil {
 			return err

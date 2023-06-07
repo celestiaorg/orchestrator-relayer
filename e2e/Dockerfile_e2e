@@ -7,19 +7,20 @@ RUN make build
 
 # rebuild the celestia-app binary
 WORKDIR /opt
-RUN git clone https://github.com/celestiaorg/celestia-app && cd celestia-app && git checkout 41ebe6b1f208
+RUN git clone https://github.com/celestiaorg/celestia-app && cd celestia-app && git checkout v1.0.0-rc2
 WORKDIR /opt/celestia-app
 # set timeout propose to 1s and timeout commit to 1ms
 RUN sed -i 's#time.Second#time.Millisecond#g' pkg/appconsts/consensus_consts.go
 RUN sed -i 's#10#1#g' pkg/appconsts/consensus_consts.go
+RUN sed -i 's#15#1#g' pkg/appconsts/consensus_consts.go
 RUN sed -i 's#TimeoutPropose[[:space:]]=[[:space:]]time.Millisecond[[:space:]]\*[[:space:]]1#TimeoutPropose = time.Second#g' pkg/appconsts/consensus_consts.go
 RUN sed -i 's#time.Millisecond#50*time.Millisecond#g' pkg/appconsts/consensus_consts.go
 RUN make build
 
 # final image
-FROM alpine:3.17.2
+FROM alpine:3.18.0
 # hadolint ignore=DL3018
-RUN apk update && apk --no-cache add bash
+RUN apk update && apk --no-cache add bash jq coreutils curl
 
 COPY --from=builder /orchestrator-relayer/build/qgb /bin/qgb
 COPY --from=builder /opt/celestia-app/build/celestia-appd /bin/celestia-appd

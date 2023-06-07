@@ -2,6 +2,10 @@
 
 # This script starts core0
 
+# set the genesis time to current time for pruning to work properly
+new_time=$(date -u +"%Y-%m-%dT%H:%M:%S.%N")"Z"
+jq --arg new_time "$new_time" '.genesis_time = $new_time' /opt/config/genesis_template.json > /opt/config/genesis.json
+
 if [[ ! -f /opt/data/priv_validator_state.json ]]
 then
     mkdir /opt/data

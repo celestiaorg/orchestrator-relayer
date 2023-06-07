@@ -88,10 +88,6 @@ func (aq *AppQuerier) QueryDataCommitmentByNonce(ctx context.Context, nonce uint
 		return nil, types.ErrAttestationNotFound
 	}
 
-	if attestation.Type() != celestiatypes.DataCommitmentRequestType {
-		return nil, types.ErrAttestationNotDataCommitmentRequest
-	}
-
 	dcc, ok := attestation.(*celestiatypes.DataCommitment)
 	if !ok {
 		return nil, types.ErrAttestationNotDataCommitmentRequest
@@ -107,7 +103,7 @@ func (aq *AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height u
 	if err != nil {
 		return nil, err
 	}
-	dcc, err := aq.QueryDataCommitmentByNonce(ctx, resp.Nonce)
+	dcc, err := aq.QueryDataCommitmentByNonce(ctx, resp.DataCommitment.Nonce)
 	if err != nil {
 		return nil, err
 	}
@@ -122,10 +118,6 @@ func (aq *AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*ce
 	}
 	if attestation == nil {
 		return nil, types.ErrAttestationNotFound
-	}
-
-	if attestation.Type() != celestiatypes.ValsetRequestType {
-		return nil, types.ErrAttestationNotValsetRequest
 	}
 
 	value, ok := attestation.(*celestiatypes.Valset)
@@ -161,9 +153,9 @@ func (aq *AppQuerier) QueryLatestValset(ctx context.Context) (*celestiatypes.Val
 // If nonce is 1, it will return an error. Because, there is no valset before nonce 1.
 func (aq *AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
 	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
-	resp, err := queryClient.LastValsetRequestBeforeNonce(
+	resp, err := queryClient.LatestValsetRequestBeforeNonce(
 		ctx,
-		&celestiatypes.QueryLastValsetRequestBeforeNonceRequest{Nonce: nonce},
+		&celestiatypes.QueryLatestValsetRequestBeforeNonceRequest{Nonce: nonce},
 	)
 	if err != nil {
 		return nil, err
@@ -175,7 +167,7 @@ func (aq *AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint
 // QueryLastUnbondingHeight query the last unbonding height from state machine.
 func (aq *AppQuerier) QueryLastUnbondingHeight(ctx context.Context) (int64, error) {
 	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
-	resp, err := queryClient.LastUnbondingHeight(ctx, &celestiatypes.QueryLastUnbondingHeightRequest{})
+	resp, err := queryClient.LatestUnbondingHeight(ctx, &celestiatypes.QueryLatestUnbondingHeightRequest{})
 	if err != nil {
 		return 0, err
 	}

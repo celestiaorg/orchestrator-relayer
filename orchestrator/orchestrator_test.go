@@ -3,6 +3,7 @@ package orchestrator_test
 import (
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -19,7 +20,7 @@ func (s *OrchestratorTestSuite) TestProcessDataCommitmentEvent() {
 	_, err := s.Node.CelestiaNetwork.WaitForHeight(50)
 	require.NoError(t, err)
 
-	dc := celestiatypes.NewDataCommitment(2, 10, 20)
+	dc := celestiatypes.NewDataCommitment(2, 10, 20, time.Now())
 	commitment, err := hexutil.Decode("0x1234")
 	require.NoError(t, err)
 	dataRootTupleRoot := types.DataCommitmentTupleRootSignBytes(big.NewInt(2), commitment)
@@ -49,6 +50,7 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 			Power:      10,
 			EVMAddress: s.Orchestrator.EvmAccount.Address,
 		}},
+		time.Now(),
 	)
 	require.NoError(t, err)
 
