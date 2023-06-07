@@ -22,7 +22,7 @@ services:
       - ${PWD}/celestia-app/core0/config/node_key.json:/opt/config/node_key.json:ro
       - ${PWD}/celestia-app/core0/keyring-test:/opt/keyring-test:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
-      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+      - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
       - ${PWD}/scripts/start_core0.sh:/opt/start_core0.sh:ro
 
   core0-orch:
@@ -79,7 +79,7 @@ services:
       - ${PWD}/celestia-app/core1/keyring-test:/opt/keyring-test:ro
       - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
-      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+      - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
 
   core1-orch:
     container_name: core1-orch
@@ -133,7 +133,7 @@ services:
       - ${PWD}/celestia-app/core2/keyring-test:/opt/keyring-test:ro
       - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
-      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+      - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
 
   core2-orch:
     container_name: core2-orch
@@ -187,7 +187,7 @@ services:
       - ${PWD}/celestia-app/core3/keyring-test:/opt/keyring-test:ro
       - ${PWD}/scripts/start_node_and_create_validator.sh:/opt/start_node_and_create_validator.sh:ro
       - ${PWD}/celestia-app/config.toml:/opt/config/config.toml:ro
-      - ${PWD}/celestia-app/genesis.json:/opt/config/genesis.json:ro
+      - ${PWD}/celestia-app/genesis_template.json:/opt/config/genesis_template.json:ro
 
   core3-orch:
     container_name: core3-orch
