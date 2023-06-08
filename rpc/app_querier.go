@@ -103,11 +103,7 @@ func (aq *AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height u
 	if err != nil {
 		return nil, err
 	}
-	dcc, err := aq.QueryDataCommitmentByNonce(ctx, resp.DataCommitment.Nonce)
-	if err != nil {
-		return nil, err
-	}
-	return dcc, nil
+	return resp.DataCommitment, nil
 }
 
 // QueryLatestDataCommitment query the latest data commitment in QGB state machine.
