@@ -15,8 +15,8 @@ type TestNode struct {
 	EVMChain        *EVMChain
 }
 
-func NewTestNode(ctx context.Context, t *testing.T) *TestNode {
-	celestiaNetwork := NewCelestiaNetwork(ctx, t)
+func NewTestNode(ctx context.Context, t *testing.T, genesisOpts ...celestiatestnode.GenesisOption) *TestNode {
+	celestiaNetwork := NewCelestiaNetwork(ctx, t, genesisOpts...)
 	dhtNetwork := NewDHTNetwork(ctx, 2)
 
 	evmChain := NewEVMChain(celestiatestnode.NodeEVMPrivateKey)

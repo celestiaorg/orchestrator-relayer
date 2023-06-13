@@ -172,18 +172,20 @@ func (orch Orchestrator) StartNewEventsListener(
 				// we only want to handle the attestation when the block is committed
 				continue
 			}
-			attestationEvent := mustGetEvent(result, attestationEventName)
-			nonce, err := strconv.Atoi(attestationEvent[0])
-			if err != nil {
-				return err
-			}
-			orch.Logger.Info("enqueueing new attestation nonce", "nonce", nonce)
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			case <-signalChan:
-				return ErrSignalChanNotif
-			case queue <- uint64(nonce):
+			attestationEvents := mustGetEvent(result, attestationEventName)
+			for _, attEvent := range attestationEvents {
+				nonce, err := strconv.Atoi(attEvent)
+				if err != nil {
+					return err
+				}
+				orch.Logger.Info("enqueueing new attestation nonce", "nonce", nonce)
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-signalChan:
+					return ErrSignalChanNotif
+				case queue <- uint64(nonce):
+				}
 			}
 		}
 	}

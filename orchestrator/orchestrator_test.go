@@ -1,9 +1,15 @@
 package orchestrator_test
 
 import (
+	"context"
 	"math/big"
 	"testing"
 	"time"
+
+	"github.com/celestiaorg/celestia-app/app"
+	"github.com/celestiaorg/celestia-app/app/encoding"
+	"github.com/celestiaorg/orchestrator-relayer/rpc"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -111,4 +117,49 @@ func TestValidatorPartOfValset(t *testing.T) {
 			assert.Equal(t, tt.expectedResult, result)
 		})
 	}
+}
+
+func (s *OrchestratorTestSuite) TestEnqueuingAttestationNonces() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	t := s.T()
+	_, err := s.Node.CelestiaNetwork.WaitForHeight(10)
+	require.NoError(t, err)
+
+	// nonces queue will be closed below
+	noncesQueue := make(chan uint64, 100)
+	signalChan := make(chan struct{})
+	defer close(signalChan)
+
+	go func() {
+		_ = s.Orchestrator.StartNewEventsListener(ctx, noncesQueue, signalChan)
+	}()
+	go func() {
+		_ = s.Orchestrator.EnqueueMissingEvents(ctx, noncesQueue, signalChan)
+	}()
+
+	// set the data commitment window to a high value
+	s.Node.CelestiaNetwork.SetDataCommitmentWindow(t, 1000)
+	_, err = s.Node.CelestiaNetwork.WaitForHeightWithTimeout(1500, time.Minute)
+	assert.NoError(t, err)
+
+	// set the data commitment window to a low value
+	s.Node.CelestiaNetwork.SetDataCommitmentWindow(t, 100)
+
+	ecfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
+	appQuerier := rpc.NewAppQuerier(
+		tmlog.NewNopLogger(),
+		s.Node.CelestiaNetwork.GRPCAddr,
+		ecfg,
+	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
+
+	latestNonce, err := appQuerier.QueryLatestAttestationNonce(ctx)
+	s.NoError(err)
+
+	cancel()
+	close(noncesQueue)
+	assert.GreaterOrEqual(t, len(noncesQueue), int(latestNonce))
 }
