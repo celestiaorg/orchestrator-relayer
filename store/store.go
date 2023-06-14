@@ -28,7 +28,7 @@ type Store struct {
 	// Path the path to the qgb storage root
 	Path string
 
-	// protects directory
+	// protects directory when the data store is open
 	dirLock *fslock.Locker
 }
 
@@ -41,20 +41,14 @@ type OpenOptions struct {
 }
 
 // OpenStore creates new FS Store under the given 'path'.
-// To be opened the Store must be initialized first, otherwise ErrNotInited is thrown.
+// To be opened, the Store must be initialized first, otherwise ErrNotInited is thrown.
 // OpenStore takes a file Lock on directory, hence only one Store can be opened at a time under the
 // given 'path', otherwise ErrOpened is thrown.
+// The store is locked only in the case of also opening the data store, however, in the case
+// of the keys, the store can still be opened.
 func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, error) {
 	path, err := storePath(path)
 	if err != nil {
-		return nil, err
-	}
-
-	flock, err := fslock.Lock(lockPath(path))
-	if err != nil {
-		if err == fslock.ErrLocked {
-			return nil, ErrOpened
-		}
 		return nil, err
 	}
 
@@ -64,17 +58,26 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 		NeedP2PKeyStore: options.HasP2PKeyStore,
 	})
 	if !ok {
-		flock.Unlock() //nolint: errcheck
 		return nil, ErrNotInited
 	}
 
 	var ds *badger.Datastore
+	var flock *fslock.Locker
 	if options.HasDataStore {
+		flock, err = fslock.Lock(lockPath(path))
+		if err != nil {
+			if err == fslock.ErrLocked {
+				return nil, ErrOpened
+			}
+			return nil, err
+		}
 		if options.BadgerOptions == nil {
+			flock.Unlock() //nolint: errcheck
 			return nil, fmt.Errorf("badger data store options needed to open the store")
 		}
 		ds, err = badger.NewDatastore(dataPath(path), options.BadgerOptions)
 		if err != nil {
+			flock.Unlock() //nolint: errcheck
 			return nil, fmt.Errorf("can't open Badger Datastore: %w", err)
 		}
 	}
@@ -106,12 +109,12 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 
 // Close closes an opened store and removes the lock file.
 func (s Store) Close(logger tmlog.Logger, options OpenOptions) error {
-	err := s.dirLock.Unlock()
-	if err != nil {
-		logger.Info("couldn't unlock store", "path", s.Path, "err", err.Error())
-		return err
-	}
 	if options.HasDataStore {
+		err := s.dirLock.Unlock()
+		if err != nil {
+			logger.Info("couldn't unlock store", "path", s.Path, "err", err.Error())
+			return err
+		}
 		err = s.DataStore.Close()
 		if err != nil {
 			logger.Info("couldn't close data store", "path", s.Path, "err", err.Error())
