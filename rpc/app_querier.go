@@ -106,6 +106,16 @@ func (aq *AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height u
 	return resp.DataCommitment, nil
 }
 
+// QueryLatestDataCommitment query the latest data commitment in QGB state machine.
+func (aq *AppQuerier) QueryLatestDataCommitment(ctx context.Context) (*celestiatypes.DataCommitment, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+	resp, err := queryClient.LatestDataCommitment(ctx, &celestiatypes.QueryLatestDataCommitmentRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return resp.DataCommitment, nil
+}
+
 // QueryValsetByNonce query a valset by nonce.
 func (aq *AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*celestiatypes.Valset, error) {
 	attestation, err := aq.QueryAttestationByNonce(ctx, nonce)
