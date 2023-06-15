@@ -119,7 +119,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 			// using an immediate ticker not to wait the initial wait period before starting to relay
 			err := helpers.ImmediateTicker(
 				ctx,
-				10*time.Second,
+				100*time.Second,
 				processFunc,
 			)
 			if err != nil {
