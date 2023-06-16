@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -9,18 +10,21 @@ import (
 )
 
 const (
-	FlagCelestiaGRPC        = "celes-grpc"
-	FlagEVMAccAddress       = "evm-address"
-	FlagTendermintRPC       = "celes-rpc"
+	FlagCoreGRPCHost        = "core.grpc.host"
+	FlagCoreGRPCPort        = "core.grpc.port"
+	FlagEVMAccAddress       = "evm.address"
+	FlagCoreRPCHost         = "core.rpc.host"
+	FlagCoreRPCPort         = "core.rpc.port"
 	ServiceNameOrchestrator = "orchestrator"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(FlagTendermintRPC, "t", "tcp://localhost:26657", "Specify the rest rpc address")
-	cmd.Flags().StringP(FlagCelestiaGRPC, "c", "localhost:9090", "Specify the grpc address (without the protocol prefix)")
-	cmd.Flags().StringP(
+	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rest rpc address host")
+	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rest rpc address port")
+	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
+	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
+	cmd.Flags().String(
 		FlagEVMAccAddress,
-		"d",
 		"",
 		"Specify the EVM account address to use for signing (Note: the private key should be in the keystore)",
 	)
@@ -38,7 +42,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 
 type StartConfig struct {
 	*base.Config
-	celesGRPC, tendermintRPC     string
+	coreGRPC, coreRPC            string
 	evmAccAddress                string
 	bootstrappers, p2pListenAddr string
 	p2pNickname                  string
@@ -52,11 +56,19 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	if evmAccAddr == "" {
 		return StartConfig{}, errors.New("the evm account address should be specified")
 	}
-	tendermintRPC, err := cmd.Flags().GetString(FlagTendermintRPC)
+	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	celesGRPC, err := cmd.Flags().GetString(FlagCelestiaGRPC)
+	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
 	if err != nil {
 		return StartConfig{}, err
 	}
@@ -90,8 +102,8 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 
 	return StartConfig{
 		evmAccAddress: evmAccAddr,
-		celesGRPC:     celesGRPC,
-		tendermintRPC: tendermintRPC,
+		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
+		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
 		bootstrappers: bootstrappers,
 		p2pNickname:   p2pNickname,
 		p2pListenAddr: p2pListenAddress,

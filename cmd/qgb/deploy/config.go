@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/base"
 
@@ -10,30 +11,31 @@ import (
 )
 
 const (
-	FlagEVMAccAddress   = "evm-address"
-	FlagEVMChainID      = "evm-chain-id"
-	FlagCelesGRPC       = "celes-grpc"
-	FlagEVMRPC          = "evm-rpc"
+	FlagEVMAccAddress   = "evm.address"
+	FlagEVMChainID      = "evm.chain-id"
+	FlagEVMRPC          = "evm.rpc"
+	FlagEVMGasLimit     = "evm.gas-limit"
+	FlagCoreGRPCHost    = "core.grpc.host"
+	FlagCoreGRPCPort    = "core.grpc.port"
 	FlagStartingNonce   = "starting-nonce"
-	FlagEVMGasLimit     = "evm-gas-limit"
 	ServiceNameDeployer = "deployer"
 )
 
 func addDeployFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(FlagEVMAccAddress, "d", "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
-	cmd.Flags().Uint64P(FlagEVMChainID, "z", 5, "Specify the evm chain id")
-	cmd.Flags().StringP(FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address")
-	cmd.Flags().StringP(FlagEVMRPC, "e", "http://localhost:8545", "Specify the ethereum rpc address")
-	cmd.Flags().StringP(
+	cmd.Flags().String(FlagEVMAccAddress, "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
+	cmd.Flags().Uint64(FlagEVMChainID, 5, "Specify the evm chain id")
+	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
+	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
+	cmd.Flags().String(FlagEVMRPC, "http://localhost:8545", "Specify the ethereum rpc address")
+	cmd.Flags().String(
 		FlagStartingNonce,
-		"n",
 		"latest",
 		"Specify the nonce to start the QGB contract from. "+
 			"\"earliest\": for genesis, "+
 			"\"latest\": for latest valset nonce, "+
 			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
 	)
-	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
+	cmd.Flags().Uint64(FlagEVMGasLimit, evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	homeDir, err := base.DefaultServicePath(ServiceNameDeployer)
 	if err != nil {
 		panic(err)
@@ -46,11 +48,11 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 
 type deployConfig struct {
 	*base.Config
-	evmRPC, celesGRPC string
-	evmChainID        uint64
-	evmAccAddress     string
-	startingNonce     string
-	evmGasLimit       uint64
+	evmRPC, coreGRPC string
+	evmChainID       uint64
+	evmAccAddress    string
+	startingNonce    string
+	evmGasLimit      uint64
 }
 
 func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
@@ -65,7 +67,11 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 	if err != nil {
 		return deployConfig{}, err
 	}
-	celesGRPC, err := cmd.Flags().GetString(FlagCelesGRPC)
+	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
 	if err != nil {
 		return deployConfig{}, err
 	}
@@ -100,7 +106,7 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 	return deployConfig{
 		evmAccAddress: evmAccAddr,
 		evmChainID:    evmChainID,
-		celesGRPC:     celesGRPC,
+		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
 		evmRPC:        evmRPC,
 		startingNonce: startingNonce,
 		evmGasLimit:   evmGasLimit,

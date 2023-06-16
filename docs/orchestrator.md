@@ -144,28 +144,19 @@ Starts the QGB orchestrator to sign attestations
 
 Usage:
   qgb orchestrator start <flags> [flags]
-
-Flags:
-  -c, --celes-grpc string          Specify the grpc address without the protocol prefix (default "localhost:9090")
-  -t, --celes-rpc string           Specify the rest rpc address (default "tcp://localhost:26657")
-  -d, --evm-address string         Specify the EVM account address to use for signing (Note: the private key should be in the keystore)
-  -h, --help                       help for start
-      --home string                The qgb orchestrator home directory
-  -b, --p2p-bootstrappers string   Comma-separated multiaddresses of p2p peers to connect to
-  -q, --p2p-listen-addr string     MultiAddr for the p2p peer to listen on (default "/ip4/0.0.0.0/tcp/30000")
-  -p, --p2p-nickname string        Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)
-      --evm-passphrase string          the account passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 To start the orchestrator in the default home directory, run the following:
 
 ```ssh
 qgb orchestrator start \
-    -c localhost:9090 \
-    -t http://localhost:26657 \
-    -d 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488 \
-    -b /ip4/127.0.0.1/tcp/30001/p2p/12D3KooWFFHahpcZcuqnUhpBoX5fJ68Qm5Hc8dxiBcX1oo46fLxh \
-    -q /ip4/0.0.0.0/tcp/30000
+    --core.grpc.host localhost \
+    --core.grpc.port 9090 \
+    --core.rpc.host localhost \
+    --core.rpc.port 26657 \
+    --evm.address 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488 \
+    --p2p.bootstrappers /ip4/127.0.0.1/tcp/30001/p2p/12D3KooWFFHahpcZcuqnUhpBoX5fJ68Qm5Hc8dxiBcX1oo46fLxh \
+    --p2p.listen-addr /ip4/0.0.0.0/tcp/30000
 ```
 
 And, you will be prompted to enter your EVM key passphrase so that the orchestrator can use it to sign attestations. Make sure that it's the EVM address that was provided when creating the validator. If not, then the orchestrator will not sign, and you will keep seeing a "validator not part of valset" warning message. If you see such message, first verify that your validator is part of the active validator set. If so, then probably the EVM address provided to the orchestrator is not the right one, and you should check which EVM address is registered to your validator. Check the next section for more information.

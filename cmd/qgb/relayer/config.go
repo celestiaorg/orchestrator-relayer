@@ -15,24 +15,28 @@ import (
 )
 
 const (
-	FlagEVMAccAddress   = "evm-address"
-	FlagEVMChainID      = "evm-chain-id"
-	FlagCelesGRPC       = "celes-grpc"
-	FlagTendermintRPC   = "celes-rpc"
-	FlagEVMRPC          = "evm-rpc"
-	FlagContractAddress = "contract-address"
-	FlagEVMGasLimit     = "evm-gas-limit"
+	FlagEVMAccAddress   = "evm.address"
+	FlagEVMChainID      = "evm.chain-id"
+	FlagCoreGRPCHost    = "core.grpc.host"
+	FlagCoreGRPCPort    = "core.grpc.port"
+	FlagCoreRPCHost     = "core.rpc.host"
+	FlagCoreRPCPort     = "core.rpc.port"
+	FlagEVMRPC          = "evm.rpc"
+	FlagContractAddress = "evm.contract-address"
+	FlagEVMGasLimit     = "evm.gas-limit"
 	ServiceNameRelayer  = "relayer"
 )
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().StringP(FlagEVMAccAddress, "d", "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
-	cmd.Flags().Uint64P(FlagEVMChainID, "z", 5, "Specify the evm chain id")
-	cmd.Flags().StringP(FlagCelesGRPC, "c", "localhost:9090", "Specify the grpc address (without the protocol prefix)")
-	cmd.Flags().StringP(FlagTendermintRPC, "t", "tcp://localhost:26657", "Specify the rest rpc address")
-	cmd.Flags().StringP(FlagEVMRPC, "e", "http://localhost:8545", "Specify the ethereum rpc address")
-	cmd.Flags().StringP(FlagContractAddress, "a", "", "Specify the contract at which the qgb is deployed")
-	cmd.Flags().Uint64P(FlagEVMGasLimit, "l", evm.DefaultEVMGasLimit, "Specify the evm gas limit")
+	cmd.Flags().String(FlagEVMAccAddress, "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
+	cmd.Flags().Uint64(FlagEVMChainID, 5, "Specify the evm chain id")
+	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
+	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
+	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rest rpc address host")
+	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rest rpc address port")
+	cmd.Flags().String(FlagEVMRPC, "http://localhost:8545", "Specify the ethereum rpc address")
+	cmd.Flags().String(FlagContractAddress, "", "Specify the contract at which the qgb is deployed")
+	cmd.Flags().Uint64(FlagEVMGasLimit, evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	homeDir, err := base.DefaultServicePath(ServiceNameRelayer)
 	if err != nil {
 		panic(err)
@@ -48,13 +52,13 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 
 type StartConfig struct {
 	*base.Config
-	evmChainID                       uint64
-	evmRPC, celesGRPC, tendermintRPC string
-	evmAccAddress                    string
-	contractAddr                     ethcmn.Address
-	evmGasLimit                      uint64
-	bootstrappers, p2pListenAddr     string
-	p2pNickname                      string
+	evmChainID                   uint64
+	evmRPC, coreGRPC, coreRPC    string
+	evmAccAddress                string
+	contractAddr                 ethcmn.Address
+	evmGasLimit                  uint64
+	bootstrappers, p2pListenAddr string
+	p2pNickname                  string
 }
 
 func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
@@ -69,11 +73,19 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 	if err != nil {
 		return StartConfig{}, err
 	}
-	tendermintRPC, err := cmd.Flags().GetString(FlagTendermintRPC)
+	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	celesGRPC, err := cmd.Flags().GetString(FlagCelesGRPC)
+	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
 	if err != nil {
 		return StartConfig{}, err
 	}
@@ -88,7 +100,7 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 		return StartConfig{}, fmt.Errorf("valid contract address flag is required: %s", FlagContractAddress)
 	}
 	address := ethcmn.HexToAddress(contractAddr)
-	ethRPC, err := cmd.Flags().GetString(FlagEVMRPC)
+	evmRPC, err := cmd.Flags().GetString(FlagEVMRPC)
 	if err != nil {
 		return StartConfig{}, err
 	}
@@ -127,10 +139,10 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 	return StartConfig{
 		evmAccAddress: evmAccAddr,
 		evmChainID:    evmChainID,
-		celesGRPC:     celesGRPC,
-		tendermintRPC: tendermintRPC,
+		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
+		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
 		contractAddr:  address,
-		evmRPC:        ethRPC,
+		evmRPC:        evmRPC,
 		evmGasLimit:   evmGasLimit,
 		bootstrappers: bootstrappers,
 		p2pListenAddr: p2pListenAddress,

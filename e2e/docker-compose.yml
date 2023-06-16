@@ -40,8 +40,10 @@ services:
       - MONIKER=core0
       - PRIVATE_KEY=da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9
       - EVM_ADDRESS=0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488
-      - TENDERMINT_RPC=tcp://core0:26657
-      - CELESTIA_GRPC=core0:9090
+      - CORE_RPC_HOST=core0
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=core0
+      - CORE_GRPC_PORT=9090
       # the other peers will consider core0 as a bootstrapper. So, it doesn't need to connect to any need during startup
       - P2P_BOOTSTRAPPERS=
       - P2P_IDENTITY=f7fd2be6b2abaa8519b0570d3a12e684a397456b0cc721198ebdd7e343cdd8f41813ef8aa857426c4e909c4fe19120a0f3f8c505286ca9d9249b5681475ec459
@@ -97,8 +99,10 @@ services:
       - MONIKER=core1
       - EVM_ADDRESS=0x91DEd26b5f38B065FC0204c7929Da1b2A21877Ad
       - PRIVATE_KEY=002ad18ca3def673345897b063bfa98d829a4d812dbd07f1938676828a82c4f9
-      - TENDERMINT_RPC=tcp://core1:26657
-      - CELESTIA_GRPC=core1:9090
+      - CORE_RPC_HOST=core1
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=core1
+      - CORE_GRPC_PORT=9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
     entrypoint: [
@@ -152,8 +156,10 @@ services:
       - MONIKER=core2
       - EVM_ADDRESS=0x3d22f0C38251ebdBE92e14BBF1bd2067F1C3b7D7
       - PRIVATE_KEY=6adac8b5de0ba702ec8feab6d386a0c7334c6720b9174c02333700d431057af8
-      - TENDERMINT_RPC=tcp://core2:26657
-      - CELESTIA_GRPC=core2:9090
+      - CORE_RPC_HOST=core2
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=core2
+      - CORE_GRPC_PORT=9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
     entrypoint: [
@@ -207,8 +213,10 @@ services:
       - MONIKER=core3
       - EVM_ADDRESS=0x3EE99606625E740D8b29C8570d855Eb387F3c790
       - PRIVATE_KEY=2f7f6763500dfb48b710a4c5c6c6a487b8aa6c7bc8b8a9b637a23f651f1c9b51
-      - TENDERMINT_RPC=tcp://core3:26657
-      - CELESTIA_GRPC=core3:9090
+      - CORE_RPC_HOST=core3
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=core3
+      - CORE_GRPC_PORT=9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
     entrypoint: [
@@ -250,8 +258,10 @@ services:
       - EVM_CHAIN_ID=qgb-e2e
       - EVM_ADDRESS=0x95359c3348e189ef7781546e6E13c80230fC9fB5
       - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
-      - TENDERMINT_RPC=tcp://core0:26657
-      - CELESTIA_GRPC=core0:9090
+      - CORE_RPC_HOST=core0
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=core0
+      - CORE_GRPC_PORT=9090
       - EVM_CHAIN_ID=1234
       - EVM_ENDPOINT=http://ganache:8545
       - STARTING_NONCE=earliest
@@ -278,8 +288,10 @@ services:
       - EVM_CHAIN_ID=qgb-e2e
       - EVM_ADDRESS=0x95359c3348e189ef7781546e6E13c80230fC9fB5
       - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
-      - TENDERMINT_RPC=tcp://core0:26657
-      - CELESTIA_GRPC=core0:9090
+      - CORE_RPC_HOST=core0
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=core0
+      - CORE_GRPC_PORT=9090
       - EVM_CHAIN_ID=1234
       - EVM_ENDPOINT=http://ganache:8545
       - STARTING_NONCE=earliest

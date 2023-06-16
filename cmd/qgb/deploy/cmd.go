@@ -43,7 +43,7 @@ func Command() *cobra.Command {
 
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
-			querier := rpc.NewAppQuerier(logger, config.celesGRPC, encCfg)
+			querier := rpc.NewAppQuerier(logger, config.coreGRPC, encCfg)
 			err = querier.Start()
 			if err != nil {
 				return err
