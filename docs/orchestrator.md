@@ -130,6 +130,12 @@ And, you will be prompted to enter your EVM key passphrase so that the orchestra
 
 If you no longer have access to your EVM address, you could always edit your validator with a new EVM address. This can be done through the `edit-validator` command. Check the next section.
 
+### Open the P2P port
+
+In order for the signature propagation to be successful, you will need to expose the P2P port, which is by default `30000`.
+
+If not, then the signatures may not be available to the network and relayers will not be able to query them.
+
 #### Edit validator
 
 If your validator was created using an EVM address that you don't have access to, you can always edit it using the `edit-validator` command.
