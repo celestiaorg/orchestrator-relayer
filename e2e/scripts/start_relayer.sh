@@ -5,19 +5,20 @@
 
 # check if environment variables are set
 if [[ -z "${EVM_CHAIN_ID}" || -z "${PRIVATE_KEY}" ]] || \
-   [[ -z "${TENDERMINT_RPC}" || -z "${CELESTIA_GRPC}" ]] || \
+   [[ -z "${CORE_GRPC_HOST}" || -z "${CORE_GRPC_PORT}" ]] || \
+   [[ -z "${CORE_RPC_HOST}" || -z "${CORE_RPC_PORT}" ]] || \
    [[ -z "${EVM_ENDPOINT}" || -z "${P2P_BOOTSTRAPPERS}" ]] || \
    [[ -z "${P2P_LISTEN}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "EVM_CHAIN_ID, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, EVM_ENDPOINT, P2P_BOOTSTRAPPERS, P2P_LISTEN variables"
+  echo "EVM_CHAIN_ID, PRIVATE_KEY, CORE_GRPC_HOST, CORE_GRPC_PORT, CORE_RPC_HOST, CORE_RPC_PORT, EVM_ENDPOINT, P2P_BOOTSTRAPPERS, P2P_LISTEN variables"
   exit 1
 fi
 
 # wait for the node to get up and running
 while true
 do
-  height=$(/bin/celestia-appd query block 1 -n ${TENDERMINT_RPC} 2>/dev/null)
+  height=$(/bin/celestia-appd query block 1 -n tcp://$CORE_RPC_HOST:$CORE_RPC_PORT 2>/dev/null)
   if [[ -n ${height} ]] ; then
     break
   fi
@@ -46,12 +47,14 @@ QGB_CONTRACT=$(cat /opt/qgb_address.txt)
 # to give time for the bootstrappers to be up
 sleep 5s
 /bin/qgb relayer start \
-  -d="${EVM_ADDRESS}" \
-  -t="${TENDERMINT_RPC}" \
-  -c="${CELESTIA_GRPC}" \
-  -z="${EVM_CHAIN_ID}" \
-  -e="${EVM_ENDPOINT}" \
-  -a="${QGB_CONTRACT}" \
-  -b="${P2P_BOOTSTRAPPERS}" \
-  -q="${P2P_LISTEN}" \
+  --evm.address="${EVM_ADDRESS}" \
+  --core.rpc.host="${CORE_RPC_HOST}" \
+  --core.rpc.port="${CORE_RPC_PORT}" \
+  --core.grpc.host="${CORE_GRPC_HOST}" \
+  --core.grpc.port="${CORE_GRPC_PORT}" \
+  --evm.chain-id="${EVM_CHAIN_ID}" \
+  --evm.rpc="${EVM_ENDPOINT}" \
+  --evm.contract-address="${QGB_CONTRACT}" \
+  --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
+  --p2p.listen-addr="${P2P_LISTEN}" \
   --evm-passphrase=123

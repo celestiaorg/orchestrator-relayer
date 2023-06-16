@@ -53,8 +53,8 @@ func Start() *cobra.Command {
 			tmQuerier, appQuerier, p2pQuerier, retrier, evmKeyStore, acc, stopFuncs, err := common.InitBase(
 				ctx,
 				logger,
-				config.tendermintRPC,
-				config.celesGRPC,
+				config.coreRPC,
+				config.coreGRPC,
 				config.Home,
 				config.evmAccAddress,
 				config.EVMPassphrase,

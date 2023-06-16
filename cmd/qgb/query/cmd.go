@@ -75,7 +75,7 @@ func Signers() *cobra.Command {
 			}()
 
 			// create tm querier and app querier
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
@@ -358,7 +358,7 @@ func Signature() *cobra.Command {
 			}()
 
 			// create tm querier and app querier
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.tendermintRPC, config.celesGRPC)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err

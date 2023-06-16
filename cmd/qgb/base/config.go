@@ -43,19 +43,19 @@ func DefaultServicePath(serviceName string) (string, error) {
 }
 
 const (
-	FlagBootstrappers    = "p2p-bootstrappers"
-	FlagP2PListenAddress = "p2p-listen-addr"
-	FlagP2PNickname      = "p2p-nickname"
+	FlagBootstrappers    = "p2p.bootstrappers"
+	FlagP2PListenAddress = "p2p.listen-addr"
+	FlagP2PNickname      = "p2p.nickname"
 )
 
 func AddP2PNicknameFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP(FlagP2PNickname, "p", "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
+	cmd.Flags().String(FlagP2PNickname, "", "Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)")
 }
 
 func AddP2PListenAddressFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP(FlagP2PListenAddress, "q", "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
+	cmd.Flags().String(FlagP2PListenAddress, "/ip4/0.0.0.0/tcp/30000", "MultiAddr for the p2p peer to listen on")
 }
 
 func AddBootstrappersFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP(FlagBootstrappers, "b", "", "Comma-separated multiaddresses of p2p peers to connect to")
+	cmd.Flags().String(FlagBootstrappers, "", "Comma-separated multiaddresses of p2p peers to connect to")
 }

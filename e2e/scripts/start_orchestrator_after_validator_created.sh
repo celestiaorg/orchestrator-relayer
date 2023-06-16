@@ -4,11 +4,12 @@
 
 # check if environment variables are set
 if [[ -z "${MONIKER}" || -z "${PRIVATE_KEY}" ]] || \
-   [[ -z "${TENDERMINT_RPC}" || -z "${CELESTIA_GRPC}" ]] || \
+   [[ -z "${CORE_GRPC_HOST}" || -z "${CORE_GRPC_PORT}" ]] || \
+   [[ -z "${CORE_RPC_HOST}" || -z "${CORE_RPC_PORT}" ]] || \
    [[ -z "${P2P_LISTEN}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "MONIKER, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, P2P_LISTEN variables"
+  echo "MONIKER, PRIVATE_KEY, CORE_GRPC_HOST, CORE_GRPC_PORT, CORE_RPC_HOST, CORE_RPC_PORT, P2P_LISTEN variables"
   exit 1
 fi
 
@@ -17,7 +18,7 @@ VAL_ADDRESS=$(celestia-appd keys show ${MONIKER} --keyring-backend test --bech=v
 while true
 do
   # verify that the node is listening on gRPC
-  nc -z -w5 $(echo $CELESTIA_GRPC | cut -d : -f 1) $(echo $CELESTIA_GRPC | cut -d : -f 2)
+  nc -z -w5 $CORE_GRPC_HOST $CORE_GRPC_PORT
   result=$?
   if [ "${result}" != "0" ]; then
     echo "Waiting for node gRPC to be available ..."
@@ -26,7 +27,7 @@ do
   fi
 
   # verify if RPC is running and the validator was created
-  output=$(celestia-appd query staking validator ${VAL_ADDRESS} --node $TENDERMINT_RPC 2>/dev/null)
+  output=$(celestia-appd query staking validator ${VAL_ADDRESS} --node tcp://$CORE_RPC_HOST:$CORE_RPC_PORT 2>/dev/null)
   if [[ -n "${output}" ]] ; then
     break
   fi
@@ -47,21 +48,25 @@ then
   /bin/qgb orchestrator keys p2p import key "${P2P_IDENTITY}"
 
   /bin/qgb orchestrator start \
-    -d="${EVM_ADDRESS}" \
-    -t="${TENDERMINT_RPC}" \
-    -c="${CELESTIA_GRPC}" \
-    -p=key \
-    -q="${P2P_LISTEN}" \
+    --evm.address="${EVM_ADDRESS}" \
+    --core.rpc.host="${CORE_RPC_HOST}" \
+    --core.rpc.port="${CORE_RPC_PORT}" \
+    --core.grpc.host="${CORE_GRPC_HOST}" \
+    --core.grpc.port="${CORE_GRPC_PORT}" \
+    --p2p.nickname=key \
+    --p2p.listen-addr="${P2P_LISTEN}" \
     --evm-passphrase=123
 else
   # to give time for the bootstrappers to be up
   sleep 5s
 
   /bin/qgb orchestrator start \
-    -d="${EVM_ADDRESS}" \
-    -t="${TENDERMINT_RPC}" \
-    -c="${CELESTIA_GRPC}" \
-    -b="${P2P_BOOTSTRAPPERS}" \
-    -q="${P2P_LISTEN}"\
+    --evm.address="${EVM_ADDRESS}" \
+    --core.rpc.host="${CORE_RPC_HOST}" \
+    --core.rpc.port="${CORE_RPC_PORT}" \
+    --core.grpc.host="${CORE_GRPC_HOST}" \
+    --core.grpc.port="${CORE_GRPC_PORT}" \
+    --p2p.listen-addr="${P2P_LISTEN}" \
+    --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
     --evm-passphrase=123
 fi

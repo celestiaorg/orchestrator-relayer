@@ -11,11 +11,12 @@ fi
 
 # check if environment variables are set
 if [[ -z "${EVM_CHAIN_ID}" || -z "${PRIVATE_KEY}" ]] || \
-   [[ -z "${TENDERMINT_RPC}" || -z "${CELESTIA_GRPC}" ]] || \
+   [[ -z "${CORE_RPC_HOST}" || -z "${CORE_RPC_PORT}" ]] || \
+   [[ -z "${CORE_GRPC_HOST}" || -z "${CORE_GRPC_PORT}" ]] || \
    [[ -z "${EVM_ENDPOINT}" || -z "${STARTING_NONCE}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "EVM_CHAIN_ID, PRIVATE_KEY, TENDERMINT_RPC, CELESTIA_GRPC, EVM_ENDPOINT, STARTING_NONCE variables"
+  echo "EVM_CHAIN_ID, PRIVATE_KEY, CORE_RPC_HOST, CORE_RPC_PORT, CORE_GRPC_HOST, CORE_GRPC_PORT, EVM_ENDPOINT, STARTING_NONCE variables"
   exit 1
 fi
 
@@ -23,7 +24,7 @@ fi
 while true
 do
   # verify that the node is listening on gRPC
-  nc -z -w5 $(echo $CELESTIA_GRPC | cut -d : -f 1) $(echo $CELESTIA_GRPC | cut -d : -f 2)
+  nc -z -w5 "$CORE_GRPC_HOST" "$CORE_GRPC_PORT"
   result=$?
   if [ "${result}" != "0" ]; then
     echo "Waiting for node gRPC to be available ..."
@@ -31,7 +32,7 @@ do
     continue
   fi
 
-  height=$(/bin/celestia-appd query block 1 -n ${TENDERMINT_RPC} 2>/dev/null)
+  height=$(/bin/celestia-appd query block 1 -n tcp://${CORE_RPC_HOST}:${CORE_RPC_PORT} 2>/dev/null)
   if [[ -n ${height} ]] ; then
     break
   fi
@@ -63,11 +64,12 @@ done
 echo "deploying QGB contract..."
 
 /bin/qgb deploy \
-  -z "${EVM_CHAIN_ID}" \
-  -d "${EVM_ADDRESS}" \
-  -c "${CELESTIA_GRPC}" \
-  -n "${STARTING_NONCE}" \
-  -e "${EVM_ENDPOINT}" \
+  --evm.chain-id "${EVM_CHAIN_ID}" \
+  --evm.address "${EVM_ADDRESS}" \
+  --core.grpc.host "${CORE_GRPC_HOST}" \
+  --core.grpc.port "${CORE_GRPC_PORT}" \
+  --starting-nonce "${STARTING_NONCE}" \
+  --evm.rpc "${EVM_ENDPOINT}" \
   --evm-passphrase=123 > /opt/output
 
 echo $(cat /opt/output)
