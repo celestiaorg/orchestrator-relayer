@@ -85,7 +85,7 @@ func CreateDHTAndWaitForPeers(
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("created host")
+	logger.Info("created P2P host")
 
 	prettyPrintHost(h)
 
