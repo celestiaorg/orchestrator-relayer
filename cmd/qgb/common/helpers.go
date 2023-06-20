@@ -2,8 +2,11 @@ package common
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/libp2p/go-libp2p/core/host"
 
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 	"github.com/celestiaorg/orchestrator-relayer/store"
@@ -82,13 +85,9 @@ func CreateDHTAndWaitForPeers(
 	if err != nil {
 		return nil, err
 	}
-	logger.Info(
-		"created host",
-		"ID",
-		h.ID().String(),
-		"Addresses",
-		h.Addrs(),
-	)
+	logger.Info("created host")
+
+	prettyPrintHost(h)
 
 	// get the bootstrappers
 	var aIBootstrappers []peer.AddrInfo
@@ -114,6 +113,14 @@ func CreateDHTAndWaitForPeers(
 		return nil, err
 	}
 	return dht, nil
+}
+
+func prettyPrintHost(h host.Host) {
+	fmt.Printf("ID: %s\n", h.ID().String())
+	fmt.Println("Listen addresses:")
+	for _, addr := range h.Addrs() {
+		fmt.Printf("\t%s\n", addr.String())
+	}
 }
 
 // InitBase initializes the base components for the orchestrator and relayer.
