@@ -12,7 +12,7 @@ import (
 const (
 	FlagCoreGRPCHost        = "core.grpc.host"
 	FlagCoreGRPCPort        = "core.grpc.port"
-	FlagEVMAccAddress       = "evm.address"
+	FlagEVMAccAddress       = "evm.account"
 	FlagCoreRPCHost         = "core.rpc.host"
 	FlagCoreRPCPort         = "core.rpc.port"
 	ServiceNameOrchestrator = "orchestrator"

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	FlagEVMAccAddress   = "evm.address"
+	FlagEVMAccAddress   = "evm.account"
 	FlagEVMChainID      = "evm.chain-id"
 	FlagCoreGRPCHost    = "core.grpc.host"
 	FlagCoreGRPCPort    = "core.grpc.port"

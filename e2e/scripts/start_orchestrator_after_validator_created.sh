@@ -39,7 +39,7 @@ done
 /bin/qgb orch init
 
 # add keys to keystore
-/bin/qgb orch keys evm import ecdsa "${PRIVATE_KEY}" --evm-passphrase 123
+/bin/qgb orch keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase 123
 
 # start orchestrator
 if [[ -z "${P2P_BOOTSTRAPPERS}" ]]
@@ -48,25 +48,25 @@ then
   /bin/qgb orchestrator keys p2p import key "${P2P_IDENTITY}"
 
   /bin/qgb orchestrator start \
-    --evm.address="${EVM_ADDRESS}" \
+    --evm.account="${EVM_ACCOUNT}" \
     --core.rpc.host="${CORE_RPC_HOST}" \
     --core.rpc.port="${CORE_RPC_PORT}" \
     --core.grpc.host="${CORE_GRPC_HOST}" \
     --core.grpc.port="${CORE_GRPC_PORT}" \
     --p2p.nickname=key \
     --p2p.listen-addr="${P2P_LISTEN}" \
-    --evm-passphrase=123
+    --evm.passphrase=123
 else
   # to give time for the bootstrappers to be up
   sleep 5s
 
   /bin/qgb orchestrator start \
-    --evm.address="${EVM_ADDRESS}" \
+    --evm.account="${EVM_ACCOUNT}" \
     --core.rpc.host="${CORE_RPC_HOST}" \
     --core.rpc.port="${CORE_RPC_PORT}" \
     --core.grpc.host="${CORE_GRPC_HOST}" \
     --core.grpc.port="${CORE_GRPC_PORT}" \
     --p2p.listen-addr="${P2P_LISTEN}" \
     --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
-    --evm-passphrase=123
+    --evm.passphrase=123
 fi

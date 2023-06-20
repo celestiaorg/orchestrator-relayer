@@ -104,11 +104,6 @@ create a new EVM address
 
 Usage:
   qgb orchestrator keys evm add [flags]
-
-Flags:
-  -h, --help                help for add
-      --home string         The qgb evm keys home directory
-      --evm-passphrase string   the account passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 The passphrase of the key encryption can be passed as a flag. But it is advised not to pass it as plain text and instead enter it when prompted interactively.
@@ -135,11 +130,6 @@ delete an EVM addresses from the key store
 
 Usage:
   qgb orchestrator keys evm delete <account address in hex> [flags]
-
-Flags:
-  -h, --help                help for delete
-      --home string         The qgb evm keys home directory
-      --evm-passphrase string   the account passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 The provided address should be a `0x` prefixed EVM address.
@@ -186,12 +176,6 @@ update an EVM account passphrase
 
 Usage:
   qgb orchestrator keys evm update <account address in hex> [flags]
-
-Flags:
-      --evm-passphrase string   the evm account passphrase (if not specified as a flag, it will be asked interactively)
-  -h, --help                    help for update
-      --home string             The qgb evm keys home directory
-      --new-passphrase string   the evm account new passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 Example:
@@ -235,7 +219,7 @@ Use "qgb orchestrator keys evm import [command] --help" for more information abo
 
 #### EVM: Import ECDSA
 
-For the first one, it takes as argument the private key in plaintext. Then, it prompts for the passphrase to use when encrypting the key and saving it to the keystore. The passphrase could be passed as a flag using the `--evm-passphrase`, but it's advised not to.
+For the first one, it takes as argument the private key in plaintext. Then, it prompts for the passphrase to use when encrypting the key and saving it to the keystore. The passphrase could be passed as a flag using the `--evm.passphrase`, but it's advised not to.
 
 Example:
 
@@ -260,12 +244,6 @@ import an EVM address from a file
 
 Usage:
   qgb orchestrator keys evm import file <path to key file> [flags]
-
-Flags:
-      --evm-passphrase string   the evm account passphrase (if not specified as a flag, it will be asked interactively)
-  -h, --help                    help for file
-      --home string             The qgb evm keys home directory
-      --new-passphrase string   the evm account new passphrase (if not specified as a flag, it will be asked interactively)
 ```
 
 For example, if we have a file in the current directory containing a private key, we could run the following:
@@ -322,10 +300,6 @@ create a new Ed25519 P2P address
 
 Usage:
   qgb orchestrator keys p2p add <nickname> [flags]
-
-Flags:
-  -h, --help          help for add
-      --home string   The qgb p2p keys home directory
 ```
 
 It takes as argument an optional `<nickname>` which would be the name that we can use to reference that private key. If not specified, an incremental nickname will be assigned.
@@ -354,10 +328,6 @@ delete an Ed25519 P2P private key from store
 
 Usage:
   qgb orchestrator keys p2p delete <nickname> [flags]
-
-Flags:
-  -h, --help          help for delete
-      --home string   The qgb p2p keys home directory
 ```
 
 #### P2P: Import subcommand
@@ -371,10 +341,6 @@ import an existing p2p private key
 
 Usage:
   qgb orchestrator keys p2p import <nickname> <private_key_in_hex_without_0x> [flags]
-
-Flags:
-  -h, --help          help for import
-      --home string   The qgb p2p keys home directory
 ```
 
 #### P2P: List subcommand
@@ -388,8 +354,4 @@ list existing p2p addresses
 
 Usage:
   qgb orchestrator keys p2p list [flags]
-
-Flags:
-  -h, --help          help for list
-      --home string   The qgb p2p keys home directory
 ```

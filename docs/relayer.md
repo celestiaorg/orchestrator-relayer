@@ -114,7 +114,7 @@ To start the relayer using the default home directory, run the following:
   --core.grpc.port=9090 \
   --evm.chain-id=4 \
   --evm.rpc=http://localhost:8545 \
-  --evm.address=0x35a1F8CE94187E4b043f4D57548EF2348Ed556c8 \
+  --evm.account=0x35a1F8CE94187E4b043f4D57548EF2348Ed556c8 \
   --p2p.bootstrappers=/ip4/127.0.0.1/tcp/30001/p2p/12D3KooWFFHahpcZcuqnUhpBoX5fJ68Qm5Hc8dxiBcX1oo46fLxh \
   --p2p.listen-addr=/ip4/0.0.0.0/tcp/30001
 ```

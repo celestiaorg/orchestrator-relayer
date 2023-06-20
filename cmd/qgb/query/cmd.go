@@ -328,10 +328,10 @@ func writeConfirmsToJSONFile(logger tmlog.Logger, qOutput queryOutput, outputFil
 
 func Signature() *cobra.Command {
 	command := &cobra.Command{
-		Use:   "signature <nonce> <evm_address>",
+		Use:   "signature <nonce> <evm_account>",
 		Args:  cobra.ExactArgs(2),
-		Short: "Queries a specific signature referenced by an EVM address and a nonce",
-		Long: "Queries a specific signature referenced by an EVM address and a nonce. The nonce is the attestation" +
+		Short: "Queries a specific signature referenced by an EVM account address and a nonce",
+		Long: "Queries a specific signature referenced by an EVM account address and a nonce. The nonce is the attestation" +
 			" nonce that the command will query signatures for. The EVM address is the address registered by the validator " +
 			"in the staking module.",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -429,7 +429,7 @@ func getSignatureAndPrintIt(
 	evmAddress string,
 	nonce uint64,
 ) error {
-	logger.Info("getting signature for address and nonce", "nonce", nonce, "evm_address", evmAddress)
+	logger.Info("getting signature for address and nonce", "nonce", nonce, "evm_account", evmAddress)
 
 	att, err := appQuerier.QueryAttestationByNonce(ctx, nonce)
 	if err != nil {
@@ -450,9 +450,9 @@ func getSignatureAndPrintIt(
 			return err
 		}
 		if confirm == nil {
-			logger.Info("couldn't find orchestrator signature", "nonce", nonce, "evm_address", evmAddress)
+			logger.Info("couldn't find orchestrator signature", "nonce", nonce, "evm_account", evmAddress)
 		} else {
-			logger.Info("found orchestrator signature", "nonce", nonce, "evm_address", evmAddress, "signature", confirm.Signature)
+			logger.Info("found orchestrator signature", "nonce", nonce, "evm_account", evmAddress, "signature", confirm.Signature)
 		}
 	case *celestiatypes.DataCommitment:
 		commitment, err := tmQuerier.QueryCommitment(
@@ -469,9 +469,9 @@ func getSignatureAndPrintIt(
 			return err
 		}
 		if confirm == nil {
-			logger.Info("couldn't find orchestrator signature", "nonce", nonce, "evm_address", evmAddress)
+			logger.Info("couldn't find orchestrator signature", "nonce", nonce, "evm_account", evmAddress)
 		} else {
-			logger.Info("found orchestrator signature", "nonce", nonce, "evm_address", evmAddress, "signature", confirm.Signature)
+			logger.Info("found orchestrator signature", "nonce", nonce, "evm_account", evmAddress, "signature", confirm.Signature)
 		}
 	default:
 		return errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(nonce, 10))
