@@ -57,8 +57,6 @@ The smart contract implementation is in [quantum-gravity-bridge](https://github.
 
 The state machine implementation is in [x/qgb](https://github.com/celestiaorg/celestia-app/tree/main/x/qgb).
 
-QGB v1 implementation, including the orchestrator and relayer, is in the [qgb-integration](https://github.com/celestiaorg/celestia-app/tree/qgb-integration) branch.
-
 QGB ADRs are in the [docs](https://github.com/celestiaorg/celestia-app/tree/main/docs/architecture).
 
 QGB design explained in this [blog](https://blog.celestia.org/celestiums/).
