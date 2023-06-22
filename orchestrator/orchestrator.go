@@ -109,9 +109,6 @@ func (orch Orchestrator) Start(ctx context.Context) {
 		orch.Logger.Error("stopping enqueuing missing attestations")
 	}()
 
-	// FIXME should we add  another go routine that keep checking if all the attestations
-	// were signed every 10min for example?
-
 	wg.Wait()
 }
 
