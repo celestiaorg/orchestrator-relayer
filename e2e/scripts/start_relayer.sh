@@ -42,12 +42,12 @@ QGB_CONTRACT=$(cat /opt/qgb_address.txt)
 /bin/qgb relayer init
 
 # import keys to relayer
-/bin/qgb relayer keys evm import ecdsa "${PRIVATE_KEY}" --evm-passphrase 123
+/bin/qgb relayer keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase 123
 
 # to give time for the bootstrappers to be up
 sleep 5s
 /bin/qgb relayer start \
-  --evm.address="${EVM_ADDRESS}" \
+  --evm.account="${EVM_ACCOUNT}" \
   --core.rpc.host="${CORE_RPC_HOST}" \
   --core.rpc.port="${CORE_RPC_PORT}" \
   --core.grpc.host="${CORE_GRPC_HOST}" \
@@ -57,4 +57,4 @@ sleep 5s
   --evm.contract-address="${QGB_CONTRACT}" \
   --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
   --p2p.listen-addr="${P2P_LISTEN}" \
-  --evm-passphrase=123
+  --evm.passphrase=123

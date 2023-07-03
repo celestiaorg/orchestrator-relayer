@@ -7,7 +7,7 @@ import (
 )
 
 // GetDataCommitmentConfirmKey creates a data commitment confirm in the
-// format: "/<DataCommitmentConfirmNamespace>/<nonce>:<evm_address>:<data_root_tuple_root>":
+// format: "/<DataCommitmentConfirmNamespace>/<nonce>:<evm_account>:<data_root_tuple_root>":
 // - nonce: in hex format
 // - evm address: the 0x prefixed orchestrator EVM address in hex format
 // - data root tuple root: is the digest, in a 0x prefixed hex format, that is signed over for a
@@ -20,7 +20,7 @@ func GetDataCommitmentConfirmKey(nonce uint64, evmAddr string, dataRootTupleRoot
 }
 
 // GetValsetConfirmKey creates a valset confirm in the
-// format: "/<ValsetNamespace>/<nonce>:<evm_address>:<sign_bytes>":
+// format: "/<ValsetNamespace>/<nonce>:<evm_account>:<sign_bytes>":
 // - nonce: in hex format
 // - evm address: the orchestrator EVM address in hex format
 // - sign bytes: is the digest, in a 0x prefixed hex format, that is signed over for a valset and

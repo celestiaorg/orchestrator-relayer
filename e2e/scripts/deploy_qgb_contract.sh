@@ -59,18 +59,18 @@ do
 done
 
 # import keys to deployer
-/bin/qgb deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm-passphrase=123
+/bin/qgb deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase=123
 
 echo "deploying QGB contract..."
 
 /bin/qgb deploy \
   --evm.chain-id "${EVM_CHAIN_ID}" \
-  --evm.address "${EVM_ADDRESS}" \
+  --evm.account "${EVM_ACCOUNT}" \
   --core.grpc.host "${CORE_GRPC_HOST}" \
   --core.grpc.port "${CORE_GRPC_PORT}" \
   --starting-nonce "${STARTING_NONCE}" \
   --evm.rpc "${EVM_ENDPOINT}" \
-  --evm-passphrase=123 > /opt/output
+  --evm.passphrase=123 > /opt/output
 
 echo $(cat /opt/output)
 

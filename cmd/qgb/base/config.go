@@ -14,7 +14,7 @@ import (
 
 const (
 	FlagHome          = cli.HomeFlag
-	FlagEVMPassphrase = "evm-passphrase"
+	FlagEVMPassphrase = "evm.passphrase"
 )
 
 // Config contains the base config that all commands should have.

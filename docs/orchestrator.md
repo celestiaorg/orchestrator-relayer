@@ -121,7 +121,7 @@ qgb orchestrator start \
     --core.grpc.port 9090 \
     --core.rpc.host localhost \
     --core.rpc.port 26657 \
-    --evm.address 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488 \
+    --evm.account 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488 \
     --p2p.bootstrappers /ip4/127.0.0.1/tcp/30001/p2p/12D3KooWFFHahpcZcuqnUhpBoX5fJ68Qm5Hc8dxiBcX1oo46fLxh \
     --p2p.listen-addr /ip4/0.0.0.0/tcp/30000
 ```
@@ -233,7 +233,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=<absolute_path_to_qgb_binary> orchestrator start -d <evm_address> --evm-passphrase <evm_passphrase> --celes-grpc <grpc_endpoint> -t <rpc_endpoint> -b <bootstrappers_list>
+ExecStart=<absolute_path_to_qgb_binary> orchestrator start --evm.account <evm_account> --evm.passphrase <evm_passphrase> --core.grpc.host <grpc_endpoint_host> --core.grpc.port <grpc_endpoint_port> --core.rpc.host <rpc_endpoint_host> --core.rpc.port <rpc_endpoint_port> --p2p.bootstrappers <bootstrappers_list>
 LimitNOFILE=infinity
 LimitCORE=infinity
 Restart=always

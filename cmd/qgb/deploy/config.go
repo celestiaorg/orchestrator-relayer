@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	FlagEVMAccAddress   = "evm.address"
+	FlagEVMAccAddress   = "evm.account"
 	FlagEVMChainID      = "evm.chain-id"
 	FlagEVMRPC          = "evm.rpc"
 	FlagEVMGasLimit     = "evm.gas-limit"

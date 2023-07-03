@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	FlagNewPassphrase = "new-passphrase"
+	FlagNewEVMPassphrase = "evm.new-passphrase"
 )
 
 func keysConfigFlags(cmd *cobra.Command, service string) *cobra.Command {
@@ -56,7 +56,7 @@ func keysNewPassphraseConfigFlags(cmd *cobra.Command, service string) *cobra.Com
 	}
 	cmd.Flags().String(base.FlagHome, homeDir, "The qgb evm keys home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
-	cmd.Flags().String(FlagNewPassphrase, "", "the evm account new passphrase (if not specified as a flag, it will be asked interactively)")
+	cmd.Flags().String(FlagNewEVMPassphrase, "", "the evm account new passphrase (if not specified as a flag, it will be asked interactively)")
 	return cmd
 }
 
@@ -82,7 +82,7 @@ func parseKeysNewPassphraseConfigFlags(cmd *cobra.Command, serviceName string) (
 		return KeysNewPassphraseConfig{}, err
 	}
 
-	newPassphrase, err := cmd.Flags().GetString(FlagNewPassphrase)
+	newPassphrase, err := cmd.Flags().GetString(FlagNewEVMPassphrase)
 	if err != nil {
 		return KeysNewPassphraseConfig{}, err
 	}

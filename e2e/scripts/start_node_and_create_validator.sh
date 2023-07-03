@@ -4,9 +4,9 @@
 # keeps running it validating blocks.
 
 # check if environment variables are set
-if [[ -z "${CELESTIA_HOME}" || -z "${MONIKER}" || -z "${EVM_ADDRESS}" || -z "${AMOUNT}" ]]
+if [[ -z "${CELESTIA_HOME}" || -z "${MONIKER}" || -z "${EVM_ACCOUNT}" || -z "${AMOUNT}" ]]
 then
-  echo "Environment not setup correctly. Please set: CELESTIA_HOME, MONIKER, EVM_ADDRESS, AMOUNT variables"
+  echo "Environment not setup correctly. Please set: CELESTIA_HOME, MONIKER, EVM_ACCOUNT, AMOUNT variables"
   exit 1
 fi
 
@@ -51,7 +51,7 @@ fi
       --min-self-delegation=1000000 \
       --from="${MONIKER}" \
       --keyring-backend=test \
-      --evm-address="${EVM_ADDRESS}" \
+      --evm-address="${EVM_ACCOUNT}" \
       --home="${CELESTIA_HOME}" \
       --broadcast-mode=block \
       --fees="300000utia" \
