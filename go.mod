@@ -33,7 +33,7 @@ require (
 	github.com/libp2p/go-libp2p v0.26.3
 	github.com/libp2p/go-libp2p-kad-dht v0.23.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/multiformats/go-multiaddr v0.9.0
+	github.com/multiformats/go-multiaddr v0.10.0
 	github.com/tendermint/tendermint v0.34.28
 	github.com/testcontainers/testcontainers-go/modules/compose v0.20.1
 )
@@ -345,8 +345,8 @@ require (
 	go.uber.org/fx v1.18.2 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/exp v0.0.0-20230310171629-522b1b587ee0 // indirect
-	golang.org/x/mod v0.9.0 // indirect
+	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
+	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
