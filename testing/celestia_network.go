@@ -54,16 +54,17 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, genesisOpts ...celest
 	}
 
 	tmCfg := celestiatestnode.DefaultTendermintConfig()
-	tmCfg.Consensus.TargetHeightDuration = time.Millisecond * 5
+	tmCfg.Consensus.TimeoutCommit = time.Millisecond * 5
 	appConf := celestiatestnode.DefaultAppConfig()
 
 	clientContext, _, _ := celestiatestnode.NewNetwork(
 		t,
-		celestiatestnode.DefaultParams(),
-		tmCfg,
-		appConf,
-		accounts,
-		genesisOpts...,
+		celestiatestnode.DefaultConfig().
+			WithAppConfig(appConf).
+			WithTendermintConfig(tmCfg).
+			WithAccounts(accounts).
+			WithGenesisOptions(genesisOpts...).
+			WithChainID("qgb-test"),
 	)
 
 	appRPC := clientContext.GRPCClient.Target()
