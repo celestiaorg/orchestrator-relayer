@@ -3,8 +3,8 @@ module github.com/celestiaorg/orchestrator-relayer
 go 1.20
 
 require (
-	github.com/celestiaorg/celestia-app v1.0.0-rc8
-	github.com/celestiaorg/nmt v0.17.0 // indirect
+	github.com/celestiaorg/celestia-app v1.0.0-rc11
+	github.com/celestiaorg/nmt v0.18.0 // indirect
 	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/gogo/protobuf v1.3.3 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/buger/goterm v1.0.4 // indirect
 	github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 // indirect
-	github.com/celestiaorg/rsmt2d v0.9.0 // indirect
+	github.com/celestiaorg/rsmt2d v0.10.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -374,11 +374,11 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.15.0-sdk-v0.46.13
+	github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.16.1-sdk-v0.46.13
 	github.com/docker/docker => github.com/docker/docker v23.0.5+incompatible
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.23.0-tm-v0.34.28
+	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.26.0-tm-v0.34.28
 )
 
 // testcontainers required replaces:
