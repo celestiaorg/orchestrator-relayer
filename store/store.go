@@ -32,11 +32,8 @@ type Store struct {
 	// Path the path to the qgb storage root.
 	Path string
 
-	// dataStoreLock protects directory when the data store is open.
-	dataStoreLock *fslock.Locker
-
-	// signatureStoreLock protects directory when the signature store is open.
-	signatureStoreLock *fslock.Locker
+	// storeLock protects directory when the data store is open.
+	storeLock *fslock.Locker
 }
 
 // OpenOptions contains the options used to create the store
@@ -120,7 +117,7 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 	logger.Info("successfully opened store", "path", path)
 
 	return &Store{
-		dataStoreLock:  flock,
+		storeLock:      flock,
 		Path:           path,
 		DataStore:      ds,
 		SignatureStore: sigStore,
@@ -132,7 +129,7 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 // Close closes an opened store and removes the lock file.
 func (s Store) Close(logger tmlog.Logger, options OpenOptions) error {
 	if options.HasDataStore || options.HasSignatureStore {
-		err := s.dataStoreLock.Unlock()
+		err := s.storeLock.Unlock()
 		if err != nil {
 			logger.Info("couldn't unlock store", "path", s.Path, "err", err.Error())
 			return err
