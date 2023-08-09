@@ -4,6 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/store"
+	badger "github.com/ipfs/go-ds-badger2"
+
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
@@ -44,7 +47,10 @@ func NewRelayer(
 	require.NoError(t, err)
 	evmClient := NewEVMClient(ks, &acc)
 	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
-	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier)
+	tempDir := t.TempDir()
+	sigStore, err := badger.NewDatastore(tempDir, store.DefaultBadgerOptions(tempDir))
+	require.NoError(t, err)
+	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier, sigStore)
 	return r
 }
 

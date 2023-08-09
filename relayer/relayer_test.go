@@ -5,6 +5,9 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/p2p"
+	"github.com/ipfs/go-datastore"
+
 	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
 
 	"github.com/stretchr/testify/assert"
@@ -35,4 +38,10 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 	lastNonce, err := s.Relayer.EVMClient.StateLastEventNonce(nil)
 	require.NoError(t, err)
 	assert.Equal(t, att.Nonce, lastNonce)
+
+	// check if the relayed data commitment confirm is saved to relayer store
+	key := datastore.NewKey(p2p.GetDataCommitmentConfirmKey(att.Nonce, s.Orchestrator.EvmAccount.Address.Hex(), dataRootTupleRoot.Hex()))
+	has, err := s.Relayer.SignatureStore.Has(ctx, key)
+	require.NoError(t, err)
+	assert.True(t, has)
 }

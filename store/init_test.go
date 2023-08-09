@@ -13,9 +13,10 @@ func TestInit(t *testing.T) {
 	tmp := t.TempDir()
 
 	options := store.InitOptions{
-		NeedDataStore:   true,
-		NeedEVMKeyStore: true,
-		NeedP2PKeyStore: true,
+		NeedDataStore:      true,
+		NeedSignatureStore: true,
+		NeedEVMKeyStore:    true,
+		NeedP2PKeyStore:    true,
 	}
 
 	err := store.Init(logger, tmp, options)

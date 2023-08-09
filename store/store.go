@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -16,28 +17,32 @@ import (
 
 // Store contains relevant information about the QGB store.
 type Store struct {
-	// Datastore provides a Datastore - a KV store for dht p2p data to be stored on disk.
+	// DataStore provides a Datastore - a KV store for dht p2p data to be stored on disk.
 	DataStore datastore.Batching
 
-	// EVMKeyStore provides a keystore for EVM private keys
+	// SignatureStore provides a signature store - a KV store for all orchestrator signatures to be stored on disk.
+	SignatureStore *badger.Datastore
+
+	// EVMKeyStore provides a keystore for EVM private keys.
 	EVMKeyStore *keystore.KeyStore
 
-	// P2PKeyStore provides a keystore for P2P private keys
+	// P2PKeyStore provides a keystore for P2P private keys.
 	P2PKeyStore *keystore2.FSKeystore
 
-	// Path the path to the qgb storage root
+	// Path the path to the qgb storage root.
 	Path string
 
-	// protects directory when the data store is open
-	dirLock *fslock.Locker
+	// storeLock protects directory when the data store is open.
+	storeLock *fslock.Locker
 }
 
 // OpenOptions contains the options used to create the store
 type OpenOptions struct {
-	HasDataStore   bool
-	BadgerOptions  *badger.Options
-	HasEVMKeyStore bool
-	HasP2PKeyStore bool
+	HasDataStore      bool
+	BadgerOptions     *badger.Options
+	HasSignatureStore bool
+	HasEVMKeyStore    bool
+	HasP2PKeyStore    bool
 }
 
 // OpenStore creates new FS Store under the given 'path'.
@@ -53,32 +58,45 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 	}
 
 	ok := IsInit(logger, path, InitOptions{
-		NeedDataStore:   options.HasDataStore,
-		NeedEVMKeyStore: options.HasEVMKeyStore,
-		NeedP2PKeyStore: options.HasP2PKeyStore,
+		NeedDataStore:      options.HasDataStore,
+		NeedEVMKeyStore:    options.HasEVMKeyStore,
+		NeedP2PKeyStore:    options.HasP2PKeyStore,
+		NeedSignatureStore: options.HasSignatureStore,
 	})
 	if !ok {
 		return nil, ErrNotInited
 	}
 
-	var ds *badger.Datastore
 	var flock *fslock.Locker
-	if options.HasDataStore {
+	if options.HasDataStore || options.HasSignatureStore {
 		flock, err = fslock.Lock(lockPath(path))
 		if err != nil {
-			if err == fslock.ErrLocked {
+			if errors.Is(err, fslock.ErrLocked) {
 				return nil, ErrOpened
 			}
 			return nil, err
 		}
 		if options.BadgerOptions == nil {
 			flock.Unlock() //nolint: errcheck
-			return nil, fmt.Errorf("badger data store options needed to open the store")
+			return nil, fmt.Errorf("badger store options needed to open the store")
 		}
+	}
+
+	var ds *badger.Datastore
+	if options.HasDataStore {
 		ds, err = badger.NewDatastore(dataPath(path), options.BadgerOptions)
 		if err != nil {
 			flock.Unlock() //nolint: errcheck
 			return nil, fmt.Errorf("can't open Badger Datastore: %w", err)
+		}
+	}
+
+	var sigStore *badger.Datastore
+	if options.HasSignatureStore {
+		sigStore, err = badger.NewDatastore(signaturePath(path), options.BadgerOptions)
+		if err != nil {
+			flock.Unlock() //nolint: errcheck
+			return nil, fmt.Errorf("can't open Badger SignatureStore: %w", err)
 		}
 	}
 
@@ -99,25 +117,35 @@ func OpenStore(logger tmlog.Logger, path string, options OpenOptions) (*Store, e
 	logger.Info("successfully opened store", "path", path)
 
 	return &Store{
-		dirLock:     flock,
-		Path:        path,
-		DataStore:   ds,
-		EVMKeyStore: evmKs,
-		P2PKeyStore: p2pKs,
+		storeLock:      flock,
+		Path:           path,
+		DataStore:      ds,
+		SignatureStore: sigStore,
+		EVMKeyStore:    evmKs,
+		P2PKeyStore:    p2pKs,
 	}, nil
 }
 
 // Close closes an opened store and removes the lock file.
 func (s Store) Close(logger tmlog.Logger, options OpenOptions) error {
-	if options.HasDataStore {
-		err := s.dirLock.Unlock()
+	if options.HasDataStore || options.HasSignatureStore {
+		err := s.storeLock.Unlock()
 		if err != nil {
 			logger.Info("couldn't unlock store", "path", s.Path, "err", err.Error())
 			return err
 		}
-		err = s.DataStore.Close()
+	}
+	if options.HasDataStore {
+		err := s.DataStore.Close()
 		if err != nil {
 			logger.Info("couldn't close data store", "path", s.Path, "err", err.Error())
+			return err
+		}
+	}
+	if options.HasSignatureStore {
+		err := s.SignatureStore.Close()
+		if err != nil {
+			logger.Info("couldn't close signature store", "path", s.Path, "err", err.Error())
 			return err
 		}
 	}
@@ -133,6 +161,11 @@ func lockPath(base string) string {
 // dataPath returns the data folder path relative to the base
 func dataPath(base string) string {
 	return filepath.Join(base, DataPath)
+}
+
+// signaturePath returns the relayer signatures folder path relative to the base
+func signaturePath(base string) string {
+	return filepath.Join(base, SignaturePath)
 }
 
 // evmKeyStorePath returns the evm keystore folder path relative to the base
