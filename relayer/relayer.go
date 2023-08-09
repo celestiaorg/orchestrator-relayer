@@ -7,6 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ipfs/go-datastore"
+	badger "github.com/ipfs/go-ds-badger2"
+
 	"github.com/pkg/errors"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
@@ -26,12 +29,13 @@ import (
 )
 
 type Relayer struct {
-	TmQuerier  *rpc.TmQuerier
-	AppQuerier *rpc.AppQuerier
-	P2PQuerier *p2p.Querier
-	EVMClient  *evm.Client
-	logger     tmlog.Logger
-	Retrier    *helpers.Retrier
+	TmQuerier      *rpc.TmQuerier
+	AppQuerier     *rpc.AppQuerier
+	P2PQuerier     *p2p.Querier
+	EVMClient      *evm.Client
+	logger         tmlog.Logger
+	Retrier        *helpers.Retrier
+	SignatureStore *badger.Datastore
 }
 
 func NewRelayer(
@@ -41,14 +45,16 @@ func NewRelayer(
 	evmClient *evm.Client,
 	logger tmlog.Logger,
 	retrier *helpers.Retrier,
+	sigStore *badger.Datastore,
 ) *Relayer {
 	return &Relayer{
-		TmQuerier:  tmQuerier,
-		AppQuerier: appQuerier,
-		P2PQuerier: p2pQuerier,
-		EVMClient:  evmClient,
-		logger:     logger,
-		Retrier:    retrier,
+		TmQuerier:      tmQuerier,
+		AppQuerier:     appQuerier,
+		P2PQuerier:     p2pQuerier,
+		EVMClient:      evmClient,
+		logger:         logger,
+		Retrier:        retrier,
+		SignatureStore: sigStore,
 	}
 }
 
@@ -134,47 +140,55 @@ func (r *Relayer) Start(ctx context.Context) error {
 	}
 }
 
-func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, att celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
-	switch castedAtt := att.(type) {
+func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, attI celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
+	switch att := attI.(type) {
 	case *celestiatypes.Valset:
-		previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, castedAtt.Nonce)
+		previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.Nonce)
 		if err != nil {
 			return nil, err
 		}
-		signBytes, err := castedAtt.SignBytes()
+		signBytes, err := att.SignBytes()
 		if err != nil {
 			return nil, err
 		}
-		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, castedAtt.Nonce, *previousValset, signBytes.Hex())
+		confirms, err := r.P2PQuerier.QueryTwoThirdsValsetConfirms(ctx, 30*time.Minute, 10*time.Second, att.Nonce, *previousValset, signBytes.Hex())
 		if err != nil {
 			return nil, err
 		}
-		tx, err := r.UpdateValidatorSet(ctx, opts, *castedAtt, castedAtt.TwoThirdsThreshold(), confirms)
+		err = r.SaveValsetSignaturesToStore(ctx, *att, confirms)
+		if err != nil {
+			return nil, err
+		}
+		tx, err := r.UpdateValidatorSet(ctx, opts, *att, att.TwoThirdsThreshold(), confirms)
 		if err != nil {
 			return nil, err
 		}
 		return tx, nil
 	case *celestiatypes.DataCommitment:
-		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, castedAtt.Nonce)
+		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.Nonce)
 		if err != nil {
 			return nil, err
 		}
-		commitment, err := r.TmQuerier.QueryCommitment(ctx, castedAtt.BeginBlock, castedAtt.EndBlock)
+		commitment, err := r.TmQuerier.QueryCommitment(ctx, att.BeginBlock, att.EndBlock)
 		if err != nil {
 			return nil, err
 		}
-		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
-		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, castedAtt.Nonce, dataRootHash.Hex())
+		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, att.Nonce, dataRootHash.Hex())
 		if err != nil {
 			return nil, err
 		}
-		tx, err := r.SubmitDataRootTupleRoot(opts, *castedAtt, *valset, commitment.String(), confirms)
+		err = r.SaveDataCommitmentSignaturesToStore(ctx, *att, dataRootHash.String(), confirms)
+		if err != nil {
+			return nil, err
+		}
+		tx, err := r.SubmitDataRootTupleRoot(opts, *att, *valset, commitment.String(), confirms)
 		if err != nil {
 			return nil, err
 		}
 		return tx, nil
 	default:
-		return nil, errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(att.GetNonce(), 10))
+		return nil, errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(attI.GetNonce(), 10))
 	}
 }
 
@@ -182,7 +196,7 @@ func (r *Relayer) UpdateValidatorSet(
 	ctx context.Context,
 	opts *bind.TransactOpts,
 	valset celestiatypes.Valset,
-	newThreshhold uint64,
+	newThreshold uint64,
 	confirms []types.ValsetConfirm,
 ) (*coregethtypes.Transaction, error) {
 	var currentValset celestiatypes.Valset
@@ -210,7 +224,7 @@ func (r *Relayer) UpdateValidatorSet(
 	tx, err := r.EVMClient.UpdateValidatorSet(
 		opts,
 		valset.Nonce,
-		newThreshhold,
+		newThreshold,
 		currentValset,
 		valset,
 		sigs,
@@ -256,6 +270,60 @@ func (r *Relayer) SubmitDataRootTupleRoot(
 		return nil, err
 	}
 	return tx, nil
+}
+
+func (r *Relayer) SaveValsetSignaturesToStore(ctx context.Context, att celestiatypes.Valset, confirms []types.ValsetConfirm) error {
+	batch, err := r.SignatureStore.Batch(ctx)
+	if err != nil {
+		return err
+	}
+	signBytes, err := att.SignBytes()
+	if err != nil {
+		return err
+	}
+	for _, confirm := range confirms {
+		key := datastore.NewKey(p2p.GetValsetConfirmKey(att.Nonce, confirm.EthAddress, signBytes.Hex()))
+		value, err := types.MarshalValsetConfirm(confirm)
+		if err != nil {
+			return err
+		}
+		has, err := r.SignatureStore.Has(ctx, key)
+		if err != nil {
+			return err
+		}
+		if !has {
+			err := batch.Put(ctx, key, value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return batch.Commit(ctx)
+}
+
+func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att celestiatypes.DataCommitment, dataRootTupleRoot string, confirms []types.DataCommitmentConfirm) error {
+	batch, err := r.SignatureStore.Batch(ctx)
+	if err != nil {
+		return err
+	}
+	for _, confirm := range confirms {
+		key := datastore.NewKey(p2p.GetDataCommitmentConfirmKey(att.Nonce, confirm.EthAddress, dataRootTupleRoot))
+		value, err := types.MarshalDataCommitmentConfirm(confirm)
+		if err != nil {
+			return err
+		}
+		has, err := r.SignatureStore.Has(ctx, key)
+		if err != nil {
+			return err
+		}
+		if !has {
+			err := batch.Put(ctx, key, value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return batch.Commit(ctx)
 }
 
 // matchAttestationConfirmSigs matches and sorts the confirm signatures with the valset

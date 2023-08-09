@@ -13,10 +13,11 @@ func TestStore(t *testing.T) {
 	path := t.TempDir()
 
 	options := store.OpenOptions{
-		HasDataStore:   true,
-		BadgerOptions:  store.DefaultBadgerOptions(path),
-		HasEVMKeyStore: true,
-		HasP2PKeyStore: true,
+		HasDataStore:      true,
+		BadgerOptions:     store.DefaultBadgerOptions(path),
+		HasSignatureStore: true,
+		HasEVMKeyStore:    true,
+		HasP2PKeyStore:    true,
 	}
 	// open non initiated store
 	_, err := store.OpenStore(logger, path, options)
@@ -24,9 +25,10 @@ func TestStore(t *testing.T) {
 
 	// init directory
 	err = store.Init(logger, path, store.InitOptions{
-		NeedDataStore:   true,
-		NeedEVMKeyStore: true,
-		NeedP2PKeyStore: true,
+		NeedDataStore:      true,
+		NeedSignatureStore: true,
+		NeedEVMKeyStore:    true,
+		NeedP2PKeyStore:    true,
 	})
 	assert.NoError(t, err)
 

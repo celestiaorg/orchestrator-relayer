@@ -1,6 +1,7 @@
 package store
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -12,6 +13,8 @@ import (
 const (
 	// DataPath the subdir for the data folder containing the p2p data relative to the path.
 	DataPath = "data"
+	// SignaturePath the subdir for the signatures folder containing all the signatures that the relayer query.
+	SignaturePath = "signatures"
 	// EVMKeyStorePath the subdir for the path containing the EVM keystore.
 	EVMKeyStorePath = "keystore/evm"
 	// P2PKeyStorePath the subdir for the path containing the p2p keystore.
@@ -26,9 +29,10 @@ func storePath(path string) (string, error) {
 // InitOptions contains the options used to init a path or check if a path
 // is already initiated.
 type InitOptions struct {
-	NeedDataStore   bool
-	NeedEVMKeyStore bool
-	NeedP2PKeyStore bool
+	NeedDataStore      bool
+	NeedSignatureStore bool
+	NeedEVMKeyStore    bool
+	NeedP2PKeyStore    bool
 }
 
 // Init initializes the qgb file system in the directory under
@@ -49,7 +53,7 @@ func Init(log tmlog.Logger, path string, options InitOptions) error {
 
 	flock, err := fslock.Lock(lockPath(path))
 	if err != nil {
-		if err == fslock.ErrLocked {
+		if errors.Is(err, fslock.ErrLocked) {
 			return ErrOpened
 		}
 		return err
@@ -62,6 +66,15 @@ func Init(log tmlog.Logger, path string, options InitOptions) error {
 		}
 
 		log.Info("data dir initialized", "path", dataPath(path))
+	}
+
+	if options.NeedSignatureStore {
+		err = initDir(signaturePath(path))
+		if err != nil {
+			return err
+		}
+
+		log.Info("signature dir initialized", "path", signaturePath(path))
 	}
 
 	if options.NeedP2PKeyStore {
@@ -109,6 +122,12 @@ func IsInit(logger tmlog.Logger, path string, options InitOptions) bool {
 	// check if the data store exists if it's needed
 	if options.NeedDataStore && !Exists(dataPath(path)) {
 		logger.Info("data path not initialized", "path", path)
+		return false
+	}
+
+	// check if the signature store exists if it's needed
+	if options.NeedSignatureStore && !Exists(signaturePath(path)) {
+		logger.Info("signature path not initialized", "path", path)
 		return false
 	}
 

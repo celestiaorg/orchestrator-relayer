@@ -3,6 +3,11 @@ package relayer
 import (
 	"context"
 	"os"
+	"time"
+
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
+	"github.com/celestiaorg/orchestrator-relayer/p2p"
+	dssync "github.com/ipfs/go-datastore/sync"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/common"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys"
@@ -50,9 +55,10 @@ func Init() *cobra.Command {
 			logger := tmlog.NewTMLogger(os.Stdout)
 
 			initOptions := store.InitOptions{
-				NeedDataStore:   true,
-				NeedEVMKeyStore: true,
-				NeedP2PKeyStore: true,
+				NeedDataStore:      true,
+				NeedEVMKeyStore:    true,
+				NeedP2PKeyStore:    true,
+				NeedSignatureStore: true,
 			}
 			isInit := store.IsInit(logger, config.home, initOptions)
 			if isInit {
@@ -88,18 +94,47 @@ func Start() *cobra.Command {
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
-			tmQuerier, appQuerier, p2pQuerier, retrier, evmKeystore, acc, stopFuncs, err := common.InitBase(
-				ctx,
-				logger,
-				config.coreRPC,
-				config.coreGRPC,
-				config.Home,
-				config.evmAccAddress,
-				config.EVMPassphrase,
-				config.p2pNickname,
-				config.p2pListenAddr,
-				config.bootstrappers,
-			)
+			stopFuncs := make([]func() error, 0)
+
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC)
+			stopFuncs = append(stopFuncs, stops...)
+			if err != nil {
+				return err
+			}
+
+			s, stops, err := common.OpenStore(logger, config.Home, store.OpenOptions{
+				HasDataStore:      true,
+				BadgerOptions:     store.DefaultBadgerOptions(config.Home),
+				HasSignatureStore: true,
+				HasEVMKeyStore:    true,
+				HasP2PKeyStore:    true,
+			})
+			stopFuncs = append(stopFuncs, stops...)
+			if err != nil {
+				return err
+			}
+
+			logger.Info("loading EVM account", "address", config.evmAccAddress)
+
+			acc, err := evm2.GetAccountFromStoreAndUnlockIt(s.EVMKeyStore, config.evmAccAddress, config.EVMPassphrase)
+			stopFuncs = append(stopFuncs, func() error { return s.EVMKeyStore.Lock(acc.Address) })
+			if err != nil {
+				return err
+			}
+
+			// creating the data store
+			dataStore := dssync.MutexWrap(s.DataStore)
+
+			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.p2pListenAddr, config.bootstrappers, dataStore)
+			if err != nil {
+				return err
+			}
+			stopFuncs = append(stopFuncs, func() error { return dht.Close() })
+
+			// creating the p2p querier
+			p2pQuerier := p2p.NewQuerier(dht, logger)
+			retrier := helpers.NewRetrier(logger, 6, time.Minute)
+
 			defer func() {
 				for _, f := range stopFuncs {
 					err := f()
@@ -108,9 +143,6 @@ func Start() *cobra.Command {
 					}
 				}
 			}()
-			if err != nil {
-				return err
-			}
 
 			// connecting to a QGB contract
 			ethClient, err := ethclient.Dial(config.evmRPC)
@@ -126,8 +158,8 @@ func Start() *cobra.Command {
 			evmClient := evm.NewClient(
 				logger,
 				qgbWrapper,
-				evmKeystore,
-				acc,
+				s.EVMKeyStore,
+				&acc,
 				config.evmRPC,
 				config.evmGasLimit,
 			)
@@ -139,6 +171,7 @@ func Start() *cobra.Command {
 				evmClient,
 				logger,
 				retrier,
+				s.SignatureStore,
 			)
 
 			// Listen for and trap any OS signal to graceful shutdown and exit
