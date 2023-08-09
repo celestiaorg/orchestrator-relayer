@@ -38,6 +38,7 @@ func TestStore(t *testing.T) {
 	assert.NotNil(t, s.DataStore)
 	assert.NotNil(t, s.P2PKeyStore)
 	assert.NotNil(t, s.EVMKeyStore)
+	assert.NotNil(t, s.SignatureStore)
 
 	err = s.Close(logger, options)
 	assert.NoError(t, err)
