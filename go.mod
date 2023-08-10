@@ -33,7 +33,7 @@ require (
 	github.com/libp2p/go-libp2p v0.26.3
 	github.com/libp2p/go-libp2p-kad-dht v0.23.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/multiformats/go-multiaddr v0.10.1
+	github.com/multiformats/go-multiaddr v0.11.0
 	github.com/tendermint/tendermint v0.34.28
 	github.com/testcontainers/testcontainers-go/modules/compose v0.20.1
 )
@@ -238,7 +238,7 @@ require (
 	github.com/mikioh/tcpopt v0.0.0-20190314235656-172688c1accc // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
-	github.com/minio/sha256-simd v1.0.0 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/buildkit v0.11.5 // indirect
@@ -345,7 +345,7 @@ require (
 	go.uber.org/fx v1.18.2 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
-	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
+	golang.org/x/exp v0.0.0-20230725012225-302865e7556b // indirect
 	golang.org/x/mod v0.11.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sync v0.2.0 // indirect
