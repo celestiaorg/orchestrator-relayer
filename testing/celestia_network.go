@@ -195,6 +195,7 @@ func RegisterEVMAddress(
 		"validator",
 		registerMsg,
 	)
+	require.NoError(t, err)
 	resp, err := input.WaitForTx(res.TxHash, 10)
 	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, resp.TxResult.Code)
