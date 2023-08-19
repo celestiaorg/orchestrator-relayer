@@ -89,7 +89,7 @@ func (s *QuerierTestSuite) TestQueryLatestValset() {
 
 	vs, err := appQuerier.QueryLatestValset(context.Background())
 	s.NoError(err)
-	s.Equal(uint64(1), vs.Nonce)
+	s.GreaterOrEqual(vs.Nonce, uint64(1))
 }
 
 func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
@@ -103,7 +103,7 @@ func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
 
 	vs, err := appQuerier.QueryLastValsetBeforeNonce(context.Background(), 2)
 	s.NoError(err)
-	s.Equal(uint64(1), vs.Nonce)
+	s.GreaterOrEqual(vs.Nonce, uint64(1))
 }
 
 func (s *QuerierTestSuite) TestQueryLastUnbondingHeight() {

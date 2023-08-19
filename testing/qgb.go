@@ -16,7 +16,6 @@ import (
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
-	celestiatestnode "github.com/celestiaorg/celestia-app/test/util/testnode"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/relayer"
@@ -41,7 +40,7 @@ func NewRelayer(
 	tmQuerier.WithClientConn(node.CelestiaNetwork.Client)
 	p2pQuerier := p2p.NewQuerier(node.DHTNetwork.DHTs[0], logger)
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
-	acc, err := ks.ImportECDSA(celestiatestnode.NodeEVMPrivateKey, "123")
+	acc, err := ks.ImportECDSA(NodeEVMPrivateKey, "123")
 	require.NoError(t, err)
 	err = ks.Unlock(acc, "123")
 	require.NoError(t, err)
@@ -77,7 +76,7 @@ func NewOrchestrator(
 	broadcaster := orchestrator.NewBroadcaster(node.DHTNetwork.DHTs[0])
 	retrier := helpers.NewRetrier(logger, 3, 500*time.Millisecond)
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
-	acc, err := ks.ImportECDSA(celestiatestnode.NodeEVMPrivateKey, "123")
+	acc, err := ks.ImportECDSA(NodeEVMPrivateKey, "123")
 	require.NoError(t, err)
 	err = ks.Unlock(acc, "123")
 	require.NoError(t, err)

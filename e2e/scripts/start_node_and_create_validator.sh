@@ -51,7 +51,6 @@ fi
       --min-self-delegation=1000000 \
       --from="${MONIKER}" \
       --keyring-backend=test \
-      --evm-address="${EVM_ACCOUNT}" \
       --home="${CELESTIA_HOME}" \
       --broadcast-mode=block \
       --fees="300000utia" \
@@ -64,11 +63,20 @@ fi
     sleep 1s
   done
 
+  # Register the validator EVM address
+  celestia-appd tx qgb register \
+    "${VAL_ADDRESS}" \
+    "${EVM_ACCOUNT}" \
+    --from "${MONIKER}" \
+    --home "${CELESTIA_HOME}" \
+    --fees "30000utia" -b block \
+    --chain-id="qgb-e2e" \
+    --yes
 } &
 
 # start node
 celestia-appd start \
 --home="${CELESTIA_HOME}" \
 --moniker="${MONIKER}" \
---p2p.persistent_peers=7cd70d8b4fc318f18e2766e0d46ccd1489b0bf65@core0:26656 \
+--p2p.persistent_peers=40664e2a69d5557b0d35ec8b9d423785b12579b7@core0:26656 \
 --rpc.laddr=tcp://0.0.0.0:26657

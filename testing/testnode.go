@@ -19,7 +19,7 @@ func NewTestNode(ctx context.Context, t *testing.T, genesisOpts ...celestiatestn
 	celestiaNetwork := NewCelestiaNetwork(ctx, t, genesisOpts...)
 	dhtNetwork := NewDHTNetwork(ctx, 2)
 
-	evmChain := NewEVMChain(celestiatestnode.NodeEVMPrivateKey)
+	evmChain := NewEVMChain(NodeEVMPrivateKey)
 
 	return &TestNode{
 		Context:         ctx,
