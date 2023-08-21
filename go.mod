@@ -1,10 +1,11 @@
 module github.com/celestiaorg/orchestrator-relayer
 
 go 1.20
+toolchain go1.21.0
 
 require (
-	github.com/celestiaorg/celestia-app v1.0.0-rc11
-	github.com/celestiaorg/nmt v0.18.0 // indirect
+	github.com/celestiaorg/celestia-app v1.0.0-rc12
+	github.com/celestiaorg/nmt v0.18.1 // indirect
 	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
 	github.com/ethereum/go-ethereum v1.12.1
 	github.com/gogo/protobuf v1.3.3 // indirect
@@ -25,7 +26,7 @@ require (
 )
 
 require (
-	github.com/cosmos/cosmos-sdk v0.46.13
+	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/ipfs/boxo v0.11.0
 	github.com/ipfs/go-datastore v0.6.0
@@ -78,7 +79,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/buger/goterm v1.0.4 // indirect
 	github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 // indirect
-	github.com/celestiaorg/rsmt2d v0.10.0 // indirect
+	github.com/celestiaorg/rsmt2d v0.11.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -212,7 +213,7 @@ require (
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
-	github.com/klauspost/reedsolomon v1.11.1 // indirect
+	github.com/klauspost/reedsolomon v1.11.8 // indirect
 	github.com/koron/go-ssdp v0.0.3 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
