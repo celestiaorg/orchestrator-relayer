@@ -21,8 +21,10 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 	_, err := s.Node.CelestiaNetwork.WaitForHeightWithTimeout(400, 30*time.Second)
 	require.NoError(t, err)
 
-	att := types.NewDataCommitment(2, 10, 100, time.Now())
 	ctx := context.Background()
+	latestValset, err := s.Orchestrator.AppQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+	att := types.NewDataCommitment(latestValset.Nonce+1, 10, 100, time.Now())
 	commitment, err := s.Orchestrator.TmQuerier.QueryCommitment(ctx, att.BeginBlock, att.EndBlock)
 	require.NoError(t, err)
 	dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)

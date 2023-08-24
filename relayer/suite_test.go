@@ -32,9 +32,9 @@ func (s *RelayerTestSuite) SetupSuite() {
 	s.Orchestrator = qgbtesting.NewOrchestrator(t, s.Node)
 	s.Relayer = qgbtesting.NewRelayer(t, s.Node)
 	go s.Node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
-	initVs, err := s.Relayer.AppQuerier.QueryValsetByNonce(s.Node.Context, 1)
+	initVs, err := s.Relayer.AppQuerier.QueryLatestValset(s.Node.Context)
 	require.NoError(t, err)
-	_, _, _, err = s.Relayer.EVMClient.DeployQGBContract(s.Node.EVMChain.Auth, s.Node.EVMChain.Backend, *initVs, 1, true)
+	_, _, _, err = s.Relayer.EVMClient.DeployQGBContract(s.Node.EVMChain.Auth, s.Node.EVMChain.Backend, *initVs, initVs.Nonce, true)
 	require.NoError(t, err)
 }
 

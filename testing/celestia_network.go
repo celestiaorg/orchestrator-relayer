@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	gethcommon "github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
@@ -23,6 +26,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 )
+
+// NodeEVMPrivateKey the key used to initialize the test node validator.
+// Its corresponding address is: "0x9c2B12b5a07FC6D719Ed7646e5041A7E85758329".
+var NodeEVMPrivateKey, _ = crypto.HexToECDSA("64a1d6f0e760a8d62b4afdde4096f16f51b401eaaecc915740f71770ea76a8ad")
 
 // CelestiaNetwork is a Celestia-app validator running in-process.
 // The EVM key that was used to create this network's single validator can
@@ -70,6 +77,21 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, genesisOpts ...celest
 	appRPC := clientContext.GRPCClient.Target()
 	status, err := clientContext.Client.Status(ctx)
 	require.NoError(t, err)
+
+	// register EVM address
+	rec, err := clientContext.Keyring.Key("validator")
+	require.NoError(t, err)
+	pubKey, err := rec.GetPubKey()
+	require.NoError(t, err)
+	valAddr, err := sdk.ValAddressFromHex(pubKey.Address().String())
+	require.NoError(t, err)
+	RegisterEVMAddress(
+		t,
+		clientContext,
+		valAddr,
+		gethcommon.HexToAddress("0x9c2B12b5a07FC6D719Ed7646e5041A7E85758329"),
+	)
+
 	return &CelestiaNetwork{
 		Context:  clientContext,
 		Accounts: accounts,
@@ -158,6 +180,27 @@ func (cn *CelestiaNetwork) SetDataCommitmentWindow(t *testing.T, window uint64) 
 	presp, err := bqc.Params(cn.Context.GoContext(), &types.QueryParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, window, presp.Params.DataCommitmentWindow)
+}
+
+func RegisterEVMAddress(
+	t *testing.T,
+	input celestiatestnode.Context,
+	valAddr sdk.ValAddress,
+	evmAddr gethcommon.Address,
+) {
+	registerMsg := types.NewMsgRegisterEVMAddress(valAddr, evmAddr)
+	res, err := celestiatestnode.SignAndBroadcastTx(
+		encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		input.Context,
+		"validator",
+		registerMsg,
+	)
+	require.NoError(t, err)
+	resp, err := input.WaitForTx(res.TxHash, 10)
+	require.NoError(t, err)
+	require.Equal(t, abci.CodeTypeOK, resp.TxResult.Code)
+
+	require.NoError(t, input.WaitForNextBlock())
 }
 
 func getAddress(account string, kr keyring.Keyring) sdk.AccAddress {

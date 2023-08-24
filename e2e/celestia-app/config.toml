@@ -305,7 +305,7 @@ keep-invalid-txs-in-cache = false
 
 # Maximum size of a single transaction.
 # NOTE: the max size of a tx transmitted over the network is {max_tx_bytes}.
-max_tx_bytes = 2097152
+max_tx_bytes = 7897088
 
 # Maximum size of a batch of transactions to send to a peer
 # Including space needed by encoding (one varint per transaction).
@@ -438,12 +438,12 @@ discard_abci_responses = false
 # to decide which txs to index based on configuration set in the application.
 #
 # Options:
-#   1) "kv"
+#   1) "null"
 #   2) "kv" (default) - the simplest possible indexer, backed by key-value storage (defaults to levelDB; see DBBackend).
 # 		- When "kv" is chosen "tx.height" and "tx.hash" will always be indexed.
 #   3) "psql" - the indexer services backed by PostgreSQL.
 # When "kv" or "psql" is chosen "tx.height" and "tx.hash" will always be indexed.
-indexer = "null"
+indexer = "kv"
 
 # The PostgreSQL connection configuration, the connection format:
 #   postgresql://<user>:<password>@<host>:<port>/<db>?<opts>
@@ -486,3 +486,21 @@ influx_org = "celestia"
 
 # The size of the batches that are sent to the database.
 influx_batch_size = 20
+
+# The list of tables that are updated when tracing. All available tables and
+# their schema can be found in the pkg/trace/schema package.
+influx_tables = ["mempool_tx", "mempool_peer_state", "consensus_round_state", "consensus_block_parts", ]
+
+# The URL of the pyroscope instance to use for continuous profiling.
+# If empty, continuous profiling is disabled.
+pyroscope_url = ""
+
+# When true, tracing data is added to the continuous profiling
+# performed by pyroscope.
+pyroscope_trace = false
+
+# pyroscope_profile_types is a list of profile types to be traced with
+# pyroscope. Available profile types are: cpu, alloc_objects, alloc_space,
+# inuse_objects, inuse_space, goroutines, mutex_count, mutex_duration,
+# block_count, block_duration.
+pyroscope_profile_types = ["cpu", "alloc_objects", "inuse_objects", "goroutines", "mutex_count", "mutex_duration", "block_count", "block_duration", ]

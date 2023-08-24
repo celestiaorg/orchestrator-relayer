@@ -26,11 +26,16 @@ do
   sleep 5s
 done
 
+# this will introduce flakiness but it's gonna be complicated to wait for validators to be created
+# and also waiting for them to change their addresses in bash. Also, depending on the testing scenarios,
+# the network topology varies. So, the best we can do now is sleep.
+sleep 60s
+
 # check whether to deploy a new contract or use an existing one
 if [[ -z "${QGB_CONTRACT}" ]]
 then
   export DEPLOY_NEW_CONTRACT=true
-  export STARTING_NONCE=earliest
+  export STARTING_NONCE=latest
   # expects the script to be mounted to this directory
   /bin/bash /opt/deploy_qgb_contract.sh
 fi

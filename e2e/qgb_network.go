@@ -406,21 +406,22 @@ func (network QGBNetwork) WaitForBlockWithCustomTimeout(
 // to sign the first data commitment (could be upgraded to get any signature, either valset or data commitment,
 // and for any nonce, but would require adding a new method to the querier. Don't think it is worth it now as
 // the number of valsets that will be signed is trivial and reaching 0 would be in no time).
-func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *p2p.QgbDHT, evmAddr string) error {
+// Returns the height and the nonce of some attestation that the orchestrator signed.
+func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *p2p.QgbDHT, evmAddr string) (uint64, uint64, error) {
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 	defer appQuerier.Stop() //nolint:errcheck
 
 	tmQuerier := rpc.NewTmQuerier(network.TendermintRPC, network.Logger)
 	err = tmQuerier.Start()
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 	defer tmQuerier.Stop() //nolint:errcheck
 
@@ -429,13 +430,13 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 		select {
 		case <-network.stopChan:
 			cancel()
-			return ErrNetworkStopped
+			return 0, 0, ErrNetworkStopped
 		case <-ctx.Done():
 			cancel()
 			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-				return fmt.Errorf("orchestrator didn't start correctly")
+				return 0, 0, fmt.Errorf("orchestrator didn't start correctly")
 			}
-			return ctx.Err()
+			return 0, 0, ctx.Err()
 		default:
 			fmt.Println("waiting for orchestrator to start ...")
 			lastNonce, err := appQuerier.QueryLatestAttestationNonce(ctx)
@@ -457,7 +458,7 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 					vsConfirm, err := p2pQuerier.QueryValsetConfirmByEVMAddress(ctx, lastNonce-i, evmAddr, signBytes.Hex())
 					if err == nil && vsConfirm != nil {
 						cancel()
-						return nil
+						return castedAtt.Height, castedAtt.Nonce, nil
 					}
 				case *types.DataCommitment:
 					commitment, err := tmQuerier.QueryCommitment(ctx, castedAtt.BeginBlock, castedAtt.EndBlock)
@@ -468,7 +469,7 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 					dcConfirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, lastNonce-i, evmAddr, dataRootTupleRoot.Hex())
 					if err == nil && dcConfirm != nil {
 						cancel()
-						return nil
+						return castedAtt.EndBlock, castedAtt.Nonce, nil
 					}
 				}
 			}
@@ -878,4 +879,20 @@ func (network QGBNetwork) PrintLogs() {
 	_ = network.Instance.
 		WithCommand([]string{"logs"}).
 		Invoke()
+}
+
+func (network QGBNetwork) GetLatestValset(ctx context.Context) (*types.Valset, error) {
+	// create app querier
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	err := appQuerier.Start()
+	if err != nil {
+		return nil, err
+	}
+	defer appQuerier.Stop() //nolint:errcheck
+
+	valset, err := appQuerier.QueryLatestValset(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return valset, nil
 }

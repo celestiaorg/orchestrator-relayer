@@ -47,20 +47,16 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
+	height, _, err := network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
-	vsConfirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
-	// assert the confirm exist
-	assert.NoError(t, err)
-	require.NotNil(t, vsConfirm)
-	// assert that it carries the right evm address
-	assert.Equal(t, CORE0EVMADDRESS, vsConfirm.EthAddress)
+	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+height))
+	HandleNetworkError(t, network, err, false)
 
-	dcConfirm, err := network.GetDataCommitmentConfirmByHeight(ctx, dht, network.DataCommitmentWindow-2, CORE0EVMADDRESS)
+	dcConfirm, err := network.GetDataCommitmentConfirmByHeight(ctx, dht, height, CORE0EVMADDRESS)
 	// assert the confirm exist
 	require.NoError(t, err)
 	require.NotNil(t, dcConfirm)
@@ -111,28 +107,34 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
+	c0Height, _, err := network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
+	c1Height, _, err := network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
+	latestValset, err := network.GetLatestValset(ctx)
+	require.NoError(t, err)
+
 	// check core0 submitted the valset confirm
-	core0ValsetConfirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
+	core0ValsetConfirm, err := network.GetValsetConfirm(ctx, dht, latestValset.Nonce, CORE0EVMADDRESS)
 	// assert the confirm exist
 	assert.NoError(t, err)
 	assert.NotNil(t, core0ValsetConfirm)
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0ValsetConfirm.EthAddress)
 
+	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+c0Height))
+	HandleNetworkError(t, network, err, false)
+
 	// check core0 submitted the data commitment confirm
 	core0DataCommitmentConfirm, err := network.GetDataCommitmentConfirmByHeight(
 		ctx,
 		dht,
-		network.DataCommitmentWindow-1,
+		c0Height,
 		CORE0EVMADDRESS,
 	)
 	// assert the confirm exist
@@ -141,13 +143,11 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0DataCommitmentConfirm.EthAddress)
 
-	// get the last valset where all validators were created
-	vs, err := network.GetValsetContainingVals(ctx, 2)
-	require.NoError(t, err)
-	require.NotNil(t, vs)
+	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+c1Height))
+	HandleNetworkError(t, network, err, false)
 
 	// check core1 submitted the data commitment confirm
-	core1Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, vs.Nonce+1, CORE1EVMADDRESS)
+	core1Confirm, err := network.GetDataCommitmentConfirmByHeight(ctx, dht, c1Height, CORE1EVMADDRESS)
 	require.NoError(t, err)
 	require.NotNil(t, core1Confirm)
 }
@@ -182,34 +182,40 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
+	c0Height, _, err := network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE2EVMADDRESS)
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE2EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE3EVMADDRESS)
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE3EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
+	latestValset, err := network.GetLatestValset(ctx)
+	require.NoError(t, err)
+
 	// check core0 submitted the valset confirm
-	core0ValsetConfirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
+	core0ValsetConfirm, err := network.GetValsetConfirm(ctx, dht, latestValset.Nonce, CORE0EVMADDRESS)
 	// check the confirm exist
 	require.NoError(t, err)
 	require.NotNil(t, core0ValsetConfirm)
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0ValsetConfirm.EthAddress)
 
+	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+c0Height))
+	HandleNetworkError(t, network, err, false)
+
 	// check core0 submitted the data commitment confirm
 	core0DataCommitmentConfirm, err := network.GetDataCommitmentConfirmByHeight(
 		ctx,
 		dht,
-		network.DataCommitmentWindow-2,
+		c0Height,
 		CORE0EVMADDRESS,
 	)
 	// check the confirm exist
@@ -218,23 +224,18 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0DataCommitmentConfirm.EthAddress)
 
-	// get the last valset where all validators were created
-	vs, err := network.GetValsetContainingVals(ctx, 4)
-	require.NoError(t, err)
-	require.NotNil(t, vs)
-
 	// check core1 submitted the data commitment confirm
-	core1Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, vs.Nonce+1, CORE1EVMADDRESS)
+	core1Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, latestValset.Nonce+1, CORE1EVMADDRESS)
 	require.NoError(t, err)
 	require.NotNil(t, core1Confirm)
 
 	// check core2 submitted the data commitment confirm
-	core2Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, vs.Nonce+1, CORE2EVMADDRESS)
+	core2Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, latestValset.Nonce+1, CORE2EVMADDRESS)
 	require.NoError(t, err)
 	require.NotNil(t, core2Confirm)
 
 	// check core3 submitted the data commitment confirm
-	core3Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, vs.Nonce+1, CORE3EVMADDRESS)
+	core3Confirm, err := network.GetDataCommitmentConfirm(ctx, dht, latestValset.Nonce+1, CORE3EVMADDRESS)
 	require.NoError(t, err)
 	require.NotNil(t, core3Confirm)
 }
@@ -285,35 +286,38 @@ func TestOrchestratorReplayOld(t *testing.T) {
 	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
-	// check core0 submitted valset 1 confirm
-	vs1Core0Confirm, err := network.GetValsetConfirm(ctx, dht, 1, CORE0EVMADDRESS)
+	latestValset, err := network.GetLatestValset(ctx)
+	require.NoError(t, err)
+
+	// check core0 submitted the valset confirm
+	vs1Core0Confirm, err := network.GetValsetConfirm(ctx, dht, latestValset.Nonce, CORE0EVMADDRESS)
 	// assert the confirm exist
 	require.NoError(t, err)
 	require.NotNil(t, vs1Core0Confirm)
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, vs1Core0Confirm.EthAddress)
 
-	// get the last valset where all validators were created
-	vs, err := network.GetValsetContainingVals(ctx, 2)
-	require.NoError(t, err)
-	require.NotNil(t, vs)
-
 	latestNonce, err := network.GetLatestAttestationNonce(ctx)
 	require.NoError(t, err)
 
 	// checks that all nonces where all validators were part of the valset were signed
-	for i := vs.Nonce + 1; i <= latestNonce; i++ {
+	for i := latestValset.Nonce + 1; i <= latestNonce; i++ {
+		// check core0 submitted the attestation confirm
+		wasSigned, err := network.WasAttestationSigned(ctx, dht, i, CORE0EVMADDRESS)
+		require.NoError(t, err)
+		require.True(t, wasSigned)
+
 		// check core1 submitted the attestation confirm
-		wasSigned, err := network.WasAttestationSigned(ctx, dht, i, CORE1EVMADDRESS)
+		wasSigned, err = network.WasAttestationSigned(ctx, dht, i, CORE1EVMADDRESS)
 		require.NoError(t, err)
 		require.True(t, wasSigned)
 	}
