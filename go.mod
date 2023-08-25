@@ -287,6 +287,9 @@ require (
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/pyroscope-io/client v0.7.2 // indirect
+	github.com/pyroscope-io/godeltaprof v0.1.2 // indirect
+	github.com/pyroscope-io/otel-profiling-go v0.4.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
 	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
@@ -342,6 +345,7 @@ require (
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.14.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.14.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.15.1 // indirect
 	go.opentelemetry.io/otel/internal/metric v0.27.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.15.1 // indirect
@@ -386,7 +390,7 @@ replace (
 	github.com/docker/docker => github.com/docker/docker v23.0.5+incompatible
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.26.0-tm-v0.34.28
+	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.26.2-tm-v0.34.28
 )
 
 // testcontainers required replaces:
