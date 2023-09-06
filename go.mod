@@ -18,8 +18,8 @@ require (
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	golang.org/x/crypto v0.10.0 // indirect
 	golang.org/x/net v0.10.0 // indirect
-	golang.org/x/sys v0.11.0 // indirect
-	golang.org/x/term v0.11.0
+	golang.org/x/sys v0.12.0 // indirect
+	golang.org/x/term v0.12.0
 	google.golang.org/genproto v0.0.0-20230525234025-438c736192d0 // indirect
 	google.golang.org/grpc v1.56.1
 )
