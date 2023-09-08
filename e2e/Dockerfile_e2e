@@ -1,12 +1,12 @@
 # stage 1 Build qgb binary
-FROM golang:1.20-alpine as builder
+FROM golang:1.21.1-alpine as builder
 RUN apk update && apk --no-cache add make gcc musl-dev git
 COPY . /orchestrator-relayer
 WORKDIR /orchestrator-relayer
 RUN make build
 
 # final image
-FROM ghcr.io/celestiaorg/celestia-app:v1.0.0-rc12
+FROM ghcr.io/celestiaorg/celestia-app:v1.0.0-rc14
 
 USER root
 
