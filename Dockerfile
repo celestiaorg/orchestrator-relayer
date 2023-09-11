@@ -11,6 +11,8 @@ FROM --platform=$BUILDPLATFORM docker.io/alpine:3.18.3
 ARG UID=10001
 ARG USER_NAME=celestia
 
+ENV CELESTIA_HOME=/home/${USER_NAME}
+
 # hadolint ignore=DL3018
 RUN apk update && apk add --no-cache \
         bash \
