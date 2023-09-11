@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/celestiaorg/celestia-app v1.0.0-rc13
 	github.com/celestiaorg/nmt v0.19.0 // indirect
-	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
+	github.com/celestiaorg/quantum-gravity-bridge v2.0.0+incompatible
 	github.com/ethereum/go-ethereum v1.12.1
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
