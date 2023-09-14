@@ -76,7 +76,7 @@ func (ec *Client) DeployQGBContract(
 	contractInitNonce uint64,
 	initBridge bool,
 ) (gethcommon.Address, *coregethtypes.Transaction, *qgbwrapper.Wrappers, error) {
-	// deploy the QGB contract using the chain parameters
+	// deploy the QGB implementation contract
 	impAddr, impTx, _, err := ec.DeployImplementation(opts, contractBackend)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -84,6 +84,7 @@ func (ec *Client) DeployQGBContract(
 
 	ec.logger.Info("deploying QGB implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
 
+	// encode the QGB contract initialization data using the chain parameters
 	ethVsHash, err := contractInitValset.Hash()
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -102,7 +103,7 @@ func (ec *Client) DeployQGBContract(
 		opts.Nonce.Add(opts.Nonce, big.NewInt(1))
 	}
 
-	// deploy the ERC1967 proxy
+	// deploy the ERC1967 proxy, link it to the QGB implementation contract, and initialize it
 	proxyAddr, tx, _, err := ec.DeployERC1867Proxy(opts, contractBackend, impAddr, initData)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
