@@ -5,6 +5,8 @@ import (
 	"os"
 	"time"
 
+	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
+
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	dssync "github.com/ipfs/go-datastore/sync"
@@ -16,7 +18,6 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/store"
 
 	"github.com/celestiaorg/orchestrator-relayer/relayer"
-	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
 	tmlog "github.com/tendermint/tendermint/libs/log"
@@ -150,7 +151,7 @@ func Start() *cobra.Command {
 				return err
 			}
 			defer ethClient.Close()
-			qgbWrapper, err := wrapper.NewQuantumGravityBridge(config.contractAddr, ethClient)
+			qgbWrapper, err := qgbwrapper.NewWrappers(config.contractAddr, ethClient)
 			if err != nil {
 				return err
 			}

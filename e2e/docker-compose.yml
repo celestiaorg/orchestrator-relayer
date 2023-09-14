@@ -264,7 +264,7 @@ services:
       - CORE_GRPC_PORT=9090
       - EVM_CHAIN_ID=1234
       - EVM_ENDPOINT=http://ganache:8545
-      - STARTING_NONCE=earliest
+      - STARTING_NONCE=latest
     entrypoint: [
       "/bin/bash"
     ]
@@ -294,7 +294,7 @@ services:
       - CORE_GRPC_PORT=9090
       - EVM_CHAIN_ID=1234
       - EVM_ENDPOINT=http://ganache:8545
-      - STARTING_NONCE=earliest
+      - STARTING_NONCE=latest
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
 #      set the following environment variable to some value
