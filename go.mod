@@ -4,12 +4,10 @@ go 1.21
 
 toolchain go1.21.1
 
-replace github.com/celestiaorg/quantum-gravity-bridge => github.com/sweexordious/quantum-gravity-bridge v1.4.1-0.20230913173701-eebfd521b5ba
-
 require (
-	github.com/celestiaorg/celestia-app v1.0.0-rc9.0.20230913154707-424f63163e42
+	github.com/celestiaorg/celestia-app v1.0.0-rc15
 	github.com/celestiaorg/nmt v0.19.0 // indirect
-	github.com/celestiaorg/quantum-gravity-bridge v2.0.0+incompatible
+	github.com/celestiaorg/quantum-gravity-bridge v2.1.0+incompatible
 	github.com/ethereum/go-ethereum v1.13.0
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
