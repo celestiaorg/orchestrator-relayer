@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
+	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
-	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -755,20 +756,21 @@ func (network QGBNetwork) WasAttestationSigned(
 	}
 }
 
-func (network QGBNetwork) GetLatestDeployedQGBContract(_ctx context.Context) (*wrapper.QuantumGravityBridge, error) {
+func (network QGBNetwork) GetLatestDeployedQGBContract(_ctx context.Context) (*qgbwrapper.Wrappers, error) {
 	return network.GetLatestDeployedQGBContractWithCustomTimeout(_ctx, 5*time.Minute)
 }
 
 func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 	_ctx context.Context,
 	timeout time.Duration,
-) (*wrapper.QuantumGravityBridge, error) {
+) (*qgbwrapper.Wrappers, error) {
 	client, err := ethclient.Dial(network.EVMRPC)
 	if err != nil {
 		return nil, err
 	}
 	height := 0
 	ctx, cancel := context.WithTimeout(_ctx, timeout)
+	implementationFound := false
 	for {
 		select {
 		case <-network.stopChan:
@@ -811,9 +813,14 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 				if receipt.ContractAddress == (ethcommon.Address{}) {
 					continue
 				}
-				// If the bridge is loaded, then it's the latest deployed QGB contracct
-				bridge, err := wrapper.NewQuantumGravityBridge(receipt.ContractAddress, client)
+				// If the bridge is loaded, then it's the latest-deployed proxy QGB contract
+				bridge, err := qgbwrapper.NewWrappers(receipt.ContractAddress, client)
 				if err != nil {
+					continue
+				}
+				if !implementationFound {
+					// at this level, we found the implementation. Now, we will look for the proxy.
+					implementationFound = true
 					continue
 				}
 				cancel()
@@ -823,7 +830,7 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 	}
 }
 
-func (network QGBNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *wrapper.QuantumGravityBridge) error {
+func (network QGBNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *qgbwrapper.Wrappers) error {
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
 		select {
@@ -848,7 +855,7 @@ func (network QGBNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *wr
 	}
 }
 
-func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *wrapper.QuantumGravityBridge, n uint64) error {
+func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *qgbwrapper.Wrappers, n uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	for {
 		select {

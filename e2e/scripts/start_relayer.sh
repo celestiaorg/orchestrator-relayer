@@ -15,6 +15,8 @@ then
   exit 1
 fi
 
+echo "starting relayer..."
+
 # wait for the node to get up and running
 while true
 do
