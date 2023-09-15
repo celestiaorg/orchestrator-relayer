@@ -5,9 +5,9 @@ go 1.21
 toolchain go1.21.1
 
 require (
-	github.com/celestiaorg/celestia-app v1.0.0-rc14
+	github.com/celestiaorg/celestia-app v1.0.0-rc15
 	github.com/celestiaorg/nmt v0.19.0 // indirect
-	github.com/celestiaorg/quantum-gravity-bridge v1.3.0
+	github.com/celestiaorg/quantum-gravity-bridge v2.0.0+incompatible
 	github.com/ethereum/go-ethereum v1.13.0
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
