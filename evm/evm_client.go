@@ -14,7 +14,8 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
-	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
+	proxywrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/ERC1967Proxy.sol"
+	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
@@ -23,7 +24,7 @@ const DefaultEVMGasLimit = uint64(25000000)
 
 type Client struct {
 	logger   tmlog.Logger
-	Wrapper  *wrapper.QuantumGravityBridge
+	Wrapper  *qgbwrapper.Wrappers
 	Ks       *keystore.KeyStore
 	Acc      *accounts.Account
 	EvmRPC   string
@@ -35,7 +36,7 @@ type Client struct {
 // The wrapper parameter can be nil when creating the client for contract deployment.
 func NewClient(
 	logger tmlog.Logger,
-	wrapper *wrapper.QuantumGravityBridge,
+	wrapper *qgbwrapper.Wrappers,
 	ks *keystore.KeyStore,
 	acc *accounts.Account,
 	evmRPC string,
@@ -65,29 +66,52 @@ func (ec *Client) NewEthClient() (*ethclient.Client, error) {
 // The waitToBeMined, when set to true, will wait for the transaction to be included in a block,
 // and log relevant information.
 // The initBridge, when set to true, will assign the newly deployed bridge to the wrapper. This
-// later can be used for further interactions with the new contract.
+// can be used later for further interactions with the new contract.
 // Multiple calls to DeployQGBContract with the initBridge flag set to true will overwrite everytime
 // the bridge contract.
 func (ec *Client) DeployQGBContract(
 	opts *bind.TransactOpts,
-	backend bind.ContractBackend,
+	contractBackend bind.ContractBackend,
 	contractInitValset types.Valset,
 	contractInitNonce uint64,
 	initBridge bool,
-) (gethcommon.Address, *coregethtypes.Transaction, *wrapper.QuantumGravityBridge, error) {
-	ethVsHash, err := contractInitValset.Hash()
+) (gethcommon.Address, *coregethtypes.Transaction, *qgbwrapper.Wrappers, error) {
+	// deploy the QGB implementation contract
+	impAddr, impTx, _, err := ec.DeployImplementation(opts, contractBackend)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
 
-	// deploy the QGB contract using the chain parameters
-	addr, tx, bridge, err := wrapper.DeployQuantumGravityBridge(
-		opts,
-		backend,
-		big.NewInt(int64(contractInitNonce)),
-		big.NewInt(int64(contractInitValset.TwoThirdsThreshold())),
-		ethVsHash,
-	)
+	ec.logger.Info("deploying QGB implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
+
+	// encode the QGB contract initialization data using the chain parameters
+	ethVsHash, err := contractInitValset.Hash()
+	if err != nil {
+		return gethcommon.Address{}, nil, nil, err
+	}
+	qgbABI, err := qgbwrapper.WrappersMetaData.GetAbi()
+	if err != nil {
+		return gethcommon.Address{}, nil, nil, err
+	}
+	initData, err := qgbABI.Pack("initialize", big.NewInt(int64(contractInitNonce)), big.NewInt(int64(contractInitValset.TwoThirdsThreshold())), ethVsHash)
+	if err != nil {
+		return gethcommon.Address{}, nil, nil, err
+	}
+
+	// bump the nonce
+	if opts.Nonce != nil {
+		opts.Nonce.Add(opts.Nonce, big.NewInt(1))
+	}
+
+	// deploy the ERC1967 proxy, link it to the QGB implementation contract, and initialize it
+	proxyAddr, tx, _, err := ec.DeployERC1867Proxy(opts, contractBackend, impAddr, initData)
+	if err != nil {
+		return gethcommon.Address{}, nil, nil, err
+	}
+
+	ec.logger.Info("deploying QGB proxy contract...", "address", proxyAddr, "tx_hash", tx.Hash().Hex())
+
+	bridge, err := qgbwrapper.NewWrappers(proxyAddr, contractBackend)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
@@ -97,14 +121,14 @@ func (ec *Client) DeployQGBContract(
 		ec.Wrapper = bridge
 	}
 
-	return addr, tx, bridge, nil
+	return proxyAddr, tx, bridge, nil
 }
 
 func (ec *Client) UpdateValidatorSet(
 	opts *bind.TransactOpts,
 	newNonce, newThreshHold uint64,
 	currentValset, newValset types.Valset,
-	sigs []wrapper.Signature,
+	sigs []qgbwrapper.Signature,
 ) (*coregethtypes.Transaction, error) {
 	// TODO in addition to the nonce, log more interesting information
 	ec.logger.Info("relaying valset", "nonce", newNonce)
@@ -147,7 +171,7 @@ func (ec *Client) SubmitDataRootTupleRoot(
 	tupleRoot gethcommon.Hash,
 	newNonce uint64,
 	currentValset types.Valset,
-	sigs []wrapper.Signature,
+	sigs []qgbwrapper.Signature,
 ) (*coregethtypes.Transaction, error) {
 	ethVals, err := ethValset(currentValset)
 	if err != nil {
@@ -209,14 +233,40 @@ func (ec *Client) WaitForTransaction(
 	return receipt, err
 }
 
-func ethValset(valset types.Valset) ([]wrapper.Validator, error) {
-	ethVals := make([]wrapper.Validator, len(valset.Members))
+func (ec *Client) DeployImplementation(opts *bind.TransactOpts, backend bind.ContractBackend) (
+	gethcommon.Address,
+	*coregethtypes.Transaction,
+	*qgbwrapper.Wrappers,
+	error,
+) {
+	return qgbwrapper.DeployWrappers(
+		opts,
+		backend,
+	)
+}
+
+func (ec *Client) DeployERC1867Proxy(
+	opts *bind.TransactOpts,
+	backend bind.ContractBackend,
+	implementationAddress gethcommon.Address,
+	data []byte,
+) (gethcommon.Address, *coregethtypes.Transaction, *proxywrapper.Wrappers, error) {
+	return proxywrapper.DeployWrappers(
+		opts,
+		backend,
+		implementationAddress,
+		data,
+	)
+}
+
+func ethValset(valset types.Valset) ([]qgbwrapper.Validator, error) {
+	ethVals := make([]qgbwrapper.Validator, len(valset.Members))
 	for i, v := range valset.Members {
 		if ok := gethcommon.IsHexAddress(v.EvmAddress); !ok {
 			return nil, errors.New("invalid ethereum address found in validator set")
 		}
 		addr := gethcommon.HexToAddress(v.EvmAddress)
-		ethVals[i] = wrapper.Validator{
+		ethVals[i] = qgbwrapper.Validator{
 			Addr:  addr,
 			Power: big.NewInt(int64(v.Power)),
 		}
