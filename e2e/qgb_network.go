@@ -770,6 +770,7 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 	}
 	height := 0
 	ctx, cancel := context.WithTimeout(_ctx, timeout)
+	implementationFound := false
 	for {
 		select {
 		case <-network.stopChan:
@@ -815,6 +816,11 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 				// If the bridge is loaded, then it's the latest-deployed proxy QGB contract
 				bridge, err := qgbwrapper.NewWrappers(receipt.ContractAddress, client)
 				if err != nil {
+					continue
+				}
+				if !implementationFound {
+					// at this level, we found the implementation. Now, we will look for the proxy.
+					implementationFound = true
 					continue
 				}
 				cancel()
