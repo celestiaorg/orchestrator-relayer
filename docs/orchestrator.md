@@ -38,6 +38,14 @@ I[2023-04-26|00:04:28.175] waiting for routing table to populate        targetnu
 
 ## How to run
 
+### Requirements
+
+To run an orchestrator, you will need to have access to the following:
+
+* *Access to your EVM address private key. This latter doesn't need to be funded in any network. If yours is not yet set, check the [register an EVM address](#register-evm-address) section.
+* *A list of bootstrappers for the P2P network. These will be shared by the team for every network we plan on supporting.
+* *Access to your consensus node RPC and gRPC ports.
+
 ### Install the QGB binary
 
 Make sure to have the QGB binary installed. Check [here](https://docs.celestia.org/nodes/qgb-binary) for more details.
@@ -95,14 +103,6 @@ qgb orchestrator keys evm list
 
 For more information about the `keys` command, check the `keys` documentation in [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/keys.md).
 
-### Requirements
-
-To run an orchestrator, you will need to have access to the following:
-
-* *Access to your EVM address private key. This latter doesn't need to be funded in any network.
-* *A list of bootstrappers for the P2P network. These will be shared by the team for every network we plan on supporting.
-* *Access to your consensus node RPC and gRPC ports.
-
 ### Start the orchestrator
 
 Now that we have the store initialized, we can start the orchestrator. Make sure you have your Celestia-app node RPC and gRPC accessible, and able to connect to the P2P network bootstrappers.
@@ -141,9 +141,11 @@ In order for the signature propagation to be successful, you will need to expose
 
 If not, then the signatures may not be available to the network and relayers will not be able to query them.
 
-#### Edit validator
+#### Register EVM Address
 
-If your validator was created using an EVM address that you don't have access to, you can always edit it using the `edit-validator` command.
+When creating a validator, a random EVM address corresponding to its operator is set in the QGB state. This latter will be used by the orchestrator to sign attestations. And since validators will generally not have access to its corresponding private key, that address needs to be edited with one whose private key is known to the validator operator.
+
+To edit an EVM address for a certain validator, its corresponding account needs to send a `RegisterEVMAddress` transaction with the new address.
 
 First, you should get your validator `valoper` address. To do so, run the following:
 
@@ -153,71 +155,107 @@ celestia-appd keys show <validator_account> --bech val
 
 This assumes that you're using the default home directory, the default keystore etc. If not, make sure to add the flags that correspond to your situation.
 
-Then, you should get your validator to verify which EVM address is attached to it:
+To check which EVM address is registered for your `valoper` address, run the following:
 
 ```ssh
-celestia-appd query staking validator <validator_valoper_address>
+celestia-appd query qgb evm <validator_valoper_address>
 ```
 
-And check the `evm_address` field if it has an address that you want to use to sign attestations. If not, let's proceed to change it.
+Then, to proceed with the edit, run the following command:
 
-Note: Please double-check the parameters of the following command before running it, as it may have persistent effects.
-
-```ssh
-celestia-appd tx staking edit-validator --evm-address=<new_evm_address> --from=<validator_account> --fees 210utia
+```shell
+celestia-appd tx qgb register \
+    <valoper_address> \
+    <new_evm_address> \
+    --fees 30000utia \
+    --broadcast-mode block \
+    --yes
 ```
 
 Example command output:
 
 ```ssh
-auth_info:
-  fee:
-    amount:
-    - amount: "210"
-      denom: utia
-    gas_limit: "210000"
-    granter: ""
-    payer: ""
-  signer_infos: []
-  tip: null
-body:
-  extension_options: []
-  memo: ""
-  messages:
-  - '@type': /cosmos.staking.v1beta1.MsgEditValidator
-    commission_rate: null
-    description:
-      details: '[do-not-modify]'
-      identity: '[do-not-modify]'
-      moniker: '[do-not-modify]'
-      security_contact: '[do-not-modify]'
-      website: '[do-not-modify]'
-    evm_address: 0x27a1F8CE94187E4b043f4D57548EF2348Ed556c7
-    min_self_delegation: null
-    validator_address: celestiavaloper1vr6j8mq6aaxr5mw9sld3a75afjr4rytp42zy6h
-  non_critical_extension_options: []
-  timeout_height: "0"
-signatures: []
-confirm transaction before signing and broadcasting [y/N]: y
 code: 0
 codespace: ""
-data: ""
-events: []
-gas_used: "0"
-gas_wanted: "0"
-height: "0"
+data: 12300A2E2F63656C65737469612E7167622E76312E4D7367526567697374657245564D41646472657373526573706F6E7365
+events:
+- attributes:
+  - index: true
+    key: c3BlbmRlcg==
+    value: Y2VsZXN0aWExcDkzcmd6Mnl5MG5hMnN5OWc3a3NzanY2MDY2dWxqcWV3cGpwZ2c=
+  - index: true
+    key: YW1vdW50
+    value: MzAwMDB1dGlh
+  type: coin_spent
+- attributes:
+  - index: true
+    key: cmVjZWl2ZXI=
+    value: Y2VsZXN0aWExN3hwZnZha20yYW1nOTYyeWxzNmY4NHoza2VsbDhjNWxwbmpzM3M=
+  - index: true
+    key: YW1vdW50
+    value: MzAwMDB1dGlh
+  type: coin_received
+- attributes:
+  - index: true
+    key: cmVjaXBpZW50
+    value: Y2VsZXN0aWExN3hwZnZha20yYW1nOTYyeWxzNmY4NHoza2VsbDhjNWxwbmpzM3M=
+  - index: true
+    key: c2VuZGVy
+    value: Y2VsZXN0aWExcDkzcmd6Mnl5MG5hMnN5OWc3a3NzanY2MDY2dWxqcWV3cGpwZ2c=
+  - index: true
+    key: YW1vdW50
+    value: MzAwMDB1dGlh
+  type: transfer
+- attributes:
+  - index: true
+    key: c2VuZGVy
+    value: Y2VsZXN0aWExcDkzcmd6Mnl5MG5hMnN5OWc3a3NzanY2MDY2dWxqcWV3cGpwZ2c=
+  type: message
+- attributes:
+  - index: true
+    key: ZmVl
+    value: MzAwMDB1dGlh
+  - index: true
+    key: ZmVlX3BheWVy
+    value: Y2VsZXN0aWExcDkzcmd6Mnl5MG5hMnN5OWc3a3NzanY2MDY2dWxqcWV3cGpwZ2c=
+  type: tx
+- attributes:
+  - index: true
+    key: YWNjX3NlcQ==
+    value: Y2VsZXN0aWExcDkzcmd6Mnl5MG5hMnN5OWc3a3NzanY2MDY2dWxqcWV3cGpwZ2cvMQ==
+  type: tx
+- attributes:
+  - index: true
+    key: c2lnbmF0dXJl
+    value: cE5ZS0pqWEZlOFVTaEZUdDdzRHVETWZNWW55YjZTT01iZnlBSkZGYnZpVk45bGJ2L2tUeXhEWWxHK2VjRE94bFlSajJIMmlWNGJLWVhMNDBQM1F4TUE9PQ==
+  type: tx
+- attributes:
+  - index: true
+    key: YWN0aW9u
+    value: L2NlbGVzdGlhLnFnYi52MS5Nc2dSZWdpc3RlckVWTUFkZHJlc3M=
+  type: message
+gas_used: "66959"
+gas_wanted: "210000"
+height: "3"
 info: ""
-logs: []
-raw_log: '[]'
+logs:
+- events:
+  - attributes:
+    - key: action
+      value: /celestia.qgb.v1.MsgRegisterEVMAddress
+    type: message
+  log: ""
+  msg_index: 0
+raw_log: '[{"msg_index":0,"events":[{"type":"message","attributes":[{"key":"action","value":"/celestia.qgb.v1.MsgRegisterEVMAddress"}]}]}]'
 timestamp: ""
 tx: null
-txhash: 25864170DDE40F51C0C38BCF5B22BBC015637F56AA1E2DFDA6CE51F2D5860579
+txhash: 4199EA959A2CFEFCD4726D8D8F7B536458A46A27318D3483A4E9614F560606BC
 ```
 
 Now, you can verify that the EVM address has been updated using the following command:
 
 ```ssh
-celestia-appd query staking validator <validator_valoper_address>
+celestia-appd query qgb evm <validator_valoper_address>
 ```
 
 Now, you can restart the orchestrator, and it should start signing.
