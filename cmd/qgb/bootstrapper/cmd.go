@@ -39,8 +39,8 @@ func Command() *cobra.Command {
 func Start() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "start",
-		Short: "Starts the bootstrapper node using the provided home. " +
-			"Could be connected to other bootstrappers via the `-b` flag.",
+		Short: "Starts the bootstrapper node using the provided home." +
+			"Could be connected to other bootstrapper nodes too.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseStartFlags(cmd)
 			if err != nil {
