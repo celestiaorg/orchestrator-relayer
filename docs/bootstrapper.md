@@ -24,11 +24,9 @@ By default, the store will be created un `~/.bootstrapper`. However, if you want
 
 ### Add keys
 
-In order for the bootstrapper to start, it will need a P2P private key in store.
-
 The P2P private key is optional, and a new one will be generated automatically on the start if none is provided.
 
-The `p2p` sub-command will help you set up this key:
+The `p2p` sub-command will help you set up this key if you want to use a specific one:
 
 ```ssh
 qgb bootstrapper p2p  --help
