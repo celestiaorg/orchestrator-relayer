@@ -14,8 +14,8 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
-	proxywrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/ERC1967Proxy.sol"
-	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
+	proxywrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/ERC1967Proxy.sol"
+	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 

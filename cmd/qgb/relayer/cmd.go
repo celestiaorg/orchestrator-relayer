@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
+	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/qgb/keys/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
