@@ -890,7 +890,7 @@ func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *qgbwrap
 }
 
 func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWindow uint64) error {
-	fmt.Println(fmt.Printf("updating data commitment window %d", newWindow))
+	fmt.Printf("updating data commitment window %d\n", newWindow)
 	kr, err := keyring.New(
 		"qgb-tests",
 		"test",
