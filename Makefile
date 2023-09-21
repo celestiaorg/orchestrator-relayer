@@ -28,7 +28,7 @@ build: mod
 
 build-docker:
 	@echo "--> Building Docker image"
-	$(DOCKER) build -t celestiaorg/orchestrator-relayer -f docker/Dockerfile .
+	@$(DOCKER) build -t celestiaorg/orchestrator-relayer -f Dockerfile .
 .PHONY: build-docker
 
 lint:
