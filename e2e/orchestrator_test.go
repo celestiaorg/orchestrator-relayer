@@ -34,9 +34,6 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(100))
-	HandleNetworkError(t, network, err, false)
-
 	window, err := network.GetCurrentDataCommitmentWindow(ctx)
 	require.NoError(t, err)
 	err = network.WaitForBlock(ctx, int64(window+50))
@@ -98,9 +95,6 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(100))
-	HandleNetworkError(t, network, err, false)
-
 	window, err := network.GetCurrentDataCommitmentWindow(ctx)
 	require.NoError(t, err)
 	err = network.WaitForBlock(ctx, int64(window+50))
@@ -177,9 +171,6 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(100))
-	HandleNetworkError(t, network, err, false)
-
 	window, err := network.GetCurrentDataCommitmentWindow(ctx)
 	require.NoError(t, err)
 	err = network.WaitForBlock(ctx, int64(window+50))
@@ -273,9 +264,6 @@ func TestOrchestratorReplayOld(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(100))
-	HandleNetworkError(t, network, err, false)
-
 	window, err := network.GetCurrentDataCommitmentWindow(ctx)
 	require.NoError(t, err)
 	err = network.WaitForBlock(ctx, int64(2*window))

@@ -1006,15 +1006,40 @@ func (network QGBNetwork) GetLatestValset(ctx context.Context) (*types.Valset, e
 }
 
 func (network QGBNetwork) GetCurrentDataCommitmentWindow(ctx context.Context) (uint64, error) {
-	qgbGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return 0, err
+	var window uint64
+	queryFun := func() error {
+		qgbGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return err
+		}
+		defer qgbGRPC.Close()
+		bqc := types.NewQueryClient(qgbGRPC)
+		presp, err := bqc.Params(ctx, &types.QueryParamsRequest{})
+		if err != nil {
+			return err
+		}
+		window = presp.Params.DataCommitmentWindow
+		return nil
 	}
-	defer qgbGRPC.Close()
-	bqc := types.NewQueryClient(qgbGRPC)
-	presp, err := bqc.Params(ctx, &types.QueryParamsRequest{})
-	if err != nil {
-		return 0, err
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	for {
+		select {
+		case <-network.stopChan:
+			cancel()
+			return 0, ErrNetworkStopped
+		case <-ctx.Done():
+			cancel()
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return 0, fmt.Errorf("couldn't query data commitment window")
+			}
+			return 0, ctx.Err()
+		default:
+			err := queryFun()
+			if err == nil {
+				cancel()
+				return window, nil
+			}
+			time.Sleep(2 * time.Second)
+		}
 	}
-	return presp.Params.DataCommitmentWindow, nil
 }
