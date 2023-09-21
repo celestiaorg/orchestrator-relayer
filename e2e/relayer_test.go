@@ -243,11 +243,13 @@ func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
 	err = network.UpdateDataCommitmentWindow(ctx, 200)
 	require.NoError(t, err)
 	err = network.WaitForBlock(ctx, int64(window+200+100))
+	require.NoError(t, err)
 
 	// shrink the data commitment window to 150
 	err = network.UpdateDataCommitmentWindow(ctx, 150)
 	require.NoError(t, err)
 	err = network.WaitForBlock(ctx, int64(window+200+150+150+50))
+	require.NoError(t, err)
 
 	nonceAfterTheWindowChanges, err := network.GetLatestAttestationNonce(ctx)
 	require.NoError(t, err)

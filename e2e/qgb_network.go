@@ -972,6 +972,9 @@ func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWin
 
 	// check that the parameters got updated as expected
 	currentWindow, err := network.GetCurrentDataCommitmentWindow(ctx)
+	if err != nil {
+		return err
+	}
 	if currentWindow != newWindow {
 		return fmt.Errorf("data commitment window was not updated successfully. %d vs %d", currentWindow, newWindow)
 	}
