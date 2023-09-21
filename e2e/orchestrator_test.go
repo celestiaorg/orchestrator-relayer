@@ -34,7 +34,12 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+50))
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
+
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+50))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying
@@ -53,7 +58,7 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+height))
+	err = network.WaitForBlock(ctx, int64(window+height))
 	HandleNetworkError(t, network, err, false)
 
 	dcConfirm, err := network.GetDataCommitmentConfirmByHeight(ctx, dht, height, CORE0EVMADDRESS)
@@ -93,8 +98,12 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+50))
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+50))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying
@@ -127,7 +136,7 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0ValsetConfirm.EthAddress)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+c0Height))
+	err = network.WaitForBlock(ctx, int64(window+c0Height))
 	HandleNetworkError(t, network, err, false)
 
 	// check core0 submitted the data commitment confirm
@@ -143,7 +152,7 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0DataCommitmentConfirm.EthAddress)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+c1Height))
+	err = network.WaitForBlock(ctx, int64(window+c1Height))
 	HandleNetworkError(t, network, err, false)
 
 	// check core1 submitted the data commitment confirm
@@ -168,8 +177,12 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+50))
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+50))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying
@@ -208,7 +221,7 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	// assert that it carries the right evm address
 	assert.Equal(t, CORE0EVMADDRESS, core0ValsetConfirm.EthAddress)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+c0Height))
+	err = network.WaitForBlock(ctx, int64(window+c0Height))
 	HandleNetworkError(t, network, err, false)
 
 	// check core0 submitted the data commitment confirm
@@ -260,8 +273,12 @@ func TestOrchestratorReplayOld(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForBlock(ctx, int64(2*network.DataCommitmentWindow))
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(2*window))
 	HandleNetworkError(t, network, err, false)
 
 	// add core0 orchestrator
@@ -273,7 +290,7 @@ func TestOrchestratorReplayOld(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	// give time for the orchestrators to submit confirms
-	err = network.WaitForBlock(ctx, int64(2*network.DataCommitmentWindow+50))
+	err = network.WaitForBlock(ctx, int64(2*window+50))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying

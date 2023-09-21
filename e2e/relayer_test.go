@@ -32,7 +32,12 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+50))
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
+
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+50))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying
@@ -90,8 +95,12 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
 
-	err = network.WaitForBlock(ctx, int64(network.DataCommitmentWindow+50))
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+50))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying
@@ -147,7 +156,12 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	HandleNetworkError(t, network, err, false)
 
 	ctx := context.Background()
-	err = network.WaitForBlock(ctx, int64(2*network.DataCommitmentWindow))
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
+
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(2*window))
 	HandleNetworkError(t, network, err, false)
 
 	// create dht for querying
@@ -199,4 +213,92 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	dcNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
 	assert.NoError(t, err)
 	assert.GreaterOrEqual(t, dcNonce, latestValset.Nonce)
+}
+
+func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
+	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping QGB integration tests")
+	}
+
+	network, err := NewQGBNetwork()
+	HandleNetworkError(t, network, err, false)
+
+	// to release resources after tests
+	defer network.DeleteAll() //nolint:errcheck
+
+	// start full network with four validators
+	err = network.StartAll()
+	HandleNetworkError(t, network, err, false)
+
+	ctx := context.Background()
+	err = network.WaitForBlock(ctx, int64(100))
+	HandleNetworkError(t, network, err, false)
+
+	window, err := network.GetCurrentDataCommitmentWindow(ctx)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window))
+	HandleNetworkError(t, network, err, false)
+
+	// update the data commitment window to 200
+	err = network.UpdateDataCommitmentWindow(ctx, 200)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+200+100))
+
+	// shrink the data commitment window to 150
+	err = network.UpdateDataCommitmentWindow(ctx, 150)
+	require.NoError(t, err)
+	err = network.WaitForBlock(ctx, int64(window+200+150+150+50))
+
+	nonceAfterTheWindowChanges, err := network.GetLatestAttestationNonce(ctx)
+	require.NoError(t, err)
+
+	// create dht for querying
+	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
+	HandleNetworkError(t, network, err, false)
+	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	defer dht.Close()
+
+	// force the connection to the DHT to start the orchestrator
+	err = ConnectToDHT(ctx, host, dht, bootstrapper[0])
+	HandleNetworkError(t, network, err, false)
+
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
+	HandleNetworkError(t, network, err, false)
+
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE1EVMADDRESS)
+	HandleNetworkError(t, network, err, false)
+
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE2EVMADDRESS)
+	HandleNetworkError(t, network, err, false)
+
+	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE3EVMADDRESS)
+	HandleNetworkError(t, network, err, false)
+
+	// give the orchestrators some time to catchup
+	time.Sleep(time.Second)
+
+	// check whether the four validators are up and running
+	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
+	HandleNetworkError(t, network, err, false)
+	err = appQuerier.Start()
+	HandleNetworkError(t, network, err, false)
+	defer appQuerier.Stop() //nolint:errcheck
+
+	latestValset, err := appQuerier.QueryLatestValset(ctx)
+	assert.NoError(t, err)
+	assert.Equal(t, 4, len(latestValset.Members))
+
+	bridge, err := network.GetLatestDeployedQGBContract(ctx)
+	HandleNetworkError(t, network, err, false)
+
+	err = network.WaitForRelayerToStart(ctx, bridge)
+	HandleNetworkError(t, network, err, false)
+
+	evmClient := evm.NewClient(nil, bridge, nil, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
+
+	err = network.WaitForEventNonce(ctx, bridge, nonceAfterTheWindowChanges)
+	HandleNetworkError(t, network, err, false)
+	dcNonce, err := evmClient.StateLastEventNonce(&bind.CallOpts{Context: ctx})
+	assert.NoError(t, err)
+	assert.GreaterOrEqual(t, dcNonce, nonceAfterTheWindowChanges)
 }
