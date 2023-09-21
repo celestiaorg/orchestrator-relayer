@@ -9,7 +9,7 @@ import (
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/types"
-	wrapper "github.com/celestiaorg/quantum-gravity-bridge/wrappers/QuantumGravityBridge.sol"
+	wrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 )
 
