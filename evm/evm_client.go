@@ -20,7 +20,7 @@ import (
 )
 
 // DefaultEVMGasLimit the default gas limit to use when sending transactions to the EVM chain.
-const DefaultEVMGasLimit = uint64(25000000)
+const DefaultEVMGasLimit = uint64(2500000)
 
 type Client struct {
 	logger   tmlog.Logger
