@@ -16,6 +16,6 @@ RUN apk update && apk --no-cache add bash jq coreutils curl
 COPY --from=builder /orchestrator-relayer/build/qgb /bin/qgb
 
 # p2p port
-EXPOSE 30000
+EXPOSE 9090 26657 30000
 
 CMD [ "/bin/qgb" ]

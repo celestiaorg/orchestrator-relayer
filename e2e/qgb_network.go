@@ -10,6 +10,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/celestiaorg/celestia-app/pkg/user"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 
 	"github.com/celestiaorg/celestia-app/app"
@@ -28,16 +37,15 @@ import (
 )
 
 type QGBNetwork struct {
-	ComposePaths         []string
-	Identifier           string
-	Instance             *testcontainers.LocalDockerCompose
-	EVMRPC               string
-	TendermintRPC        string
-	CelestiaGRPC         string
-	P2PAddr              string
-	EncCfg               encoding.Config
-	DataCommitmentWindow uint64
-	Logger               tmlog.Logger
+	ComposePaths  []string
+	Identifier    string
+	Instance      *testcontainers.LocalDockerCompose
+	EVMRPC        string
+	TendermintRPC string
+	CelestiaGRPC  string
+	P2PAddr       string
+	EncCfg        encoding.Config
+	Logger        tmlog.Logger
 
 	// used by the moderator to notify all the workers.
 	stopChan <-chan struct{}
@@ -54,17 +62,16 @@ func NewQGBNetwork() (*QGBNetwork, error) {
 	// and wanted to notify the moderator.
 	toStopChan := make(chan struct{}, 10)
 	network := &QGBNetwork{
-		Identifier:           id,
-		ComposePaths:         paths,
-		Instance:             instance,
-		EVMRPC:               "http://localhost:8545",
-		TendermintRPC:        "tcp://localhost:26657",
-		CelestiaGRPC:         "localhost:9090",
-		P2PAddr:              "localhost:30000",
-		EncCfg:               encoding.MakeConfig(app.ModuleEncodingRegisters...),
-		DataCommitmentWindow: 101, // If this one is changed, make sure to change also the genesis file
-		stopChan:             stopChan,
-		toStopChan:           toStopChan,
+		Identifier:    id,
+		ComposePaths:  paths,
+		Instance:      instance,
+		EVMRPC:        "http://localhost:8545",
+		TendermintRPC: "tcp://localhost:26657",
+		CelestiaGRPC:  "localhost:9090",
+		P2PAddr:       "localhost:30000",
+		EncCfg:        encoding.MakeConfig(app.ModuleEncodingRegisters...),
+		stopChan:      stopChan,
+		toStopChan:    toStopChan,
 	}
 
 	// moderate stop notifications from waiters.
@@ -882,6 +889,100 @@ func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *qgbwrap
 	}
 }
 
+func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWindow uint64) error {
+	fmt.Printf("updating data commitment window %d\n", newWindow)
+	kr, err := keyring.New(
+		"qgb-tests",
+		"test",
+		"celestia-app/core0",
+		nil,
+		encoding.MakeConfig(app.ModuleEncodingRegisters...).Codec,
+	)
+	if err != nil {
+		return err
+	}
+	qgbGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return err
+	}
+	defer qgbGRPC.Close()
+
+	signer, err := user.SetupSingleSigner(ctx, kr, qgbGRPC, encoding.MakeConfig(app.ModuleEncodingRegisters...))
+	if err != nil {
+		return err
+	}
+
+	// create and submit a new param change proposal for the data commitment window
+	change := proposal.NewParamChange(
+		types.ModuleName,
+		string(types.ParamsStoreKeyDataCommitmentWindow),
+		fmt.Sprintf("\"%d\"", newWindow),
+	)
+	content := proposal.NewParameterChangeProposal(
+		"data commitment window update",
+		"description",
+		[]proposal.ParamChange{change},
+	)
+
+	msg, err := v1beta1.NewMsgSubmitProposal(
+		content,
+		sdk.NewCoins(
+			sdk.NewCoin(app.BondDenom, sdk.NewInt(5000000))),
+		signer.Address(),
+	)
+	if err != nil {
+		return err
+	}
+
+	_, err = signer.SubmitTx(ctx, []sdk.Msg{msg}, user.SetGasLimitAndFee(3000000, 300000))
+	if err != nil {
+		return err
+	}
+
+	// query the proposal to get the id
+	gqc := v1.NewQueryClient(qgbGRPC)
+	gresp, err := gqc.Proposals(
+		ctx,
+		&v1.QueryProposalsRequest{
+			ProposalStatus: v1.ProposalStatus_PROPOSAL_STATUS_VOTING_PERIOD,
+		},
+	)
+	if err != nil {
+		return err
+	}
+	if len(gresp.Proposals) != 1 {
+		return fmt.Errorf("expected to have only one proposal in voting period")
+	}
+
+	// create and submit a new vote
+	vote := v1.NewMsgVote(
+		signer.Address(),
+		gresp.Proposals[0].Id,
+		v1.VoteOption_VOTE_OPTION_YES,
+		"",
+	)
+
+	_, err = signer.SubmitTx(ctx, []sdk.Msg{vote}, user.SetGasLimitAndFee(3000000, 300000))
+	if err != nil {
+		return err
+	}
+
+	// wait for the voting period to finish
+	time.Sleep(25 * time.Second)
+
+	// check that the parameters got updated as expected
+	currentWindow, err := network.GetCurrentDataCommitmentWindow(ctx)
+	if err != nil {
+		return err
+	}
+	if currentWindow != newWindow {
+		return fmt.Errorf("data commitment window was not updated successfully. %d vs %d", currentWindow, newWindow)
+	}
+
+	fmt.Println("updated data commitment window successfully")
+	return nil
+}
+
 func (network QGBNetwork) PrintLogs() {
 	_ = network.Instance.
 		WithCommand([]string{"logs"}).
@@ -902,4 +1003,43 @@ func (network QGBNetwork) GetLatestValset(ctx context.Context) (*types.Valset, e
 		return nil, err
 	}
 	return valset, nil
+}
+
+func (network QGBNetwork) GetCurrentDataCommitmentWindow(ctx context.Context) (uint64, error) {
+	var window uint64
+	queryFun := func() error {
+		qgbGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			return err
+		}
+		defer qgbGRPC.Close()
+		bqc := types.NewQueryClient(qgbGRPC)
+		presp, err := bqc.Params(ctx, &types.QueryParamsRequest{})
+		if err != nil {
+			return err
+		}
+		window = presp.Params.DataCommitmentWindow
+		return nil
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	for {
+		select {
+		case <-network.stopChan:
+			cancel()
+			return 0, ErrNetworkStopped
+		case <-ctx.Done():
+			cancel()
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return 0, fmt.Errorf("couldn't query data commitment window")
+			}
+			return 0, ctx.Err()
+		default:
+			err := queryFun()
+			if err == nil {
+				cancel()
+				return window, nil
+			}
+			time.Sleep(2 * time.Second)
+		}
+	}
 }
