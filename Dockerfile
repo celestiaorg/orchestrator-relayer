@@ -7,7 +7,7 @@ WORKDIR /orchestrator-relayer
 RUN make build
 
 # final image
-FROM --platform=$BUILDPLATFORM docker.io/alpine:3.18.3
+FROM --platform=$BUILDPLATFORM docker.io/alpine:3.18.4
 
 ARG UID=10001
 ARG USER_NAME=celestia
