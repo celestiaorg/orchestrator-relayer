@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	github.com/celestiaorg/quantum-gravity-bridge/v2 v2.1.1
+	github.com/celestiaorg/quantum-gravity-bridge/v2 v2.1.2
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/ipfs/boxo v0.13.1
