@@ -6,7 +6,7 @@ WORKDIR /orchestrator-relayer
 RUN make build
 
 # final image
-FROM ghcr.io/celestiaorg/celestia-app:v1.0.0-rc17
+FROM ghcr.io/celestiaorg/celestia-app:v1.0.0-rc18
 
 USER root
 
