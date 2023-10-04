@@ -6,7 +6,7 @@ To bootstrap the QGB P2P network, we use the bootstrapper QGB node type to accep
 
 ### Install the QGB binary
 
-Make sure to have the QGB binary installed. Check [here](https://docs.celestia.org/nodes/qgb-binary) for more details.
+Make sure to have the QGB binary installed. Check [the QGB binary page](https://docs.celestia.org/nodes/qgb-binary) for more details.
 
 ### Init the store
 
