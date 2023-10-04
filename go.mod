@@ -3,8 +3,8 @@ module github.com/celestiaorg/orchestrator-relayer
 go 1.21.1
 
 require (
-	github.com/celestiaorg/celestia-app v1.0.0-rc17
-	github.com/celestiaorg/nmt v0.19.0 // indirect
+	github.com/celestiaorg/celestia-app v1.0.0-rc18
+	github.com/celestiaorg/nmt v0.20.0 // indirect
 	github.com/ethereum/go-ethereum v1.13.2
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -91,7 +91,7 @@ require (
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/compose-spec/compose-go v1.13.4 // indirect
-	github.com/confio/ics23/go v0.9.0 // indirect
+	github.com/confio/ics23/go v0.9.1 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.0 // indirect
 	github.com/containerd/cgroups v1.1.0 // indirect
