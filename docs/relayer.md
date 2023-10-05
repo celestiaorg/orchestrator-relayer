@@ -1,27 +1,27 @@
 ---
-sidebar_label: QGB Relayer
-description: Learn about the QGB Relayer.
+sidebar_label: Blobstream Relayer
+description: Learn about the Blobstream Relayer.
 ---
 
-# QGB Relayer
+# Blobstream Relayer
 
 <!-- markdownlint-disable MD013 -->
 
-The role of the relayer is to gather attestations' signatures from the orchestrators, and submit them to a target EVM chain. The attestations are generated within the QGB module of the Celestia-app state machine. To learn more about what attestations are, you can refer to [the QGB overview](https://github.com/celestiaorg/celestia-app/tree/main/x/qgb).
+The role of the relayer is to gather attestations' signatures from the orchestrators, and submit them to a target EVM chain. The attestations are generated within the Blobstream module of the Celestia-app state machine. To learn more about what attestations are, you can refer to [the Blobstream overview](https://github.com/celestiaorg/celestia-app/tree/main/x/blobstream).
 
-Also, while every validator in the Celestia validator set needs to run an orchestrator, we only need one entity to run the relayer, and it can be anyone. Thus, if you're a validator, most likely you want to read [the orchestrator documentation](https://docs.celestia.org/nodes/qgb-orchestrator/).
+Also, while every validator in the Celestia validator set needs to run an orchestrator, we only need one entity to run the relayer, and it can be anyone. Thus, if you're a validator, most likely you want to read [the orchestrator documentation](https://docs.celestia.org/nodes/blobstream-orchestrator/).
 
-Every relayer needs to target a QGB smart contract. This latter can be deployed, if not already, using the `qgb deploy` command. More details in the [Deploy the QGB contract guide](https://docs.celestia.org/nodes/qgb-deploy/).
+Every relayer needs to target a Blobstream smart contract. This latter can be deployed, if not already, using the `qgb deploy` command. More details in the [Deploy the Blobstream contract guide](https://docs.celestia.org/nodes/blobstream-deploy/).
 
 ## How it works
 
 The relayer works as follows:
 
 1. Connect to a Celestia-app full node or validator node via RPC and gRPC and wait for attestations.
-2. Once an attestation is created inside the QGB state machine, the relayer queries it.
-3. After getting the attestation, the relayer checks if the target QGB smart contract's nonce is lower than the attestation.
+2. Once an attestation is created inside the Blobstream state machine, the relayer queries it.
+3. After getting the attestation, the relayer checks if the target Blobstream smart contract's nonce is lower than the attestation.
 4. If so, the relayer queries the P2P network for signatures from the orchestrators.
-5. Once the relayer finds more than 2/3s signatures, it submits them to the target QGB smart contract where they get validated.
+5. Once the relayer finds more than 2/3s signatures, it submits them to the target Blobstream smart contract where they get validated.
 6. Listen for new attestations and go back to step 2.
 
 The relayer connects to a separate P2P network than the consensus or the data availability one. So, we will provide bootstrappers for that one.
@@ -36,9 +36,9 @@ I[2023-04-26|00:04:28.175] waiting for routing table to populate        targetnu
 
 ## How to run
 
-### Install the QGB binary
+### Install the Blobstream binary
 
-Make sure to have the QGB binary installed. Check out the [Install the QGB binary page](https://docs.celestia.org/nodes/qgb-binary) for more details.
+Make sure to have the Blobstream binary installed. Check out the [Install the Blobstream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
 
 ### Init the store
 
@@ -91,18 +91,18 @@ After adding the key, you can check that it's added via running:
 qgb relayer keys evm list
 ```
 
-For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/qgb-keys).
+For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/blobstream-keys).
 
 ### Start the relayer
 
-Now that we have the store initialized, and we have a target QGB smart contract address, we can start the relayer. Make sure you have your Celestia-app node RPC and gRPC accessible, and able to connect to the P2P network bootstrappers.
+Now that we have the store initialized, and we have a target Blobstream smart contract address, we can start the relayer. Make sure you have your Celestia-app node RPC and gRPC accessible, and able to connect to the P2P network bootstrappers.
 
 The relayer accepts the following flags:
 
 ```ssh
 qgb relayer start --help
 
-Runs the QGB relayer to submit attestations to the target EVM chain
+Runs the Blobstream relayer to submit attestations to the target EVM chain
 
 Usage:
   qgb relayer start <flags> [flags]
@@ -124,4 +124,4 @@ To start the relayer using the default home directory, run the following:
   --p2p.listen-addr=/ip4/0.0.0.0/tcp/30001
 ```
 
-And, you will be prompted to enter your EVM key passphrase for the EVM address passed using the `-d` flag, so that the relayer can use it to send transactions to the target QGB smart contract. Make sure that it's funded.
+And, you will be prompted to enter your EVM key passphrase for the EVM address passed using the `-d` flag, so that the relayer can use it to send transactions to the target Blobstream smart contract. Make sure that it's funded.

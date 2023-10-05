@@ -7,7 +7,7 @@ description: Learn how to manage EVM private keys and P2P identities.
 
 <!-- markdownlint-disable MD013 -->
 
-The QGB `keys` command allows managing EVM private keys and P2P identities. It is defined as a subcommand for multiple commands with the only difference being the directory where the keys are stored. For the remaining functionality, it is the same for all the commands.
+The Blobstream `keys` command allows managing EVM private keys and P2P identities. It is defined as a subcommand for multiple commands with the only difference being the directory where the keys are stored. For the remaining functionality, it is the same for all the commands.
 
 ## Orchestrator command
 
@@ -50,14 +50,14 @@ The examples will use the orchestrator command to access the keys. However, the 
 ```ssh
 qgb orchestrator keys --help
 
-QGB keys manager
+Blobstream keys manager
 
 Usage:
   qgb orchestrator keys [command]
 
 Available Commands:
-  evm         QGB EVM keys manager
-  p2p         QGB p2p keys manager
+  evm         Blobstream EVM keys manager
+  p2p         Blobstream p2p keys manager
 
 Flags:
   -h, --help   help for keys
@@ -74,7 +74,7 @@ The EVM keys are `ECDSA` keys using the `secp256k1` curve. The implementation us
 ```ssh
 qgb orchestrator keys evm --help
 
-QGB EVM keys manager
+Blobstream EVM keys manager
 
 Usage:
   qgb orchestrator keys evm [command]
@@ -264,7 +264,7 @@ I[2023-04-13|17:31:58.436] successfully imported file                   address=
 I[2023-04-13|17:31:58.437] successfully closed store                    path=/home/midnight/.orchestrator
 ```
 
-with the `passphrase` being the current file passphrase, and the `new passphrase` being the new passphrase that will be used to encrypt the private key in the QGB store.
+with the `passphrase` being the current file passphrase, and the `new passphrase` being the new passphrase that will be used to encrypt the private key in the Blobstream store.
 
 ### P2P keystore
 
@@ -275,7 +275,7 @@ To access the P2P keystore, run the following:
 ```ssh
 qgb orchestrator keys p2p
 
-QGB p2p keys manager
+Blobstream p2p keys manager
 
 Usage:
   qgb orchestrator keys p2p [command]
