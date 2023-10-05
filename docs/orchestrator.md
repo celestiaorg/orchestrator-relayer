@@ -24,7 +24,7 @@ The orchestrator connects to a separate P2P network than the consensus or the da
 
 Bootstrapper for the Blockspace Race is:
 
-* `/dns/bootstr-incent-1.celestia.tools/tcp/30000/p2p/12D3KooWSGZ2LXW2soQFHgU82uLfN7pNW5gMMkTnu1fhMXG43TvP`
+- `/dns/bootstr-incent-1.celestia.tools/tcp/30000/p2p/12D3KooWSGZ2LXW2soQFHgU82uLfN7pNW5gMMkTnu1fhMXG43TvP`
 
 Make sure to specify it using the `-b` flag when running the orchestrator.
 
@@ -42,9 +42,9 @@ I[2023-04-26|00:04:28.175] waiting for routing table to populate        targetnu
 
 To run an orchestrator, you will need to have access to the following:
 
-* *Access to your EVM address private key. This latter doesn't need to be funded in any network. If yours is not yet set, check the [register an EVM address](#register-evm-address) section.
-* *A list of bootstrappers for the P2P network. These will be shared by the team for every network we plan on supporting.
-* *Access to your consensus node RPC and gRPC ports.
+- \*Access to your EVM address private key. This latter doesn't need to be funded in any network. If yours is not yet set, check the [register an EVM address](#register-evm-address) section.
+- \*A list of bootstrappers for the P2P network. These will be shared by the team for every network we plan on supporting.
+- \*Access to your consensus node RPC and gRPC ports.
 
 ### Install the Blobstream binary
 
@@ -60,16 +60,16 @@ qgb orchestrator init
 
 By default, the store will be created under `~/.orchestrator`. However, if you want to specify a custom location, you can use the `--home` flag. Or, you can use the following environment variable:
 
-| Variable            | Explanation                           | Default value     | Required |
-|---------------------|---------------------------------------|-------------------|----------|
-| `ORCHESTRATOR_HOME` | Home directory for the orchestrator   | `~/.orchestrator` | Optional |
+| Variable            | Explanation                         | Default value     | Required |
+| ------------------- | ----------------------------------- | ----------------- | -------- |
+| `ORCHESTRATOR_HOME` | Home directory for the orchestrator | `~/.orchestrator` | Optional |
 
 ### Add keys
 
 In order for the orchestrator to start, it will need two private keys:
 
-* *EVM private key
-* *P2P private key
+- \*EVM private key
+- \*P2P private key
 
 The EVM private key is the most important one since it needs to correspond to the EVM address provided when creating the validator.
 
@@ -268,8 +268,8 @@ Note: A validator set change is triggered if more than 5% of the total staking p
 
 If you want to start the orchestrator as a `systemd` service, you could use the following:
 
-* *Make sure you have the store initialized and the EVM address private key imported. Check the above sections for how to do that.
-* *Put the following configuration under: `/etc/systemd/system/orchestrator.service`:
+- \*Make sure you have the store initialized and the EVM address private key imported. Check the above sections for how to do that.
+- \*Put the following configuration under: `/etc/systemd/system/orchestrator.service`:
 
 ```text
 [Unit]
@@ -293,13 +293,13 @@ TTYPath=/dev/tty0
 WantedBy=multi-user.target
 ```
 
-* *Start the orchestrator service using:
+- \*Start the orchestrator service using:
 
 ```shell
 sudo systemctl start orchestrator
 ```
 
-* Follow the logs to see if everything is running correctly:
+- Follow the logs to see if everything is running correctly:
 
 ```shell
 sudo journalctl -f -u orchestrator
