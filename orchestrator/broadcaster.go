@@ -9,23 +9,23 @@ import (
 )
 
 type Broadcaster struct {
-	QgbDHT *p2p.QgbDHT
+	BlobStreamDHT *p2p.BlobStreamDHT
 }
 
-func NewBroadcaster(qgbDHT *p2p.QgbDHT) *Broadcaster {
-	return &Broadcaster{QgbDHT: qgbDHT}
+func NewBroadcaster(blobStreamDHT *p2p.BlobStreamDHT) *Broadcaster {
+	return &Broadcaster{BlobStreamDHT: blobStreamDHT}
 }
 
 func (b Broadcaster) ProvideDataCommitmentConfirm(ctx context.Context, nonce uint64, confirm types.DataCommitmentConfirm, dataRootTupleRoot string) error {
-	if len(b.QgbDHT.RoutingTable().ListPeers()) == 0 {
+	if len(b.BlobStreamDHT.RoutingTable().ListPeers()) == 0 {
 		return ErrEmptyPeersTable
 	}
-	return b.QgbDHT.PutDataCommitmentConfirm(ctx, p2p.GetDataCommitmentConfirmKey(nonce, confirm.EthAddress, dataRootTupleRoot), confirm)
+	return b.BlobStreamDHT.PutDataCommitmentConfirm(ctx, p2p.GetDataCommitmentConfirmKey(nonce, confirm.EthAddress, dataRootTupleRoot), confirm)
 }
 
 func (b Broadcaster) ProvideValsetConfirm(ctx context.Context, nonce uint64, confirm types.ValsetConfirm, signBytes string) error {
-	if len(b.QgbDHT.RoutingTable().ListPeers()) == 0 {
+	if len(b.BlobStreamDHT.RoutingTable().ListPeers()) == 0 {
 		return ErrEmptyPeersTable
 	}
-	return b.QgbDHT.PutValsetConfirm(ctx, p2p.GetValsetConfirmKey(nonce, confirm.EthAddress, signBytes), confirm)
+	return b.BlobStreamDHT.PutValsetConfirm(ctx, p2p.GetValsetConfirmKey(nonce, confirm.EthAddress, signBytes), confirm)
 }

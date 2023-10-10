@@ -17,7 +17,7 @@ import (
 
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -28,7 +28,7 @@ var (
 )
 
 func TestBroadcastDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 4)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 4)
 	defer network.Stop()
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
@@ -64,7 +64,7 @@ func TestBroadcastDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestBroadcastValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 4)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 4)
 	defer network.Stop()
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
@@ -100,8 +100,8 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 // TestEmptyPeersTable tests that values are not broadcasted if the DHT peers
 // table is empty.
 func TestEmptyPeersTable(t *testing.T) {
-	_, _, dht := qgbtesting.NewTestDHT(context.Background(), nil)
-	defer func(dht *p2p.QgbDHT) {
+	_, _, dht := blobstreamtesting.NewTestDHT(context.Background(), nil)
+	defer func(dht *p2p.BlobStreamDHT) {
 		err := dht.Close()
 		if err != nil {
 			require.NoError(t, err)

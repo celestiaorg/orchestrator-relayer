@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The signatures in these tests are generated using the foundry setup in the quantum-gravity-bridge repository.
+// The signatures in these tests are generated using the foundry setup in the blobstream-contracts repository.
 
 func TestNewEthereumSignature(t *testing.T) {
 	digest, err := hexutil.Decode("0x078c42ff72a01b355f9d76bfeecd2132a0d3f1aad9380870026c56e23e6d00e5")

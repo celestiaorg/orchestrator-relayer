@@ -8,18 +8,18 @@ import (
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestOrchestratorWithOneValidator(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -42,7 +42,7 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -67,11 +67,11 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 }
 
 func TestOrchestratorWithTwoValidators(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -103,7 +103,7 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -156,11 +156,11 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 }
 
 func TestOrchestratorWithMultipleValidators(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	assert.NoError(t, err)
 
 	// to release resources after tests
@@ -179,7 +179,7 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -245,11 +245,11 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 }
 
 func TestOrchestratorReplayOld(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -284,7 +284,7 @@ func TestOrchestratorReplayOld(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator

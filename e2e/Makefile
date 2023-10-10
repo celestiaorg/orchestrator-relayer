@@ -5,4 +5,4 @@ PACKAGES=$(shell go list ./...)
 all: test
 
 test:
-	@QGB_INTEGRATION_TEST=true go test -mod=readonly -failfast -test.timeout 50m -v $(PACKAGES)
+	@BLOBSTREAM_INTEGRATION_TEST=true go test -mod=readonly -failfast -test.timeout 50m -v $(PACKAGES)

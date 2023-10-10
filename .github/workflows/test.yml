@@ -45,7 +45,7 @@ jobs:
       - name: Run tests in race mode
         run: make test-race
 
-  test-qgb-e2e:
+  test-bstreak-e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,4 +61,4 @@ jobs:
       - name: Test
         run: go test -test.timeout 60m -failfast -v github.com/celestiaorg/orchestrator-relayer/e2e # yamllint disable-line rule:line-length
         env:
-          QGB_INTEGRATION_TEST: true
+          BLOBSTREAM_INTEGRATION_TEST: true

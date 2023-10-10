@@ -7,11 +7,11 @@ description: Learn how to manage EVM private keys and P2P identities.
 
 <!-- markdownlint-disable MD013 -->
 
-The QGB `keys` command allows managing EVM private keys and P2P identities. It is defined as a subcommand for multiple commands with the only difference being the directory where the keys are stored. For the remaining functionality, it is the same for all the commands.
+The BlobStream `keys` command allows managing EVM private keys and P2P identities. It is defined as a subcommand for multiple commands with the only difference being the directory where the keys are stored. For the remaining functionality, it is the same for all the commands.
 
 ## Orchestrator command
 
-The `qgb orchestrator keys` command manages keys for the orchestrator. By default, it uses the orchestrator default home directory to store the keys: `~/.orchestrator/keystore`. However, the default home can be changed either by specifying a different directory using the `--home` flag or setting the following environment variable:
+The `bstream orchestrator keys` command manages keys for the orchestrator. By default, it uses the orchestrator default home directory to store the keys: `~/.orchestrator/keystore`. However, the default home can be changed either by specifying a different directory using the `--home` flag or setting the following environment variable:
 
 | Variable            | Explanation                           | Default value     | Required |
 |---------------------|---------------------------------------|-------------------|----------|
@@ -19,7 +19,7 @@ The `qgb orchestrator keys` command manages keys for the orchestrator. By defaul
 
 ## Relayer command
 
-The `qgb relayer keys` command manages keys for the relayer. By default, it uses the relayer default home directory to store the keys: `~/.relayer/keystore`. However, the default home can be changed either by specifying a different directory using the `--home` flag or setting the following environment variable:
+The `bstream relayer keys` command manages keys for the relayer. By default, it uses the relayer default home directory to store the keys: `~/.relayer/keystore`. However, the default home can be changed either by specifying a different directory using the `--home` flag or setting the following environment variable:
 
 | Variable            | Explanation                           | Default value     | Required |
 |---------------------|---------------------------------------|-------------------|----------|
@@ -27,7 +27,7 @@ The `qgb relayer keys` command manages keys for the relayer. By default, it uses
 
 ## Deploy command
 
-The `qgb deploy keys` command manages keys for the deployer. By default, it uses the deployer default home directory to store the keys: `~/.deployer/keystore`. However, the default home can be changed either by specifying a different directory using the `--home` flag or setting the following environment variable:
+The `bstream deploy keys` command manages keys for the deployer. By default, it uses the deployer default home directory to store the keys: `~/.deployer/keystore`. However, the default home can be changed either by specifying a different directory using the `--home` flag or setting the following environment variable:
 
 | Variable            | Explanation                           | Default value     | Required |
 |---------------------|---------------------------------------|-------------------|----------|
@@ -48,21 +48,21 @@ As specified above, aside from the difference in the default home directory, the
 The examples will use the orchestrator command to access the keys. However, the same behaviour applies to the other commands as well.
 
 ```ssh
-qgb orchestrator keys --help
+bstream orchestrator keys --help
 
-QGB keys manager
+BlobStream keys manager
 
 Usage:
-  qgb orchestrator keys [command]
+  bstream orchestrator keys [command]
 
 Available Commands:
-  evm         QGB EVM keys manager
-  p2p         QGB p2p keys manager
+  evm         BlobStream EVM keys manager
+  p2p         BlobStream p2p keys manager
 
 Flags:
   -h, --help   help for keys
 
-Use "qgb orchestrator keys [command] --help" for more information about a command.
+Use "bstream orchestrator keys [command] --help" for more information about a command.
 ```
 
 ### EVM keystore
@@ -72,12 +72,12 @@ The first subcommand of the `keys` command is `evm`. This latter allows managing
 The EVM keys are `ECDSA` keys using the `secp256k1` curve. The implementation uses `geth` file system keystore [implementation](https://geth.ethereum.org/docs/developers/dapp-developer/native-accounts). Thus, keys can be used interchangeably with any compatible software.
 
 ```ssh
-qgb orchestrator keys evm --help
+bstream orchestrator keys evm --help
 
-QGB EVM keys manager
+BlobStream EVM keys manager
 
 Usage:
-  qgb orchestrator keys evm [command]
+  bstream orchestrator keys evm [command]
 
 Available Commands:
   add         create a new EVM address
@@ -89,7 +89,7 @@ Available Commands:
 Flags:
   -h, --help   help for evm
 
-Use "qgb orchestrator keys evm [command] --help" for more information about a command.
+Use "bstream orchestrator keys evm [command] --help" for more information about a command.
 ```
 
 The store also uses the `accounts.StandardScryptN` and `accounts.StandardScryptP` for the `Scrypt` password-based key derivation algorithm to improve its resistance to parallel hardware attacks:
@@ -103,12 +103,12 @@ evmKs = keystore.NewKeyStore(evmKeyStorePath(path), keystore.StandardScryptN, ke
 The `add` subcommand allows creating a new EVM private key and storing it in the keystore:
 
 ```ssh
-qgb orchestrator keys evm add --help
+bstream orchestrator keys evm add --help
 
 create a new EVM address
 
 Usage:
-  qgb orchestrator keys evm add [flags]
+  bstream orchestrator keys evm add [flags]
 ```
 
 The passphrase of the key encryption can be passed as a flag. But it is advised not to pass it as plain text and instead enter it when prompted interactively.
@@ -116,7 +116,7 @@ The passphrase of the key encryption can be passed as a flag. But it is advised 
 After creating a new key, you will see its corresponding address printed:
 
 ```ssh
-qgb orchestrator keys evm add
+bstream orchestrator keys evm add
 
 I[2023-04-13|14:16:11.387] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|14:16:11.387] please provide a passphrase for your account 
@@ -129,12 +129,12 @@ I[2023-04-13|14:16:30.534] successfully closed store                    path=/ho
 The `delete` subcommand allows deleting an EVM private key from store via providing its corresponding address:
 
 ```ssh
-qgb orchestrator keys evm delete --help
+bstream orchestrator keys evm delete --help
 
 delete an EVM addresses from the key store
 
 Usage:
-  qgb orchestrator keys evm delete <account address in hex> [flags]
+  bstream orchestrator keys evm delete <account address in hex> [flags]
 ```
 
 The provided address should be a `0x` prefixed EVM address.
@@ -144,7 +144,7 @@ After running the command, you will be prompted to enter the passphrase for the 
 Then, you will be prompted to confirm that you want to delete that private key. Make sure to verify if you're deleting the right one because once deleted, it can no longer be recovered!
 
 ```ssh
-qgb orchestrator keys evm delete 0x27a1F8CE94187E4b043f4D57548EF2348Ed556c7 
+bstream orchestrator keys evm delete 0x27a1F8CE94187E4b043f4D57548EF2348Ed556c7 
 
 I[2023-04-13|15:01:41.308] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|15:01:41.309] deleting account                             address=0x27a1F8CE94187E4b043f4D57548EF2348Ed556c7
@@ -160,7 +160,7 @@ I[2023-04-13|15:01:45.534] successfully closed store                    path=/ho
 The `list` subcommand allows listing the existing keys in the keystore:
 
 ```ssh
-qgb orchestrator keys evm list
+bstream orchestrator keys evm list
 
 I[2023-04-13|16:08:45.084] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|16:08:45.084] listing accounts available in store          
@@ -175,18 +175,18 @@ You could specify a different home using the `--home` flag to list the keys in a
 The `update` subcommand allows changing the EVM private key passphrase to a new one. It takes as argument the `0x` prefixed EVM address corresponding to the private key we want to edit.
 
 ```ssh
-qgb orchestrator evm update --help
+bstream orchestrator evm update --help
 
 update an EVM account passphrase
 
 Usage:
-  qgb orchestrator keys evm update <account address in hex> [flags]
+  bstream orchestrator keys evm update <account address in hex> [flags]
 ```
 
 Example:
 
 ```ssh
-qgb orchestrator evm update 0x7Dd8F9CAfe6D25165249A454F2d0b72FD149Bbba
+bstream orchestrator evm update 0x7Dd8F9CAfe6D25165249A454F2d0b72FD149Bbba
 
 I[2023-04-13|16:21:17.139] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|16:21:17.140] updating account                             address=0x7Dd8F9CAfe6D25165249A454F2d0b72FD149Bbba
@@ -205,12 +205,12 @@ The `--home` can be specified if the store is not in the default directory.
 The `import` subcommand allows importing existing private keys into the keystore. It has two subcommands: `ecdsa` and `file`. The first allows importing a private key in plaintext, while the other allows importing a private key from a JSON file secured with a passphrase.
 
 ```ssh
-qgb orchestrator keys evm import --help
+bstream orchestrator keys evm import --help
 
 import evm keys to the keystore
 
 Usage:
-  qgb orchestrator keys evm import [command]
+  bstream orchestrator keys evm import [command]
 
 Available Commands:
   ecdsa       import an EVM address from an ECDSA private key
@@ -219,7 +219,7 @@ Available Commands:
 Flags:
   -h, --help   help for import
 
-Use "qgb orchestrator keys evm import [command] --help" for more information about a command.
+Use "bstream orchestrator keys evm import [command] --help" for more information about a command.
 ```
 
 #### EVM: Import ECDSA
@@ -229,7 +229,7 @@ For the first one, it takes as argument the private key in plaintext. Then, it p
 Example:
 
 ```ssh
-qgb orchestrator keys evm import ecdsa da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb7
+bstream orchestrator keys evm import ecdsa da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb7
 
 I[2023-04-13|17:00:48.617] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|17:00:48.617] importing account                            
@@ -243,18 +243,18 @@ I[2023-04-13|17:00:51.990] successfully closed store                    path=/ho
 For the second, it takes a JSON key file, as defined in [@ethereum/eth-keyfile](https://github.com/ethereum/eth-keyfile), and imports it to your keystore, so it can be used for signatures.
 
 ```ssh
-qgb orchestrator keys evm import file --help
+bstream orchestrator keys evm import file --help
 
 import an EVM address from a file
 
 Usage:
-  qgb orchestrator keys evm import file <path to key file> [flags]
+  bstream orchestrator keys evm import file <path to key file> [flags]
 ```
 
 For example, if we have a file in the current directory containing a private key, we could run the following:
 
 ```ssh
-qgb orchestrator keys evm import file UTC--2023-04-13T15-00-50.302148204Z--966e6f22781ef6a6a82bbb4db3df8e225dfd9488
+bstream orchestrator keys evm import file UTC--2023-04-13T15-00-50.302148204Z--966e6f22781ef6a6a82bbb4db3df8e225dfd9488
 
 I[2023-04-13|17:31:53.307] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|17:31:53.307] importing account                            
@@ -264,7 +264,7 @@ I[2023-04-13|17:31:58.436] successfully imported file                   address=
 I[2023-04-13|17:31:58.437] successfully closed store                    path=/home/midnight/.orchestrator
 ```
 
-with the `passphrase` being the current file passphrase, and the `new passphrase` being the new passphrase that will be used to encrypt the private key in the QGB store.
+with the `passphrase` being the current file passphrase, and the `new passphrase` being the new passphrase that will be used to encrypt the private key in the BlobStream store.
 
 ### P2P keystore
 
@@ -273,12 +273,12 @@ Similar to the above EVM keystore, the P2P store has similar subcommands for han
 To access the P2P keystore, run the following:
 
 ```ssh
-qgb orchestrator keys p2p
+bstream orchestrator keys p2p
 
-QGB p2p keys manager
+BlobStream p2p keys manager
 
 Usage:
-  qgb orchestrator keys p2p [command]
+  bstream orchestrator keys p2p [command]
 
 Available Commands:
   add         create a new Ed25519 P2P address
@@ -289,7 +289,7 @@ Available Commands:
 Flags:
   -h, --help   help for p2p
 
-Use "qgb orchestrator keys p2p [command] --help" for more information about a command.
+Use "bstream orchestrator keys p2p [command] --help" for more information about a command.
 ```
 
 The `orchestrator` could be replaced by `relayer` and the only difference would be the default home directory. Aside from that, all the methods defined for the orchestrator will also work with the relayer.
@@ -299,18 +299,18 @@ The `orchestrator` could be replaced by `relayer` and the only difference would 
 The `add` subcommand creates a new p2p key to the p2p store:
 
 ```ssh
-qgb orchestrator keys p2p add --help
+bstream orchestrator keys p2p add --help
 
 create a new Ed25519 P2P address
 
 Usage:
-  qgb orchestrator keys p2p add <nickname> [flags]
+  bstream orchestrator keys p2p add <nickname> [flags]
 ```
 
 It takes as argument an optional `<nickname>` which would be the name that we can use to reference that private key. If not specified, an incremental nickname will be assigned.
 
 ```ssh
-qgb orchestrator keys p2p add
+bstream orchestrator keys p2p add
 
 I[2023-04-13|17:38:17.289] successfully opened store                    path=/home/midnight/.orchestrator
 I[2023-04-13|17:38:17.290] generating a new Ed25519 private key         nickname=1
@@ -327,12 +327,12 @@ The nickname will be needed in case the orchestrator needs to use a specific pri
 The `delete` subcommand will delete a P2P private key from store referenced by its nickname:
 
 ```ssh
-qgb orchestrator keys p2p delete --help
+bstream orchestrator keys p2p delete --help
 
 delete an Ed25519 P2P private key from store
 
 Usage:
-  qgb orchestrator keys p2p delete <nickname> [flags]
+  bstream orchestrator keys p2p delete <nickname> [flags]
 ```
 
 #### P2P: Import subcommand
@@ -340,12 +340,12 @@ Usage:
 The `import` subcommand will import an existing Ed25519 private key to the store. It takes as argument the nickname that we wish to save the private key under, and the actual private key in hex format without `0x`:
 
 ```ssh
-qgb orchestrator keys p2p import --help
+bstream orchestrator keys p2p import --help
 
 import an existing p2p private key
 
 Usage:
-  qgb orchestrator keys p2p import <nickname> <private_key_in_hex_without_0x> [flags]
+  bstream orchestrator keys p2p import <nickname> <private_key_in_hex_without_0x> [flags]
 ```
 
 #### P2P: List subcommand
@@ -353,10 +353,10 @@ Usage:
 The `list` subcommand lists the existing P2P private keys in the store:
 
 ```ssh
-qgb orchestrator keys p2p list --help
+bstream orchestrator keys p2p list --help
 
 list existing p2p addresses
 
 Usage:
-  qgb orchestrator keys p2p list [flags]
+  bstream orchestrator keys p2p list [flags]
 ```

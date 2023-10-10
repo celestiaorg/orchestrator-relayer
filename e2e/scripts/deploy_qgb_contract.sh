@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# This script deploys the QGB contract and outputs the address to stdout.
+# This script deploys the BlobStream contract and outputs the address to stdout.
 
 # check whether to deploy a new contract or no need
 if [[ "${DEPLOY_NEW_CONTRACT}" != "true" ]]
 then
-  echo "no need to deploy a new QGB contract. exiting..."
+  echo "no need to deploy a new BlobStream contract. exiting..."
   exit 0
 fi
 
@@ -59,11 +59,11 @@ do
 done
 
 # import keys to deployer
-/bin/qgb deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase=123
+/bin/bstream deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase=123
 
-echo "deploying QGB contract..."
+echo "deploying BlobStream contract..."
 
-/bin/qgb deploy \
+/bin/bstream deploy \
   --evm.chain-id "${EVM_CHAIN_ID}" \
   --evm.account "${EVM_ACCOUNT}" \
   --core.grpc.host "${CORE_GRPC_HOST}" \
@@ -74,4 +74,4 @@ echo "deploying QGB contract..."
 
 echo $(cat /opt/output)
 
-cat /opt/output | grep "deployed" | awk '{ print $5 }' | cut -f 2 -d = > /opt/qgb_address.txt
+cat /opt/output | grep "deployed" | awk '{ print $5 }' | cut -f 2 -d = > /opt/blobstream_address.txt

@@ -15,7 +15,7 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
-// Store contains relevant information about the QGB store.
+// Store contains relevant information about the BlobStream store.
 type Store struct {
 	// DataStore provides a Datastore - a KV store for dht p2p data to be stored on disk.
 	DataStore datastore.Batching
@@ -29,7 +29,7 @@ type Store struct {
 	// P2PKeyStore provides a keystore for P2P private keys.
 	P2PKeyStore *keystore2.FSKeystore
 
-	// Path the path to the qgb storage root.
+	// Path the path to the BlobStream storage root.
 	Path string
 
 	// storeLock protects directory when the data store is open.

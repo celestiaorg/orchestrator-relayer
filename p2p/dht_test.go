@@ -15,7 +15,7 @@ import (
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/assert"
@@ -30,11 +30,11 @@ var (
 func TestDHTBootstrappers(t *testing.T) {
 	ctx := context.Background()
 	// create first dht
-	h1, _, dht1 := qgbtesting.NewTestDHT(ctx, nil)
+	h1, _, dht1 := blobstreamtesting.NewTestDHT(ctx, nil)
 	defer dht1.Close()
 
 	// create second dht with dht1 being a bootstrapper
-	h2, _, dht2 := qgbtesting.NewTestDHT(
+	h2, _, dht2 := blobstreamtesting.NewTestDHT(
 		ctx,
 		[]peer.AddrInfo{{
 			ID:    h1.ID(),
@@ -58,7 +58,7 @@ func TestDHTBootstrappers(t *testing.T) {
 }
 
 func TestPutDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
@@ -96,7 +96,7 @@ func TestPutDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
@@ -134,7 +134,7 @@ func TestNetworkPutDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestNetworkGetNonExistentDataCommitmentConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	// generate a test key for the DataCommitmentConfirm
@@ -147,7 +147,7 @@ func TestNetworkGetNonExistentDataCommitmentConfirm(t *testing.T) {
 }
 
 func TestPutValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 2)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 2)
 	defer network.Stop()
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
@@ -182,7 +182,7 @@ func TestPutValsetConfirm(t *testing.T) {
 }
 
 func TestNetworkPutValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
@@ -217,7 +217,7 @@ func TestNetworkPutValsetConfirm(t *testing.T) {
 }
 
 func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
-	network := qgbtesting.NewDHTNetwork(context.Background(), 10)
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 10)
 	defer network.Stop()
 
 	// generate a test key for the ValsetConfirm
@@ -232,7 +232,7 @@ func TestNetworkGetNonExistentValsetConfirm(t *testing.T) {
 func TestWaitForPeers(t *testing.T) {
 	ctx := context.Background()
 	// create first dht
-	h1, _, dht1 := qgbtesting.NewTestDHT(ctx, nil)
+	h1, _, dht1 := blobstreamtesting.NewTestDHT(ctx, nil)
 	defer dht1.Close()
 
 	// wait for peers
@@ -241,7 +241,7 @@ func TestWaitForPeers(t *testing.T) {
 	assert.Error(t, err)
 
 	// create second dht
-	h2, _, dht2 := qgbtesting.NewTestDHT(ctx, nil)
+	h2, _, dht2 := blobstreamtesting.NewTestDHT(ctx, nil)
 	defer dht2.Close()
 	// connect to first dht
 	err = h2.Connect(ctx, peer.AddrInfo{

@@ -12,17 +12,17 @@ import (
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestRelayerWithOneValidator(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -40,7 +40,7 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -50,7 +50,7 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	bridge, err := network.GetLatestDeployedQGBContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	latestNonce, err := network.GetLatestAttestationNonce(ctx)
@@ -69,11 +69,11 @@ func TestRelayerWithOneValidator(t *testing.T) {
 }
 
 func TestRelayerWithTwoValidators(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -100,7 +100,7 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -116,7 +116,7 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
-	bridge, err := network.GetLatestDeployedQGBContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForRelayerToStart(ctx, bridge)
@@ -135,11 +135,11 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 }
 
 func TestRelayerWithMultipleValidators(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -158,7 +158,7 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -191,7 +191,7 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(latestValset.Members))
 
-	bridge, err := network.GetLatestDeployedQGBContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForRelayerToStart(ctx, bridge)
@@ -207,11 +207,11 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 }
 
 func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -245,7 +245,7 @@ func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
 	// create dht for querying
 	bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 	HandleNetworkError(t, network, err, false)
-	host, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+	host, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 	defer dht.Close()
 
 	// force the connection to the DHT to start the orchestrator
@@ -278,7 +278,7 @@ func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(latestValset.Members))
 
-	bridge, err := network.GetLatestDeployedQGBContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForRelayerToStart(ctx, bridge)

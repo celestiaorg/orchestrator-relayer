@@ -33,7 +33,7 @@ fi
   VAL_ADDRESS=$(celestia-appd keys show core0 --keyring-backend test --bech=val --home /opt -a)
 
   # Register the validator EVM address
-  celestia-appd tx qgb register \
+  celestia-appd tx blobstream register \
     "${VAL_ADDRESS}" \
     0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488 \
     --from core0 \

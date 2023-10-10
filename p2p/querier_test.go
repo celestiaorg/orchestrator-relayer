@@ -14,7 +14,7 @@ import (
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +33,7 @@ var (
 
 func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 	ctx := context.Background()
-	network := qgbtesting.NewDHTNetwork(ctx, 2)
+	network := blobstreamtesting.NewDHTNetwork(ctx, 2)
 	defer network.Stop()
 
 	vsNonce := uint64(2)
@@ -152,7 +152,7 @@ func TestQueryTwoThirdsDataCommitmentConfirms(t *testing.T) {
 
 func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 	ctx := context.Background()
-	network := qgbtesting.NewDHTNetwork(ctx, 2)
+	network := blobstreamtesting.NewDHTNetwork(ctx, 2)
 	defer network.Stop()
 
 	vsNonce := uint64(2)
@@ -279,7 +279,7 @@ func TestQueryTwoThirdsValsetConfirms(t *testing.T) {
 
 func TestQueryValsetConfirmByEVMAddress(t *testing.T) {
 	ctx := context.Background()
-	network := qgbtesting.NewDHTNetwork(ctx, 2)
+	network := blobstreamtesting.NewDHTNetwork(ctx, 2)
 	defer network.Stop()
 
 	vsNonce := uint64(10)
@@ -320,7 +320,7 @@ func TestQueryValsetConfirmByEVMAddress(t *testing.T) {
 
 func TestQueryDataCommitmentConfirmByEVMAddress(t *testing.T) {
 	ctx := context.Background()
-	network := qgbtesting.NewDHTNetwork(ctx, 2)
+	network := blobstreamtesting.NewDHTNetwork(ctx, 2)
 	defer network.Stop()
 
 	dcNonce := uint64(10)
@@ -362,7 +362,7 @@ func TestQueryDataCommitmentConfirmByEVMAddress(t *testing.T) {
 
 func TestQueryValsetConfirms(t *testing.T) {
 	ctx := context.Background()
-	network := qgbtesting.NewDHTNetwork(ctx, 2)
+	network := blobstreamtesting.NewDHTNetwork(ctx, 2)
 	defer network.Stop()
 
 	vsNonce := uint64(2)
@@ -444,7 +444,7 @@ func TestQueryValsetConfirms(t *testing.T) {
 
 func TestQueryDataCommitmentConfirms(t *testing.T) {
 	ctx := context.Background()
-	network := qgbtesting.NewDHTNetwork(ctx, 2)
+	network := blobstreamtesting.NewDHTNetwork(ctx, 2)
 	defer network.Stop()
 
 	dcNonce := uint64(2)

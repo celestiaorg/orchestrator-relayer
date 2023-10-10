@@ -259,7 +259,7 @@ services:
     environment:
 #      By default, we don't want to run the deploy on each run.
       - DEPLOY_NEW_CONTRACT=false
-      - EVM_CHAIN_ID=qgb-e2e
+      - EVM_CHAIN_ID=blobstream-e2e
       - EVM_ACCOUNT=0x95359c3348e189ef7781546e6E13c80230fC9fB5
       - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
       - CORE_RPC_HOST=core0
@@ -273,10 +273,10 @@ services:
       "/bin/bash"
     ]
     command: [
-      "/opt/deploy_qgb_contract.sh"
+      "/opt/deploy_blobstream_contract.sh"
     ]
     volumes:
-      - ${PWD}/scripts/deploy_qgb_contract.sh:/opt/deploy_qgb_contract.sh:ro
+      - ${PWD}/scripts/deploy_blobstream_contract.sh:/opt/deploy_blobstream_contract.sh:ro
 
   relayer:
     container_name: relayer
@@ -289,7 +289,7 @@ services:
     ports:
       - "30004:30000"
     environment:
-      - EVM_CHAIN_ID=qgb-e2e
+      - EVM_CHAIN_ID=blobstream-e2e
       - EVM_ACCOUNT=0x95359c3348e189ef7781546e6E13c80230fC9fB5
       - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
       - CORE_RPC_HOST=core0
@@ -302,8 +302,8 @@ services:
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
 #      set the following environment variable to some value
-#      if you want to relay to an existing QGB contract
-#      - QGB_CONTRACT=0x123
+#      if you want to relay to an existing BlobStream contract
+#      - BLOBSTREAM_CONTRACT=0x123
     entrypoint: [
       "/bin/bash"
     ]
@@ -312,4 +312,4 @@ services:
     ]
     volumes:
       - ${PWD}/scripts/start_relayer.sh:/opt/start_relayer.sh:ro
-      - ${PWD}/scripts/deploy_qgb_contract.sh:/opt/deploy_qgb_contract.sh:ro
+      - ${PWD}/scripts/deploy_blobstream_contract.sh:/opt/deploy_blobstream_contract.sh:ro

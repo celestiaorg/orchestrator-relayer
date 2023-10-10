@@ -8,7 +8,7 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/ipfs/go-datastore"
 
-	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
+	blobstreamtypes "github.com/celestiaorg/orchestrator-relayer/types"
 
 	"github.com/stretchr/testify/assert"
 
@@ -27,7 +27,7 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 	att := types.NewDataCommitment(latestValset.Nonce+1, 10, 100, time.Now())
 	commitment, err := s.Orchestrator.TmQuerier.QueryCommitment(ctx, att.BeginBlock, att.EndBlock)
 	require.NoError(t, err)
-	dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)
+	dataRootTupleRoot := blobstreamtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)
 	err = s.Orchestrator.ProcessDataCommitmentEvent(ctx, *att, dataRootTupleRoot)
 	require.NoError(t, err)
 

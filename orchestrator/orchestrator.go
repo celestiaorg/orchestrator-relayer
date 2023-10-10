@@ -306,7 +306,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		// if nonce == 1, then, the current valset should sign the confirm.
 		// In fact, the first nonce should never be signed. Because, the first attestation, in the case
 		// where the `earliest` flag is specified when deploying the contract, will be relayed as part of
-		// the deployment of the QGB contract.
+		// the deployment of the BlobStream contract.
 		// It will be signed temporarily for now.
 		previousValset, err = orch.AppQuerier.QueryValsetByNonce(ctx, att.GetNonce())
 		if err != nil {

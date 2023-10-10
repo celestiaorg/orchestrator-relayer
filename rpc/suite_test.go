@@ -11,13 +11,13 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/stretchr/testify/suite"
 )
 
 type QuerierTestSuite struct {
 	suite.Suite
-	Network *qgbtesting.CelestiaNetwork
+	Network *blobstreamtesting.CelestiaNetwork
 	EncConf encoding.Config
 	Logger  tmlog.Logger
 }
@@ -25,7 +25,7 @@ type QuerierTestSuite struct {
 func (s *QuerierTestSuite) SetupSuite() {
 	t := s.T()
 	ctx := context.Background()
-	s.Network = qgbtesting.NewCelestiaNetwork(ctx, t)
+	s.Network = blobstreamtesting.NewCelestiaNetwork(ctx, t)
 	_, err := s.Network.WaitForHeightWithTimeout(400, 30*time.Second)
 	s.EncConf = encoding.MakeConfig(app.ModuleEncodingRegisters...)
 	s.Logger = tmlog.NewNopLogger()

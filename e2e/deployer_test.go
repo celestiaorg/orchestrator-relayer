@@ -13,11 +13,11 @@ import (
 )
 
 func TestDeployer(t *testing.T) {
-	if os.Getenv("QGB_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping QGB integration tests")
+	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
+		t.Skip("Skipping BlobStream integration tests")
 	}
 
-	network, err := NewQGBNetwork()
+	network, err := NewBlobStreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -31,13 +31,13 @@ func TestDeployer(t *testing.T) {
 	err = network.WaitForBlock(ctx, 2)
 	HandleNetworkError(t, network, err, false)
 
-	_, err = network.GetLatestDeployedQGBContractWithCustomTimeout(ctx, 15*time.Second)
+	_, err = network.GetLatestDeployedBlobStreamContractWithCustomTimeout(ctx, 15*time.Second)
 	HandleNetworkError(t, network, err, true)
 
-	err = network.DeployQGBContract()
+	err = network.DeployBlobStreamContract()
 	HandleNetworkError(t, network, err, false)
 
-	bridge, err := network.GetLatestDeployedQGBContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	evmClient := evm.NewClient(nil, bridge, nil, nil, network.EVMRPC, evm.DefaultEVMGasLimit)
