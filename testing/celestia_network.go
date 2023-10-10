@@ -41,10 +41,22 @@ type CelestiaNetwork struct {
 	GRPCAddr string
 }
 
+type CelestiaNetworkParams struct {
+	GenesisOpts []celestiatestnode.GenesisOption
+	TimeIotaMs  int64
+}
+
+func DefaultCelestiaNetworkParams() CelestiaNetworkParams {
+	return CelestiaNetworkParams{
+		GenesisOpts: nil,
+		TimeIotaMs:  1,
+	}
+}
+
 // NewCelestiaNetwork creates a new CelestiaNetwork.
 // Uses `testing.T` to fail if an error happens.
 // Only supports the creation of a single validator currently.
-func NewCelestiaNetwork(ctx context.Context, t *testing.T, genesisOpts ...celestiatestnode.GenesisOption) *CelestiaNetwork {
+func NewCelestiaNetwork(ctx context.Context, t *testing.T, params CelestiaNetworkParams) *CelestiaNetwork {
 	if testing.Short() {
 		// The main reason for skipping these tests in short mode is to avoid detecting unrelated
 		// race conditions.
@@ -63,14 +75,17 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, genesisOpts ...celest
 	tmCfg := celestiatestnode.DefaultTendermintConfig()
 	tmCfg.Consensus.TimeoutCommit = time.Millisecond * 5
 	appConf := celestiatestnode.DefaultAppConfig()
+	consensusParams := celestiatestnode.DefaultParams()
+	consensusParams.Block.TimeIotaMs = params.TimeIotaMs
 
 	clientContext, _, _ := celestiatestnode.NewNetwork(
 		t,
 		celestiatestnode.DefaultConfig().
 			WithAppConfig(appConf).
+			WithConsensusParams(consensusParams).
 			WithTendermintConfig(tmCfg).
 			WithAccounts(accounts).
-			WithGenesisOptions(genesisOpts...).
+			WithGenesisOptions(params.GenesisOpts...).
 			WithChainID("qgb-test"),
 	)
 
