@@ -4,6 +4,12 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"fmt"
+	"math/big"
+	"os"
+	"path/filepath"
+	"syscall"
+	"time"
+
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/store"
@@ -14,11 +20,6 @@ import (
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 	tmlog "github.com/tendermint/tendermint/libs/log"
-	"math/big"
-	"os"
-	"path/filepath"
-	"syscall"
-	"time"
 )
 
 const (
