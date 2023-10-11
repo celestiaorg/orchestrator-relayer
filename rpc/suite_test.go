@@ -25,7 +25,7 @@ type QuerierTestSuite struct {
 func (s *QuerierTestSuite) SetupSuite() {
 	t := s.T()
 	ctx := context.Background()
-	s.Network = blobstreamtesting.NewCelestiaNetwork(ctx, t)
+	s.Network = blobstreamtesting.NewCelestiaNetwork(ctx, t, blobstreamtesting.DefaultCelestiaNetworkParams())
 	_, err := s.Network.WaitForHeightWithTimeout(400, 30*time.Second)
 	s.EncConf = encoding.MakeConfig(app.ModuleEncodingRegisters...)
 	s.Logger = tmlog.NewNopLogger()
