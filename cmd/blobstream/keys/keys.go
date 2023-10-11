@@ -1,8 +1,8 @@
 package keys
 
 import (
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/evm"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/p2p"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/p2p"
 	"github.com/spf13/cobra"
 )
 

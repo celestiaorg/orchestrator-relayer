@@ -7,7 +7,7 @@ import (
 
 	"github.com/ipfs/boxo/keystore"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/common"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	util "github.com/ipfs/boxo/util"
 	"github.com/libp2p/go-libp2p/core/crypto"

@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/common"
-	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/evm"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/common"
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	dssync "github.com/ipfs/go-datastore/sync"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 
 	"github.com/celestiaorg/orchestrator-relayer/helpers"

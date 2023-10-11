@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/base"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/spf13/cobra"

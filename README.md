@@ -20,7 +20,7 @@ make install
 
 ```sh
 # Print help
-bstream --help
+blobstream --help
 ```
 
 ## How to run
@@ -41,7 +41,7 @@ Note: the Blobstream P2P network is a separate network than the consensus or the
 ### Helpful Commands
 
 ```sh
-# Build a new orchestrator-relayer binary and output to build/bstream
+# Build a new orchestrator-relayer binary and output to build/blobstream
 make build
 
 # Run tests

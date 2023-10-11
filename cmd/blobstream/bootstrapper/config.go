@@ -1,7 +1,7 @@
 package bootstrapper
 
 import (
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/base"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 	"github.com/spf13/cobra"
 )
 

@@ -12,7 +12,7 @@ import (
 	common2 "github.com/ethereum/go-ethereum/common"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/blobstream/types"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/common"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/common"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	"github.com/celestiaorg/orchestrator-relayer/types"

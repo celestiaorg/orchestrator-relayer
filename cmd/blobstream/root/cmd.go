@@ -1,14 +1,14 @@
 package root
 
 import (
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/bootstrapper"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/generate"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/query"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/bootstrapper"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/generate"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/query"
 
 	"github.com/celestiaorg/celestia-app/x/blobstream/client"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/deploy"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/orchestrator"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/relayer"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/deploy"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/orchestrator"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/relayer"
 
 	"github.com/spf13/cobra"
 )
@@ -17,7 +17,7 @@ import (
 // main function.
 func Cmd() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:          "bstream",
+		Use:          "blobstream",
 		Short:        "The Blobstream CLI",
 		SilenceUsage: true,
 	}

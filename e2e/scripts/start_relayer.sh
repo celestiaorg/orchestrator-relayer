@@ -46,14 +46,14 @@ fi
 BLOBSTREAM_CONTRACT=$(cat /opt/blobstream_address.txt)
 
 # init the relayer
-/bin/bstream relayer init
+/bin/blobstream relayer init
 
 # import keys to relayer
-/bin/bstream relayer keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase 123
+/bin/blobstream relayer keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase 123
 
 # to give time for the bootstrappers to be up
 sleep 5s
-/bin/bstream relayer start \
+/bin/blobstream relayer start \
   --evm.account="${EVM_ACCOUNT}" \
   --core.rpc.host="${CORE_RPC_HOST}" \
   --core.rpc.port="${CORE_RPC_PORT}" \

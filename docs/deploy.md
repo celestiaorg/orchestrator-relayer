@@ -10,13 +10,13 @@ description: Learn how to deploy the Blobstream smart contract.
 The `deploy` is a helper command that allows deploying the Blobstream smart contract to a new EVM chain:
 
 ```ssh
-bstream deploy --help
+blobstream deploy --help
 
 Deploys the Blobstream contract and initializes it using the provided Celestia chain
 
 Usage:
-  bstream deploy <flags> [flags]
-  bstream deploy [command]
+  blobstream deploy <flags> [flags]
+  blobstream deploy [command]
 
 Available Commands:
   keys        Blobstream keys manager
@@ -33,13 +33,13 @@ Make sure to have the Blobstream binary installed. Check [the Blobstream binary 
 In order to deploy a Blobstream smart contract, you will need a funded EVM address and its private key. The `keys` command will help you set up this key:
 
 ```ssh
-bstream deploy keys  --help
+blobstream deploy keys  --help
 ```
 
 To import your EVM private key, there is the `import` subcommand to assist you with that:
 
 ```ssh
-bstream deploy keys evm import --help
+blobstream deploy keys evm import --help
 ```
 
 This subcommand allows you to either import a raw ECDSA private key provided as plaintext, or import it from a file. The files are JSON keystore files encrypted using a passphrase like in [this example](https://geth.ethereum.org/docs/developers/dapp-developer/native-accounts).
@@ -47,7 +47,7 @@ This subcommand allows you to either import a raw ECDSA private key provided as 
 After adding the key, you can check that it's added via running:
 
 ```ssh
-bstream deploy keys evm list
+blobstream deploy keys evm list
 ```
 
 For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/blobstream-keys).

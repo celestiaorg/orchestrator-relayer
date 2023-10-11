@@ -1,7 +1,7 @@
 package p2p
 
 import (
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/base"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 )

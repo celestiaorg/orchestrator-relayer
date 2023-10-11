@@ -8,7 +8,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
-	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/common"
+	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/common"
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/common"

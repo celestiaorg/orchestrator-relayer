@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	p2pcmd "github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/p2p"
+	p2pcmd "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/store"

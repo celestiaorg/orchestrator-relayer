@@ -5,9 +5,9 @@ import (
 	"os"
 	"strconv"
 
-	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/evm"
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -37,7 +37,7 @@ func Command() *cobra.Command {
 			// checking if the provided home is already initiated
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
 			if !isInit {
-				logger.Info("please initialize the EVM keystore using the `bstream deploy keys add/import` command")
+				logger.Info("please initialize the EVM keystore using the `blobstream deploy keys add/import` command")
 				return store.ErrNotInited
 			}
 

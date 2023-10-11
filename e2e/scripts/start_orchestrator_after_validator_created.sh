@@ -36,18 +36,18 @@ do
 done
 
 # initialize orchestrator
-/bin/bstream orch init
+/bin/blobstream orch init
 
 # add keys to keystore
-/bin/bstream orch keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase 123
+/bin/blobstream orch keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase 123
 
 # start orchestrator
 if [[ -z "${P2P_BOOTSTRAPPERS}" ]]
 then
   # import the p2p key to use
-  /bin/bstream orchestrator keys p2p import key "${P2P_IDENTITY}"
+  /bin/blobstream orchestrator keys p2p import key "${P2P_IDENTITY}"
 
-  /bin/bstream orchestrator start \
+  /bin/blobstream orchestrator start \
     --evm.account="${EVM_ACCOUNT}" \
     --core.rpc.host="${CORE_RPC_HOST}" \
     --core.rpc.port="${CORE_RPC_PORT}" \
@@ -60,7 +60,7 @@ else
   # to give time for the bootstrappers to be up
   sleep 5s
 
-  /bin/bstream orchestrator start \
+  /bin/blobstream orchestrator start \
     --evm.account="${EVM_ACCOUNT}" \
     --core.rpc.host="${CORE_RPC_HOST}" \
     --core.rpc.port="${CORE_RPC_PORT}" \

@@ -1,4 +1,4 @@
-# stage 1 Build bstream binary
+# stage 1 Build blobstream binary
 FROM golang:1.21.1-alpine as builder
 RUN apk update && apk --no-cache add make gcc musl-dev git
 COPY . /orchestrator-relayer
@@ -13,9 +13,9 @@ USER root
 # hadolint ignore=DL3018
 RUN apk update && apk --no-cache add bash jq coreutils curl
 
-COPY --from=builder /orchestrator-relayer/build/bstream /bin/bstream
+COPY --from=builder /orchestrator-relayer/build/blobstream /bin/blobstream
 
 # p2p port
 EXPOSE 9090 26657 30000
 
-CMD [ "/bin/bstream" ]
+CMD [ "/bin/blobstream" ]

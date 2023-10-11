@@ -1,4 +1,4 @@
-# stage 1 Build bstream binary
+# stage 1 Build blobstream binary
 FROM --platform=$BUILDPLATFORM docker.io/golang:1.21.2-alpine3.18 as builder
 RUN apk update && apk --no-cache add make gcc musl-dev git bash
 
@@ -27,7 +27,7 @@ RUN apk update && apk add --no-cache \
         -s /sbin/nologin \
         -u ${UID}
 
-COPY --from=builder /orchestrator-relayer/build/bstream /bin/bstream
+COPY --from=builder /orchestrator-relayer/build/blobstream /bin/blobstream
 COPY --chown=${USER_NAME}:${USER_NAME} docker/entrypoint.sh /opt/entrypoint.sh
 
 USER ${USER_NAME}

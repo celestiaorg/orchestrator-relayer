@@ -7,12 +7,12 @@ import (
 
 	blobstreamwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 
-	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/evm"
+	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	dssync "github.com/ipfs/go-datastore/sync"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/common"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/common"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/store"

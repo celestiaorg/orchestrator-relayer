@@ -45,7 +45,7 @@ jobs:
       - name: Run tests in race mode
         run: make test-race
 
-  test-bstreak-e2e:
+  test-blobstream-e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

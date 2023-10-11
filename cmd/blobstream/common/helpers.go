@@ -12,7 +12,7 @@ import (
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
-	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/p2p"
+	common2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"

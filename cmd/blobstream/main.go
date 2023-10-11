@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/root"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/root"
 )
 
 func main() {

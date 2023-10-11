@@ -59,11 +59,11 @@ do
 done
 
 # import keys to deployer
-/bin/bstream deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase=123
+/bin/blobstream deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase=123
 
 echo "deploying Blobstream contract..."
 
-/bin/bstream deploy \
+/bin/blobstream deploy \
   --evm.chain-id "${EVM_CHAIN_ID}" \
   --evm.account "${EVM_ACCOUNT}" \
   --core.grpc.host "${CORE_GRPC_HOST}" \

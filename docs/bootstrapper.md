@@ -13,7 +13,7 @@ Make sure to have the Blobstream binary installed. Check [the Blobstream binary 
 Before starting the bootstrapper, we will need to init the store:
 
 ```ssh
-bstream bootstrapper init
+blobstream bootstrapper init
 ```
 
 By default, the store will be created un `~/.bootstrapper`. However, if you want to specify a custom location, you can use the `--home` flag. Or, you can use the following environment variable:
@@ -29,7 +29,7 @@ The P2P private key is optional, and a new one will be generated automatically o
 The `p2p` sub-command will help you set up this key if you want to use a specific one:
 
 ```ssh
-bstream bootstrapper p2p  --help
+blobstream bootstrapper p2p  --help
 ```
 
 ### Start the bootstrapper
@@ -37,12 +37,12 @@ bstream bootstrapper p2p  --help
 Now that we have the store initialized, we can start the bootstrapper:
 
 ```shell
-bstream bootstrapper
+blobstream bootstrapper
 
 Blobstream P2P network bootstrapper command
 
 Usage:
-  bstream bootstrapper [command]
+  blobstream bootstrapper [command]
 
 Aliases:
   bootstrapper, bs
@@ -50,7 +50,7 @@ Aliases:
 Flags:
   -h, --help   help for bootstrapper
 
-Use "bstream bootstrapper [command] --help" for more information about a command.
+Use "blobstream bootstrapper [command] --help" for more information about a command.
 ```
 
 ### Open the P2P port

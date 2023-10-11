@@ -78,7 +78,7 @@ The P2P private key is optional, and a new one will be generated automatically o
 The `keys` command will help you set up these keys:
 
 ```ssh
-bstream orchestrator keys  --help
+blobstream orchestrator keys  --help
 ```
 
 To add an EVM private key, check the next section.
@@ -92,7 +92,7 @@ To register an EVM address for your validator, check the section [Register EVM A
 To import your EVM private key, there is the `import` subcommand to assist you with that:
 
 ```ssh
-bstream orchestrator keys evm import --help
+blobstream orchestrator keys evm import --help
 ```
 
 This subcommand allows you to either import a raw ECDSA private key provided as plaintext, or import it from a file. The files are JSON keystore files encrypted using a passphrase like in [this example](https://geth.ethereum.org/docs/developers/dapp-developer/native-accounts).
@@ -100,7 +100,7 @@ This subcommand allows you to either import a raw ECDSA private key provided as 
 After adding the key, you can check that it's added via running:
 
 ```ssh
-bstream orchestrator keys evm list
+blobstream orchestrator keys evm list
 ```
 
 For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/blobstream-keys).
@@ -112,18 +112,18 @@ Now that we have the store initialized, we can start the orchestrator. Make sure
 The orchestrator accepts the following flags:
 
 ```ssh
-bstream orchestrator start --help
+blobstream orchestrator start --help
 
 Starts the Blobstream orchestrator to sign attestations
 
 Usage:
-  bstream orchestrator start <flags> [flags]
+  blobstream orchestrator start <flags> [flags]
 ```
 
 To start the orchestrator in the default home directory, run the following:
 
 ```ssh
-bstream orchestrator start \
+blobstream orchestrator start \
     --core.grpc.host localhost \
     --core.grpc.port 9090 \
     --core.rpc.host localhost \

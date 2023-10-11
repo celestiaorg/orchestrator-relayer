@@ -3,7 +3,7 @@ package query
 import (
 	"fmt"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/relayer"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/relayer"
 	"github.com/spf13/cobra"
 )
 

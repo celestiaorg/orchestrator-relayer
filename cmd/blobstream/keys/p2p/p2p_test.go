@@ -3,7 +3,7 @@ package p2p_test
 import (
 	"testing"
 
-	"github.com/celestiaorg/orchestrator-relayer/cmd/bstream/keys/p2p"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/p2p"
 	"github.com/ipfs/boxo/keystore"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
