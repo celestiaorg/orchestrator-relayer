@@ -78,5 +78,5 @@ fi
 celestia-appd start \
 --home="${CELESTIA_HOME}" \
 --moniker="${MONIKER}" \
---p2p.persistent_peers=c7a982ec9ef3af4f0846cb30e439cd70d961ce6e@core0:26656 \
+--p2p.persistent_peers=de74a671b839639ed638fd4140f797ddadb3c2f1@core0:26656 \
 --rpc.laddr=tcp://0.0.0.0:26657
