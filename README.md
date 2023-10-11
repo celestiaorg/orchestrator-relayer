@@ -4,7 +4,7 @@ Contains the implementation of the Blobstream orchestrator and relayer.
 
 The orchestrator is the software that signs the Blobstream attestations, and the relayer is the one that relays them to the target EVM chain.
 
-For a high-level overview of how the Blobstream works, check [here](https://github.com/celestiaorg/quantum-gravity-bridge/tree/76efeca0be1a17d32ef633c0fdbd3c8f5e4cc53f#how-it-works) and [here](https://blog.celestia.org/celestiums/).
+For a high-level overview of how Blobstream works, check [here](https://github.com/celestiaorg/quantum-gravity-bridge/tree/76efeca0be1a17d32ef633c0fdbd3c8f5e4cc53f#how-it-works) and [here](https://blog.celestia.org/celestiums/).
 
 ## Install
 
