@@ -1,5 +1,5 @@
 # stage 1 Build blobstream binary
-FROM --platform=$BUILDPLATFORM docker.io/golang:1.21.2-alpine3.18 as builder
+FROM --platform=$BUILDPLATFORM docker.io/golang:1.21.3-alpine3.18 as builder
 RUN apk update && apk --no-cache add make gcc musl-dev git bash
 
 COPY . /orchestrator-relayer
