@@ -8,7 +8,6 @@ const (
 	Core0 Service = iota
 	Core0Orch
 	Core1
-
 	Core1Orch
 	Core2
 	Core2Orch
