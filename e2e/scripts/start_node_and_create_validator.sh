@@ -44,7 +44,7 @@ fi
       --amount="${AMOUNT}" \
       --pubkey="$(celestia-appd tendermint show-validator --home "${CELESTIA_HOME}")" \
       --moniker="${MONIKER}" \
-      --chain-id="qgb-e2e" \
+      --chain-id="blobstream-e2e" \
       --commission-rate=0.1 \
       --commission-max-rate=0.2 \
       --commission-max-change-rate=0.01 \
@@ -70,7 +70,7 @@ fi
     --from "${MONIKER}" \
     --home "${CELESTIA_HOME}" \
     --fees "30000utia" -b block \
-    --chain-id="qgb-e2e" \
+    --chain-id="blobstream-e2e" \
     --yes
 } &
 
