@@ -13,7 +13,7 @@ import (
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
-	"github.com/celestiaorg/celestia-app/x/blobstream/types"
+	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	"github.com/celestiaorg/orchestrator-relayer/store"

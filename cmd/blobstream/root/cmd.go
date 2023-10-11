@@ -5,7 +5,7 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/generate"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/query"
 
-	"github.com/celestiaorg/celestia-app/x/blobstream/client"
+	"github.com/celestiaorg/celestia-app/x/qgb/client"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/deploy"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/orchestrator"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/relayer"

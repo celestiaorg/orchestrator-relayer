@@ -23,7 +23,7 @@ import (
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
-	"github.com/celestiaorg/celestia-app/x/blobstream/types"
+	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
 	blobstreamtypes "github.com/celestiaorg/orchestrator-relayer/types"
