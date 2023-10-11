@@ -55,7 +55,7 @@ Make sure to have the Blobstream binary installed. Check [the Blobstream binary 
 Before starting the orchestrator, we will need to init the store:
 
 ```ssh
-qgb orchestrator init
+blobstream orchestrator init
 ```
 
 By default, the store will be created under `~/.orchestrator`. However, if you want to specify a custom location, you can use the `--home` flag. Or, you can use the following environment variable:
@@ -78,7 +78,7 @@ The P2P private key is optional, and a new one will be generated automatically o
 The `keys` command will help you set up these keys:
 
 ```ssh
-qgb orchestrator keys  --help
+blobstream orchestrator keys  --help
 ```
 
 To add an EVM private key, check the next section.
@@ -92,7 +92,7 @@ To register an EVM address for your validator, check the section [Register EVM A
 To import your EVM private key, there is the `import` subcommand to assist you with that:
 
 ```ssh
-qgb orchestrator keys evm import --help
+blobstream orchestrator keys evm import --help
 ```
 
 This subcommand allows you to either import a raw ECDSA private key provided as plaintext, or import it from a file. The files are JSON keystore files encrypted using a passphrase like in [this example](https://geth.ethereum.org/docs/developers/dapp-developer/native-accounts).
@@ -100,7 +100,7 @@ This subcommand allows you to either import a raw ECDSA private key provided as 
 After adding the key, you can check that it's added via running:
 
 ```ssh
-qgb orchestrator keys evm list
+blobstream orchestrator keys evm list
 ```
 
 For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/blobstream-keys).
@@ -112,18 +112,18 @@ Now that we have the store initialized, we can start the orchestrator. Make sure
 The orchestrator accepts the following flags:
 
 ```ssh
-qgb orchestrator start --help
+blobstream orchestrator start --help
 
 Starts the Blobstream orchestrator to sign attestations
 
 Usage:
-  qgb orchestrator start <flags> [flags]
+  blobstream orchestrator start <flags> [flags]
 ```
 
 To start the orchestrator in the default home directory, run the following:
 
 ```ssh
-qgb orchestrator start \
+blobstream orchestrator start \
     --core.grpc.host localhost \
     --core.grpc.port 9090 \
     --core.rpc.host localhost \
@@ -160,13 +160,13 @@ This assumes that you're using the default home directory, the default keystore 
 To check which EVM address is registered for your `valoper` address, run the following:
 
 ```ssh
-celestia-appd query qgb evm <validator_valoper_address>
+celestia-appd query blobstream evm <validator_valoper_address>
 ```
 
 Then, to proceed with the edit, run the following command:
 
 ```shell
-celestia-appd tx qgb register \
+celestia-appd tx blobstream register \
     <valoper_address> \
     <new_evm_address> \
     --fees 30000utia \
@@ -244,11 +244,11 @@ logs:
 - events:
   - attributes:
     - key: action
-      value: /celestia.qgb.v1.MsgRegisterEVMAddress
+      value: /celestia.blobstream.v1.MsgRegisterEVMAddress
     type: message
   log: ""
   msg_index: 0
-raw_log: '[{"msg_index":0,"events":[{"type":"message","attributes":[{"key":"action","value":"/celestia.qgb.v1.MsgRegisterEVMAddress"}]}]}]'
+raw_log: '[{"msg_index":0,"events":[{"type":"message","attributes":[{"key":"action","value":"/celestia.blobstream.v1.MsgRegisterEVMAddress"}]}]}]'
 timestamp: ""
 tx: null
 txhash: 4199EA959A2CFEFCD4726D8D8F7B536458A46A27318D3483A4E9614F560606BC
@@ -257,7 +257,7 @@ txhash: 4199EA959A2CFEFCD4726D8D8F7B536458A46A27318D3483A4E9614F560606BC
 Now, you can verify that the EVM address has been updated using the following command:
 
 ```ssh
-celestia-appd query qgb evm <validator_valoper_address>
+celestia-appd query blobstream evm <validator_valoper_address>
 ```
 
 Now, you can restart the orchestrator, and it should start signing.
@@ -278,7 +278,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=<absolute_path_to_qgb_binary> orchestrator start --evm.account <evm_account> --evm.passphrase <evm_passphrase> --core.grpc.host <grpc_endpoint_host> --core.grpc.port <grpc_endpoint_port> --core.rpc.host <rpc_endpoint_host> --core.rpc.port <rpc_endpoint_port> --p2p.bootstrappers <bootstrappers_list>
+ExecStart=<absolute_path_to_blobstream_binary> orchestrator start --evm.account <evm_account> --evm.passphrase <evm_passphrase> --core.grpc.host <grpc_endpoint_host> --core.grpc.port <grpc_endpoint_port> --core.rpc.host <rpc_endpoint_host> --core.rpc.port <rpc_endpoint_port> --p2p.bootstrappers <bootstrappers_list>
 LimitNOFILE=infinity
 LimitCORE=infinity
 Restart=always

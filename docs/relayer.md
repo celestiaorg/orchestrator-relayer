@@ -11,7 +11,7 @@ The role of the relayer is to gather attestations' signatures from the orchestra
 
 Also, while every validator in the Celestia validator set needs to run an orchestrator, we only need one entity to run the relayer, and it can be anyone. Thus, if you're a validator, most likely you want to read [the orchestrator documentation](https://docs.celestia.org/nodes/blobstream-orchestrator/).
 
-Every relayer needs to target a Blobstream smart contract. This latter can be deployed, if not already, using the `qgb deploy` command. More details in the [Deploy the Blobstream contract guide](https://docs.celestia.org/nodes/blobstream-deploy/).
+Every relayer needs to target a Blobstream smart contract. This latter can be deployed, if not already, using the `blobstream deploy` command. More details in the [Deploy the Blobstream contract guide](https://docs.celestia.org/nodes/blobstream-deploy/).
 
 ## How it works
 
@@ -45,7 +45,7 @@ Make sure to have the Blobstream binary installed. Check out the [Install the Bl
 Before starting the relayer, we will need to init the store:
 
 ```ssh
-qgb relayer init
+blobstream relayer init
 ```
 
 By default, the store will be created un `~/.relayer`. However, if you want to specify a custom location, you can use the `--home` flag. Or, you can use the following environment variable:
@@ -68,7 +68,7 @@ The P2P private key is optional, and a new one will be generated automatically o
 The `keys` command will help you set up these keys:
 
 ```ssh
-qgb relayer keys  --help
+blobstream relayer keys  --help
 ```
 
 To add an EVM private key, check the next section.
@@ -80,7 +80,7 @@ Because EVM keys are important, we provide a keystore that will help manage them
 To import your EVM private key, there is the `import` subcommand to assist you with that:
 
 ```ssh
-qgb relayer keys evm import --help
+blobstream relayer keys evm import --help
 ```
 
 This subcommand allows you to either import a raw ECDSA private key provided as plaintext, or import it from a file. The files are JSON keystore files encrypted using a passphrase like [in this example](https://geth.ethereum.org/docs/developers/dapp-developer/native-accounts).
@@ -88,7 +88,7 @@ This subcommand allows you to either import a raw ECDSA private key provided as 
 After adding the key, you can check that it's added via running:
 
 ```ssh
-qgb relayer keys evm list
+blobstream relayer keys evm list
 ```
 
 For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/blobstream-keys).
@@ -100,18 +100,18 @@ Now that we have the store initialized, and we have a target Blobstream smart co
 The relayer accepts the following flags:
 
 ```ssh
-qgb relayer start --help
+blobstream relayer start --help
 
 Runs the Blobstream relayer to submit attestations to the target EVM chain
 
 Usage:
-  qgb relayer start <flags> [flags]
+  blobstream relayer start <flags> [flags]
 ```
 
 To start the relayer using the default home directory, run the following:
 
 ```ssh
-/bin/qgb relayer start \
+/bin/blobstream relayer start \
   --evm.contract-address=0x27a1F8CE94187E4b043f4D57548EF2348Ed556c7 \
   --core.rpc.host=localhost \
   --core.rpc.port=26657 \
