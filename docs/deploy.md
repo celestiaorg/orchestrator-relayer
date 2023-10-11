@@ -70,6 +70,6 @@ The `latest` can be replaced by the following:
 
 - `latest`: to deploy the Blobstream contract starting from the latest validator set.
 - `earliest`: to deploy the Blobstream contract starting from genesis.
-- `nonce`: you can provide a custom nonce on where you want the Blobstream to start. If the provided nonce is not a `Valset` attestation, then the one before it will be used to deploy the Blobstream smart contract.
+- `nonce`: you can provide a custom nonce on where you want Blobstream to start. If the provided nonce is not a `Valset` attestation, then the one before it will be used to deploy the Blobstream smart contract.
 
 And, now you will see the Blobstream smart contract address in the logs along with the transaction hash.
