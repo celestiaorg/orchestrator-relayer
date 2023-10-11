@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/celestiaorg/celestia-app/test/util/testnode"
+	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
@@ -162,4 +165,30 @@ func (s *OrchestratorTestSuite) TestEnqueuingAttestationNonces() {
 	cancel()
 	close(noncesQueue)
 	assert.GreaterOrEqual(t, len(noncesQueue), int(latestNonce))
+}
+
+func TestProcessWithoutValsetInStore(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	codec := encoding.MakeConfig(app.ModuleEncodingRegisters...).Codec
+	node := qgbtesting.NewTestNode(
+		ctx,
+		t,
+		qgbtesting.CelestiaNetworkParams{
+			GenesisOpts: []testnode.GenesisOption{
+				testnode.ImmediateProposals(codec),
+				qgbtesting.SetDataCommitmentWindowParams(codec, celestiatypes.Params{DataCommitmentWindow: 101}),
+			},
+			TimeIotaMs: 6048000, // to have enough time to sign attestations after they're pruned
+		},
+	)
+	_, err := node.CelestiaNetwork.WaitForHeight(400)
+	require.NoError(t, err)
+
+	orch := qgbtesting.NewOrchestrator(t, node)
+
+	latestNonce, err := orch.AppQuerier.QueryLatestAttestationNonce(ctx)
+	require.NoError(t, err)
+	assert.NoError(t, orch.Process(ctx, latestNonce))
 }

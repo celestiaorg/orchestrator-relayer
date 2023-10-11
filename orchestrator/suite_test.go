@@ -26,9 +26,13 @@ func (s *OrchestratorTestSuite) SetupSuite() {
 	s.Node = blobstreamtesting.NewTestNode(
 		ctx,
 		t,
-		testnode.ImmediateProposals(codec),
-		blobstreamtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
-		// blobstreamtesting.SetVotingParams(codec, v1beta1.VotingParams{VotingPeriod: 100 * time.Hour}),
+		blobstreamtesting.CelestiaNetworkParams{
+			GenesisOpts: []testnode.GenesisOption{
+				testnode.ImmediateProposals(codec),
+				blobstreamtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
+			},
+			TimeIotaMs: 1,
+		},
 	)
 	s.Orchestrator = blobstreamtesting.NewOrchestrator(t, s.Node)
 }

@@ -26,7 +26,7 @@ func (s *RelayerTestSuite) SetupSuite() {
 		t.Skip("skipping relayer tests in short mode.")
 	}
 	ctx := context.Background()
-	s.Node = blobstreamtesting.NewTestNode(ctx, t)
+	s.Node = blobstreamtesting.NewTestNode(ctx, t, blobstreamtesting.DefaultCelestiaNetworkParams())
 	_, err := s.Node.CelestiaNetwork.WaitForHeight(2)
 	require.NoError(t, err)
 	s.Orchestrator = blobstreamtesting.NewOrchestrator(t, s.Node)
