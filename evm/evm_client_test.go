@@ -15,7 +15,7 @@ import (
 
 func (s *EVMTestSuite) TestSubmitDataCommitment() {
 	// deploy a new bridge contract
-	_, _, _, err := s.Client.DeployBlobStreamContract(s.Chain.Auth, s.Chain.Backend, *s.InitVs, 1, true)
+	_, _, _, err := s.Client.DeployBlobstreamContract(s.Chain.Auth, s.Chain.Backend, *s.InitVs, 1, true)
 	s.NoError(err)
 
 	// we just need something to sign over, it doesn't matter what
@@ -72,7 +72,7 @@ func (s *EVMTestSuite) TestSubmitDataCommitment() {
 
 func (s *EVMTestSuite) TestUpdateValset() {
 	// deploy a new bridge contract
-	_, _, _, err := s.Client.DeployBlobStreamContract(s.Chain.Auth, s.Chain.Backend, *s.InitVs, 1, true)
+	_, _, _, err := s.Client.DeployBlobstreamContract(s.Chain.Auth, s.Chain.Backend, *s.InitVs, 1, true)
 	s.NoError(err)
 
 	updatedValset := celestiatypes.Valset{

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script runs the BlobStream relayer with the ability to deploy a new BlobStream contract or
+# This script runs the Blobstream relayer with the ability to deploy a new Blobstream contract or
 # pass one as an environment variable BLOBSTREAM_CONTRACT
 
 # check if environment variables are set

@@ -1,6 +1,6 @@
-# BlobStream end to end integration test
+# Blobstream end to end integration test
 
-This directory contains the BlobStream e2e integration tests. It serves as a way to fully test the BlobStream orchestrator and relayer in real network scenarios
+This directory contains the Blobstream e2e integration tests. It serves as a way to fully test the Blobstream orchestrator and relayer in real network scenarios
 
 ## Topology
 
@@ -10,7 +10,7 @@ as discussed under [#398](https://github.com/celestiaorg/celestia-app/issues/398
 - 4 Orchestrator nodes that will each run aside of a celestia-app
 - 1 Ethereum node. Probably Ganache as it is easier to set up
 - 1 Relayer node that will listen to Celestia chain and relay attestations
-- 1 Deployer node that can deploy a new BlobStream contract when needed.
+- 1 Deployer node that can deploy a new Blobstream contract when needed.
 
 For more information on the environment variables required to run these tests, please check the `docker-compose.yml` file and the shell scripts defined under `celestia-app` directory.
 

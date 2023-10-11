@@ -36,7 +36,7 @@ import (
 	testcontainers "github.com/testcontainers/testcontainers-go/modules/compose"
 )
 
-type BlobStreamNetwork struct {
+type BlobstreamNetwork struct {
 	ComposePaths  []string
 	Identifier    string
 	Instance      *testcontainers.LocalDockerCompose
@@ -53,7 +53,7 @@ type BlobStreamNetwork struct {
 	toStopChan chan<- struct{}
 }
 
-func NewBlobStreamNetwork() (*BlobStreamNetwork, error) {
+func NewBlobstreamNetwork() (*BlobstreamNetwork, error) {
 	id := strings.ToLower(uuid.New().String())
 	paths := []string{"./docker-compose.yml"}
 	instance := testcontainers.NewLocalDockerCompose(paths, id) //nolint:staticcheck
@@ -61,7 +61,7 @@ func NewBlobStreamNetwork() (*BlobStreamNetwork, error) {
 	// given an initial capacity to avoid blocking in case multiple services failed
 	// and wanted to notify the moderator.
 	toStopChan := make(chan struct{}, 10)
-	network := &BlobStreamNetwork{
+	network := &BlobstreamNetwork{
 		Identifier:    id,
 		ComposePaths:  paths,
 		Instance:      instance,
@@ -96,7 +96,7 @@ func registerModerator(stopChan chan<- struct{}, toStopChan <-chan struct{}) {
 // it is not calling `DeleteAll()` here as it is being called inside the tests. No need to call it two times.
 // this comes from the fact that we're sticking with unit tests style tests to be able to run individual tests
 // https://github.com/celestiaorg/celestia-app/issues/428
-func registerGracefulExit(network *BlobStreamNetwork) {
+func registerGracefulExit(network *BlobstreamNetwork) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -117,9 +117,9 @@ func forceExitIfNeeded(exitCode int) {
 	}
 }
 
-// StartAll starts the whole BlobStream cluster with multiple validators, orchestrators and a relayer
+// StartAll starts the whole Blobstream cluster with multiple validators, orchestrators and a relayer
 // Make sure to release the resources after finishing by calling the `StopAll()` method.
-func (network BlobStreamNetwork) StartAll() error {
+func (network BlobstreamNetwork) StartAll() error {
 	// the reason for building before executing `up` is to avoid rebuilding all the images
 	// if some container accidentally changed some files when running.
 	// This to speed up a bit the execution.
@@ -141,7 +141,7 @@ func (network BlobStreamNetwork) StartAll() error {
 
 // StopAll stops the network and leaves the containers created. This allows to resume
 // execution from the point where they stopped.
-func (network BlobStreamNetwork) StopAll() error {
+func (network BlobstreamNetwork) StopAll() error {
 	err := network.Instance.
 		WithCommand([]string{"stop"}).
 		Invoke()
@@ -152,7 +152,7 @@ func (network BlobStreamNetwork) StopAll() error {
 }
 
 // DeleteAll deletes the containers, network and everything related to the cluster.
-func (network BlobStreamNetwork) DeleteAll() error {
+func (network BlobstreamNetwork) DeleteAll() error {
 	err := network.Instance.
 		WithCommand([]string{"down"}).
 		Invoke()
@@ -163,7 +163,7 @@ func (network BlobStreamNetwork) DeleteAll() error {
 }
 
 // KillAll kills all the containers.
-func (network BlobStreamNetwork) KillAll() error {
+func (network BlobstreamNetwork) KillAll() error {
 	err := network.Instance.
 		WithCommand([]string{"kill"}).
 		Invoke()
@@ -175,7 +175,7 @@ func (network BlobStreamNetwork) KillAll() error {
 
 // Start starts a service from the `Service` enum. Make sure to call `Stop`, in the
 // end, to release the resources.
-func (network BlobStreamNetwork) Start(service Service) error {
+func (network BlobstreamNetwork) Start(service Service) error {
 	serviceName, err := service.toString()
 	if err != nil {
 		return err
@@ -196,10 +196,10 @@ func (network BlobStreamNetwork) Start(service Service) error {
 	return nil
 }
 
-// DeployBlobStreamContract uses the Deployer service to deploy a new BlobStream contract
+// DeployBlobstreamContract uses the Deployer service to deploy a new Blobstream contract
 // based on the existing running network. If no Celestia-app nor ganache is
 // started, it creates them automatically.
-func (network BlobStreamNetwork) DeployBlobStreamContract() error {
+func (network BlobstreamNetwork) DeployBlobstreamContract() error {
 	fmt.Println("building images...")
 	err := network.Instance.
 		WithCommand([]string{"build", "--quiet", DEPLOYER}).
@@ -218,7 +218,7 @@ func (network BlobStreamNetwork) DeployBlobStreamContract() error {
 
 // StartMultiple start multiple services. Make sure to call `Stop`, in the
 // end, to release the resources.
-func (network BlobStreamNetwork) StartMultiple(services ...Service) error {
+func (network BlobstreamNetwork) StartMultiple(services ...Service) error {
 	if len(services) == 0 {
 		return fmt.Errorf("empty list of services provided")
 	}
@@ -246,7 +246,7 @@ func (network BlobStreamNetwork) StartMultiple(services ...Service) error {
 	return nil
 }
 
-func (network BlobStreamNetwork) Stop(service Service) error {
+func (network BlobstreamNetwork) Stop(service Service) error {
 	serviceName, err := service.toString()
 	if err != nil {
 		return err
@@ -262,7 +262,7 @@ func (network BlobStreamNetwork) Stop(service Service) error {
 
 // StopMultiple start multiple services. Make sure to call `Stop` or `StopMultiple`, in the
 // end, to release the resources.
-func (network BlobStreamNetwork) StopMultiple(services ...Service) error {
+func (network BlobstreamNetwork) StopMultiple(services ...Service) error {
 	if len(services) == 0 {
 		return fmt.Errorf("empty list of services provided")
 	}
@@ -283,7 +283,7 @@ func (network BlobStreamNetwork) StopMultiple(services ...Service) error {
 	return nil
 }
 
-func (network BlobStreamNetwork) ExecCommand(service Service, command []string) error {
+func (network BlobstreamNetwork) ExecCommand(service Service, command []string) error {
 	serviceName, err := service.toString()
 	if err != nil {
 		return err
@@ -299,7 +299,7 @@ func (network BlobStreamNetwork) ExecCommand(service Service, command []string) 
 
 // StartMinimal starts a network containing: 1 validator, 1 orchestrator, 1 relayer
 // and a ganache instance.
-func (network BlobStreamNetwork) StartMinimal() error {
+func (network BlobstreamNetwork) StartMinimal() error {
 	fmt.Println("building images...")
 	err := network.Instance.
 		WithCommand([]string{"build", "--quiet", "core0", "core0-orch", "relayer", "ganache"}).
@@ -319,7 +319,7 @@ func (network BlobStreamNetwork) StartMinimal() error {
 // StartBase starts the very minimal component to have a network.
 // It consists of starting `core0` as it is the genesis validator, and the docker network
 // will be created along with it, allowing more containers to join it.
-func (network BlobStreamNetwork) StartBase() error {
+func (network BlobstreamNetwork) StartBase() error {
 	fmt.Println("building images...")
 	err := network.Instance.
 		WithCommand([]string{"build", "--quiet", "core0"}).
@@ -336,7 +336,7 @@ func (network BlobStreamNetwork) StartBase() error {
 	return nil
 }
 
-func (network BlobStreamNetwork) WaitForNodeToStart(_ctx context.Context, rpcAddr string) error {
+func (network BlobstreamNetwork) WaitForNodeToStart(_ctx context.Context, rpcAddr string) error {
 	ctx, cancel := context.WithTimeout(_ctx, 5*time.Minute)
 	for {
 		select {
@@ -362,11 +362,11 @@ func (network BlobStreamNetwork) WaitForNodeToStart(_ctx context.Context, rpcAdd
 	}
 }
 
-func (network BlobStreamNetwork) WaitForBlock(_ctx context.Context, height int64) error {
+func (network BlobstreamNetwork) WaitForBlock(_ctx context.Context, height int64) error {
 	return network.WaitForBlockWithCustomTimeout(_ctx, height, 5*time.Minute)
 }
 
-func (network BlobStreamNetwork) WaitForBlockWithCustomTimeout(
+func (network BlobstreamNetwork) WaitForBlockWithCustomTimeout(
 	_ctx context.Context,
 	height int64,
 	timeout time.Duration,
@@ -415,7 +415,7 @@ func (network BlobStreamNetwork) WaitForBlockWithCustomTimeout(
 // and for any nonce, but would require adding a new method to the querier. Don't think it is worth it now as
 // the number of valsets that will be signed is trivial and reaching 0 would be in no time).
 // Returns the height and the nonce of some attestation that the orchestrator signed.
-func (network BlobStreamNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *p2p.BlobStreamDHT, evmAddr string) (uint64, uint64, error) {
+func (network BlobstreamNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *p2p.BlobstreamDHT, evmAddr string) (uint64, uint64, error) {
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
@@ -489,7 +489,7 @@ func (network BlobStreamNetwork) WaitForOrchestratorToStart(_ctx context.Context
 // GetValsetContainingVals Gets the last valset that contains a certain number of validator.
 // This is used after enabling orchestrators not to sign unless they belong to some valset.
 // Thus, any nonce after the returned valset should be signed by all orchestrators.
-func (network BlobStreamNetwork) GetValsetContainingVals(_ctx context.Context, number int) (*types.Valset, error) {
+func (network BlobstreamNetwork) GetValsetContainingVals(_ctx context.Context, number int) (*types.Valset, error) {
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
 	if err != nil {
@@ -530,9 +530,9 @@ func (network BlobStreamNetwork) GetValsetContainingVals(_ctx context.Context, n
 
 // GetValsetConfirm Returns the valset confirm for nonce `nonce`
 // signed by orchestrator whose EVM address is `evmAddr`.
-func (network BlobStreamNetwork) GetValsetConfirm(
+func (network BlobstreamNetwork) GetValsetConfirm(
 	_ctx context.Context,
-	dht *p2p.BlobStreamDHT,
+	dht *p2p.BlobstreamDHT,
 	nonce uint64,
 	evmAddr string,
 ) (*blobstreamtypes.ValsetConfirm, error) {
@@ -583,9 +583,9 @@ func (network BlobStreamNetwork) GetValsetConfirm(
 
 // GetDataCommitmentConfirm Returns the data commitment confirm for nonce `nonce`
 // signed by orchestrator whose EVM address is `evmAddr`.
-func (network BlobStreamNetwork) GetDataCommitmentConfirm(
+func (network BlobstreamNetwork) GetDataCommitmentConfirm(
 	_ctx context.Context,
-	dht *p2p.BlobStreamDHT,
+	dht *p2p.BlobstreamDHT,
 	nonce uint64,
 	evmAddr string,
 ) (*blobstreamtypes.DataCommitmentConfirm, error) {
@@ -643,9 +643,9 @@ func (network BlobStreamNetwork) GetDataCommitmentConfirm(
 
 // GetDataCommitmentConfirmByHeight Returns the data commitment confirm that commits
 // to height `height` signed by orchestrator whose EVM address is `evmAddr`.
-func (network BlobStreamNetwork) GetDataCommitmentConfirmByHeight(
+func (network BlobstreamNetwork) GetDataCommitmentConfirmByHeight(
 	_ctx context.Context,
-	dht *p2p.BlobStreamDHT,
+	dht *p2p.BlobstreamDHT,
 	height uint64,
 	evmAddr string,
 ) (*blobstreamtypes.DataCommitmentConfirm, error) {
@@ -669,7 +669,7 @@ func (network BlobStreamNetwork) GetDataCommitmentConfirmByHeight(
 }
 
 // GetLatestAttestationNonce Returns the latest attestation nonce.
-func (network BlobStreamNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint64, error) {
+func (network BlobstreamNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint64, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
@@ -686,9 +686,9 @@ func (network BlobStreamNetwork) GetLatestAttestationNonce(_ctx context.Context)
 }
 
 // WasAttestationSigned Returns true if the attestation confirm exist.
-func (network BlobStreamNetwork) WasAttestationSigned(
+func (network BlobstreamNetwork) WasAttestationSigned(
 	_ctx context.Context,
-	dht *p2p.BlobStreamDHT,
+	dht *p2p.BlobstreamDHT,
 	nonce uint64,
 	evmAddress string,
 ) (bool, error) {
@@ -763,11 +763,11 @@ func (network BlobStreamNetwork) WasAttestationSigned(
 	}
 }
 
-func (network BlobStreamNetwork) GetLatestDeployedBlobStreamContract(_ctx context.Context) (*blobstreamwrapper.Wrappers, error) {
-	return network.GetLatestDeployedBlobStreamContractWithCustomTimeout(_ctx, 5*time.Minute)
+func (network BlobstreamNetwork) GetLatestDeployedBlobstreamContract(_ctx context.Context) (*blobstreamwrapper.Wrappers, error) {
+	return network.GetLatestDeployedBlobstreamContractWithCustomTimeout(_ctx, 5*time.Minute)
 }
 
-func (network BlobStreamNetwork) GetLatestDeployedBlobStreamContractWithCustomTimeout(
+func (network BlobstreamNetwork) GetLatestDeployedBlobstreamContractWithCustomTimeout(
 	_ctx context.Context,
 	timeout time.Duration,
 ) (*blobstreamwrapper.Wrappers, error) {
@@ -820,7 +820,7 @@ func (network BlobStreamNetwork) GetLatestDeployedBlobStreamContractWithCustomTi
 				if receipt.ContractAddress == (ethcommon.Address{}) {
 					continue
 				}
-				// If the bridge is loaded, then it's the latest-deployed proxy BlobStream contract
+				// If the bridge is loaded, then it's the latest-deployed proxy Blobstream contract
 				bridge, err := blobstreamwrapper.NewWrappers(receipt.ContractAddress, client)
 				if err != nil {
 					continue
@@ -837,7 +837,7 @@ func (network BlobStreamNetwork) GetLatestDeployedBlobStreamContractWithCustomTi
 	}
 }
 
-func (network BlobStreamNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *blobstreamwrapper.Wrappers) error {
+func (network BlobstreamNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *blobstreamwrapper.Wrappers) error {
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
 		select {
@@ -862,7 +862,7 @@ func (network BlobStreamNetwork) WaitForRelayerToStart(_ctx context.Context, bri
 	}
 }
 
-func (network BlobStreamNetwork) WaitForEventNonce(ctx context.Context, bridge *blobstreamwrapper.Wrappers, n uint64) error {
+func (network BlobstreamNetwork) WaitForEventNonce(ctx context.Context, bridge *blobstreamwrapper.Wrappers, n uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	for {
 		select {
@@ -889,7 +889,7 @@ func (network BlobStreamNetwork) WaitForEventNonce(ctx context.Context, bridge *
 	}
 }
 
-func (network BlobStreamNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWindow uint64) error {
+func (network BlobstreamNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWindow uint64) error {
 	fmt.Printf("updating data commitment window %d\n", newWindow)
 	kr, err := keyring.New(
 		"blobstream-tests",
@@ -983,13 +983,13 @@ func (network BlobStreamNetwork) UpdateDataCommitmentWindow(ctx context.Context,
 	return nil
 }
 
-func (network BlobStreamNetwork) PrintLogs() {
+func (network BlobstreamNetwork) PrintLogs() {
 	_ = network.Instance.
 		WithCommand([]string{"logs"}).
 		Invoke()
 }
 
-func (network BlobStreamNetwork) GetLatestValset(ctx context.Context) (*types.Valset, error) {
+func (network BlobstreamNetwork) GetLatestValset(ctx context.Context) (*types.Valset, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
@@ -1005,7 +1005,7 @@ func (network BlobStreamNetwork) GetLatestValset(ctx context.Context) (*types.Va
 	return valset, nil
 }
 
-func (network BlobStreamNetwork) GetCurrentDataCommitmentWindow(ctx context.Context) (uint64, error) {
+func (network BlobstreamNetwork) GetCurrentDataCommitmentWindow(ctx context.Context) (uint64, error) {
 	var window uint64
 	queryFun := func() error {
 		blobStreamGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))

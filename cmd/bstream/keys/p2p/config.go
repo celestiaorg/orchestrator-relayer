@@ -11,7 +11,7 @@ func keysConfigFlags(cmd *cobra.Command, service string) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream p2p keys home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream p2p keys home directory")
 	return cmd
 }
 

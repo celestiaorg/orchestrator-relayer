@@ -23,7 +23,7 @@ func Command() *cobra.Command {
 	orchCmd := &cobra.Command{
 		Use:          "orchestrator",
 		Aliases:      []string{"orch"},
-		Short:        "BlobStream orchestrator that signs attestations",
+		Short:        "Blobstream orchestrator that signs attestations",
 		SilenceUsage: true,
 	}
 
@@ -42,7 +42,7 @@ func Command() *cobra.Command {
 func Start() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "start <flags>",
-		Short: "Starts the BlobStream orchestrator to sign attestations",
+		Short: "Starts the Blobstream orchestrator to sign attestations",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseOrchestratorFlags(cmd)
 			if err != nil {
@@ -106,7 +106,7 @@ func Start() *cobra.Command {
 			}()
 
 			// creating the broadcaster
-			broadcaster := orchestrator.NewBroadcaster(p2pQuerier.BlobStreamDHT)
+			broadcaster := orchestrator.NewBroadcaster(p2pQuerier.BlobstreamDHT)
 			if err != nil {
 				return err
 			}
@@ -144,7 +144,7 @@ func Start() *cobra.Command {
 func Init() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "init",
-		Short: "Initialize the BlobStream orchestrator store. Passed flags have persisted effect.",
+		Short: "Initialize the Blobstream orchestrator store. Passed flags have persisted effect.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseInitFlags(cmd)
 			if err != nil {

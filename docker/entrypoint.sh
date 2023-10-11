@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Starting Celestia BlobStream with command:"
+echo "Starting Celestia Blobstream with command:"
 echo "$@"
 echo ""
 

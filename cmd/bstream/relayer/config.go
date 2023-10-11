@@ -35,13 +35,13 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rest rpc address host")
 	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rest rpc address port")
 	cmd.Flags().String(FlagEVMRPC, "http://localhost:8545", "Specify the ethereum rpc address")
-	cmd.Flags().String(FlagContractAddress, "", "Specify the contract at which the BlobStream is deployed")
+	cmd.Flags().String(FlagContractAddress, "", "Specify the contract at which the Blobstream is deployed")
 	cmd.Flags().Uint64(FlagEVMGasLimit, evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	homeDir, err := base.DefaultServicePath(ServiceNameRelayer)
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream relayer home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream relayer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
@@ -159,7 +159,7 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream relayer home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream relayer home directory")
 	return cmd
 }
 

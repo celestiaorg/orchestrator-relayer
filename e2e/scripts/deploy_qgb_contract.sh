@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# This script deploys the BlobStream contract and outputs the address to stdout.
+# This script deploys the Blobstream contract and outputs the address to stdout.
 
 # check whether to deploy a new contract or no need
 if [[ "${DEPLOY_NEW_CONTRACT}" != "true" ]]
 then
-  echo "no need to deploy a new BlobStream contract. exiting..."
+  echo "no need to deploy a new Blobstream contract. exiting..."
   exit 0
 fi
 
@@ -61,7 +61,7 @@ done
 # import keys to deployer
 /bin/bstream deploy keys evm import ecdsa "${PRIVATE_KEY}" --evm.passphrase=123
 
-echo "deploying BlobStream contract..."
+echo "deploying Blobstream contract..."
 
 /bin/bstream deploy \
   --evm.chain-id "${EVM_CHAIN_ID}" \

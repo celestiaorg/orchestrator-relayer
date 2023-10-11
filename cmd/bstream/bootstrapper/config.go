@@ -14,7 +14,7 @@ func addStartFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream bootstrappers home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream bootstrappers home directory")
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
@@ -65,7 +65,7 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream bootstrappers home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream bootstrappers home directory")
 	return cmd
 }
 

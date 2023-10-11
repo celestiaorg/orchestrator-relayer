@@ -32,7 +32,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream orchestrator home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream orchestrator home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
@@ -119,7 +119,7 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream orchestrator home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream orchestrator home directory")
 	return cmd
 }
 

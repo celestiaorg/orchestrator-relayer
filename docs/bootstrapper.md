@@ -1,12 +1,12 @@
-# BlobStream bootstrapper
+# Blobstream bootstrapper
 
-To bootstrap the BlobStream P2P network, we use the bootstrapper BlobStream node type to accept connections from freshly created orchestrators/relayers and share its peer table with them.
+To bootstrap the Blobstream P2P network, we use the bootstrapper Blobstream node type to accept connections from freshly created orchestrators/relayers and share its peer table with them.
 
 ## How to run
 
-### Install the BlobStream binary
+### Install the Blobstream binary
 
-Make sure to have the BlobStream binary installed. Check [the BlobStream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
+Make sure to have the Blobstream binary installed. Check [the Blobstream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
 
 ### Init the store
 
@@ -39,7 +39,7 @@ Now that we have the store initialized, we can start the bootstrapper:
 ```shell
 bstream bootstrapper
 
-BlobStream P2P network bootstrapper command
+Blobstream P2P network bootstrapper command
 
 Usage:
   bstream bootstrapper [command]

@@ -21,7 +21,7 @@ func Command() *cobra.Command {
 	bsCmd := &cobra.Command{
 		Use:          "bootstrapper",
 		Aliases:      []string{"bs"},
-		Short:        "BlobStream P2P network bootstrapper command",
+		Short:        "Blobstream P2P network bootstrapper command",
 		SilenceUsage: true,
 	}
 
@@ -110,7 +110,7 @@ func Start() *cobra.Command {
 			}
 
 			// creating the dht
-			dht, err := p2p.NewBlobStreamDHT(ctx, h, dataStore, aIBootstrappers, logger)
+			dht, err := p2p.NewBlobstreamDHT(ctx, h, dataStore, aIBootstrappers, logger)
 			if err != nil {
 				return err
 			}
@@ -137,7 +137,7 @@ func Start() *cobra.Command {
 func Init() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "init",
-		Short: "Initialize the BlobStream bootstrapper store. Passed flags have persisted effect.",
+		Short: "Initialize the Blobstream bootstrapper store. Passed flags have persisted effect.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseInitFlags(cmd)
 			if err != nil {

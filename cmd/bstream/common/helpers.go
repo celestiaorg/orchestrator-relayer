@@ -60,7 +60,7 @@ func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC str
 	return tmQuerier, appQuerier, stopFuncs, nil
 }
 
-// CreateDHTAndWaitForPeers helper function that creates a new BlobStream DHT and waits for some peers to connect to it.
+// CreateDHTAndWaitForPeers helper function that creates a new Blobstream DHT and waits for some peers to connect to it.
 func CreateDHTAndWaitForPeers(
 	ctx context.Context,
 	logger tmlog.Logger,
@@ -69,7 +69,7 @@ func CreateDHTAndWaitForPeers(
 	p2pListenAddr string,
 	bootstrappers string,
 	dataStore ds.Batching,
-) (*p2p.BlobStreamDHT, error) {
+) (*p2p.BlobstreamDHT, error) {
 	// get the p2p private key or generate a new one
 	privKey, err := common2.GetP2PKeyOrGenerateNewOne(p2pKeyStore, p2pNickname)
 	if err != nil {
@@ -98,7 +98,7 @@ func CreateDHTAndWaitForPeers(
 	}
 
 	// creating the dht
-	dht, err := p2p.NewBlobStreamDHT(ctx, h, dataStore, aIBootstrappers, logger)
+	dht, err := p2p.NewBlobstreamDHT(ctx, h, dataStore, aIBootstrappers, logger)
 	if err != nil {
 		return nil, err
 	}

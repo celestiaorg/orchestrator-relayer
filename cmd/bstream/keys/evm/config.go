@@ -15,7 +15,7 @@ func keysConfigFlags(cmd *cobra.Command, service string) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream evm keys home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream evm keys home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 	return cmd
 }
@@ -54,7 +54,7 @@ func keysNewPassphraseConfigFlags(cmd *cobra.Command, service string) *cobra.Com
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream evm keys home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream evm keys home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 	cmd.Flags().String(FlagNewEVMPassphrase, "", "the evm account new passphrase (if not specified as a flag, it will be asked interactively)")
 	return cmd

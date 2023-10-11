@@ -19,10 +19,10 @@ import (
 
 func TestRelayerWithOneValidator(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -50,7 +50,7 @@ func TestRelayerWithOneValidator(t *testing.T) {
 	_, _, err = network.WaitForOrchestratorToStart(ctx, dht, CORE0EVMADDRESS)
 	HandleNetworkError(t, network, err, false)
 
-	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobstreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	latestNonce, err := network.GetLatestAttestationNonce(ctx)
@@ -70,10 +70,10 @@ func TestRelayerWithOneValidator(t *testing.T) {
 
 func TestRelayerWithTwoValidators(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -116,7 +116,7 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 	// give the orchestrators some time to catchup
 	time.Sleep(time.Second)
 
-	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobstreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForRelayerToStart(ctx, bridge)
@@ -136,10 +136,10 @@ func TestRelayerWithTwoValidators(t *testing.T) {
 
 func TestRelayerWithMultipleValidators(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -191,7 +191,7 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(latestValset.Members))
 
-	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobstreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForRelayerToStart(ctx, bridge)
@@ -208,10 +208,10 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 
 func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -278,7 +278,7 @@ func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 4, len(latestValset.Members))
 
-	bridge, err := network.GetLatestDeployedBlobStreamContract(ctx)
+	bridge, err := network.GetLatestDeployedBlobstreamContract(ctx)
 	HandleNetworkError(t, network, err, false)
 
 	err = network.WaitForRelayerToStart(ctx, bridge)

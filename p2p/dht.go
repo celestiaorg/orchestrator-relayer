@@ -19,16 +19,16 @@ const (
 	ValsetConfirmNamespace         = "vc"
 )
 
-// BlobStreamDHT wrapper around the `IpfsDHT` implementation.
+// BlobstreamDHT wrapper around the `IpfsDHT` implementation.
 // Used to add helper methods to easily handle the DHT.
-type BlobStreamDHT struct {
+type BlobstreamDHT struct {
 	*dht.IpfsDHT
 	logger tmlog.Logger
 }
 
-// NewBlobStreamDHT create a new IPFS DHT using a suitable configuration for the BlobStream.
+// NewBlobstreamDHT create a new IPFS DHT using a suitable configuration for the Blobstream.
 // If nil is passed for bootstrappers, the DHT will not try to connect to any existing peer.
-func NewBlobStreamDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo, logger tmlog.Logger) (*BlobStreamDHT, error) {
+func NewBlobstreamDHT(ctx context.Context, h host.Host, store ds.Batching, bootstrappers []peer.AddrInfo, logger tmlog.Logger) (*BlobstreamDHT, error) {
 	// this value is set to 23 days, which is the unbonding period.
 	// we want to have the signatures available for this whole period.
 	providers.ProvideValidity = time.Hour * 24 * 23
@@ -48,7 +48,7 @@ func NewBlobStreamDHT(ctx context.Context, h host.Host, store ds.Batching, boots
 		return nil, err
 	}
 
-	return &BlobStreamDHT{
+	return &BlobstreamDHT{
 		IpfsDHT: router,
 		logger:  logger,
 	}, nil
@@ -57,7 +57,7 @@ func NewBlobStreamDHT(ctx context.Context, h host.Host, store ds.Batching, boots
 // WaitForPeers waits for peers to be connected to the DHT.
 // Returns nil if the context is done or the peers list has more peers than the specified peersThreshold.
 // Returns error if it times out.
-func (q BlobStreamDHT) WaitForPeers(ctx context.Context, timeout time.Duration, rate time.Duration, peersThreshold int) error {
+func (q BlobstreamDHT) WaitForPeers(ctx context.Context, timeout time.Duration, rate time.Duration, peersThreshold int) error {
 	if peersThreshold < 1 {
 		return ErrPeersThresholdCannotBeNegative
 	}
@@ -101,7 +101,7 @@ func (q BlobStreamDHT) WaitForPeers(ctx context.Context, timeout time.Duration, 
 // PutDataCommitmentConfirm encodes a data commitment confirm then puts its value to the DHT.
 // The key can be generated using the `GetDataCommitmentConfirmKey` method.
 // Returns an error if it fails to do so.
-func (q BlobStreamDHT) PutDataCommitmentConfirm(ctx context.Context, key string, dcc types.DataCommitmentConfirm) error {
+func (q BlobstreamDHT) PutDataCommitmentConfirm(ctx context.Context, key string, dcc types.DataCommitmentConfirm) error {
 	encodedData, err := types.MarshalDataCommitmentConfirm(dcc)
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (q BlobStreamDHT) PutDataCommitmentConfirm(ctx context.Context, key string,
 // GetDataCommitmentConfirm looks for a data commitment confirm referenced by its key in the DHT.
 // The key can be generated using the `GetDataCommitmentConfirmKey` method.
 // Returns an error if it fails to get the confirm.
-func (q BlobStreamDHT) GetDataCommitmentConfirm(ctx context.Context, key string) (types.DataCommitmentConfirm, error) {
+func (q BlobstreamDHT) GetDataCommitmentConfirm(ctx context.Context, key string) (types.DataCommitmentConfirm, error) {
 	encodedConfirm, err := q.GetValue(ctx, key) // this is a blocking call, we should probably use timeout and channel
 	if err != nil {
 		return types.DataCommitmentConfirm{}, err
@@ -131,7 +131,7 @@ func (q BlobStreamDHT) GetDataCommitmentConfirm(ctx context.Context, key string)
 // PutValsetConfirm encodes a valset confirm then puts its value to the DHT.
 // The key can be generated using the `GetValsetConfirmKey` method.
 // Returns an error if it fails to do so.
-func (q BlobStreamDHT) PutValsetConfirm(ctx context.Context, key string, vc types.ValsetConfirm) error {
+func (q BlobstreamDHT) PutValsetConfirm(ctx context.Context, key string, vc types.ValsetConfirm) error {
 	encodedData, err := types.MarshalValsetConfirm(vc)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (q BlobStreamDHT) PutValsetConfirm(ctx context.Context, key string, vc type
 // GetValsetConfirm looks for a valset confirm referenced by its key in the DHT.
 // The key can be generated using the `GetValsetConfirmKey` method.
 // Returns an error if it fails to get the confirm.
-func (q BlobStreamDHT) GetValsetConfirm(ctx context.Context, key string) (types.ValsetConfirm, error) {
+func (q BlobstreamDHT) GetValsetConfirm(ctx context.Context, key string) (types.ValsetConfirm, error) {
 	encodedConfirm, err := q.GetValue(ctx, key) // this is a blocking call, we should probably use timeout and channel
 	if err != nil {
 		return types.ValsetConfirm{}, err

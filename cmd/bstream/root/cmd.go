@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Cmd creates a new root command for the BlobStream CLI. It is called once in the
+// Cmd creates a new root command for the Blobstream CLI. It is called once in the
 // main function.
 func Cmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:          "bstream",
-		Short:        "The BlobStream CLI",
+		Short:        "The Blobstream CLI",
 		SilenceUsage: true,
 	}
 

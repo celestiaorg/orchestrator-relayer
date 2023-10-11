@@ -18,7 +18,7 @@ import (
 func Root(serviceName string) *cobra.Command {
 	p2pCmd := &cobra.Command{
 		Use:          "p2p",
-		Short:        "BlobStream p2p keys manager",
+		Short:        "Blobstream p2p keys manager",
 		SilenceUsage: true,
 	}
 

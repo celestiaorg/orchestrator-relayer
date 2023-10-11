@@ -14,7 +14,7 @@ import (
 //
 // If a sufficient number of validators (66% of voting power) submit ValsetConfirm
 // messages with their signatures, it is then possible for anyone to query them from
-// the BlobStream P2P network and submit them to Ethereum to update the validator set.
+// the Blobstream P2P network and submit them to Ethereum to update the validator set.
 type ValsetConfirm struct {
 	// Ethereum address, associated to the orchestrator, used to sign the `ValSet`
 	// message.

@@ -16,13 +16,13 @@ import (
 
 // Querier used to query the DHT for confirms.
 type Querier struct {
-	BlobStreamDHT *BlobStreamDHT
+	BlobstreamDHT *BlobstreamDHT
 	logger        tmlog.Logger
 }
 
-func NewQuerier(blobStreamDht *BlobStreamDHT, logger tmlog.Logger) *Querier {
+func NewQuerier(blobStreamDht *BlobstreamDHT, logger tmlog.Logger) *Querier {
 	return &Querier{
-		BlobStreamDHT: blobStreamDht,
+		BlobstreamDHT: blobStreamDht,
 		logger:        logger,
 	}
 }
@@ -246,7 +246,7 @@ func (q Querier) QueryValsetConfirmByEVMAddress(
 	address string,
 	signBytes string,
 ) (*types.ValsetConfirm, error) {
-	confirm, err := q.BlobStreamDHT.GetValsetConfirm(
+	confirm, err := q.BlobstreamDHT.GetValsetConfirm(
 		ctx,
 		GetValsetConfirmKey(nonce, address, signBytes),
 	)
@@ -264,7 +264,7 @@ func (q Querier) QueryValsetConfirmByEVMAddress(
 // and signed by the orchestrator whose EVM address is `address`.
 // Returns (nil, nil) if the confirm is not found
 func (q Querier) QueryDataCommitmentConfirmByEVMAddress(ctx context.Context, nonce uint64, address string, dataRootTupleRoot string) (*types.DataCommitmentConfirm, error) {
-	confirm, err := q.BlobStreamDHT.GetDataCommitmentConfirm(
+	confirm, err := q.BlobstreamDHT.GetDataCommitmentConfirm(
 		ctx,
 		GetDataCommitmentConfirmKey(nonce, address, dataRootTupleRoot),
 	)
@@ -283,7 +283,7 @@ func (q Querier) QueryDataCommitmentConfirmByEVMAddress(ctx context.Context, non
 func (q Querier) QueryDataCommitmentConfirms(ctx context.Context, valset celestiatypes.Valset, nonce uint64, dataRootTupleRoot string) ([]types.DataCommitmentConfirm, error) {
 	confirms := make([]types.DataCommitmentConfirm, 0)
 	for _, member := range valset.Members {
-		confirm, err := q.BlobStreamDHT.GetDataCommitmentConfirm(
+		confirm, err := q.BlobstreamDHT.GetDataCommitmentConfirm(
 			ctx,
 			GetDataCommitmentConfirmKey(nonce, member.EvmAddress, dataRootTupleRoot),
 		)
@@ -304,7 +304,7 @@ func (q Querier) QueryDataCommitmentConfirms(ctx context.Context, valset celesti
 func (q Querier) QueryValsetConfirms(ctx context.Context, nonce uint64, valset celestiatypes.Valset, signBytes string) ([]types.ValsetConfirm, error) {
 	confirms := make([]types.ValsetConfirm, 0)
 	for _, member := range valset.Members {
-		confirm, err := q.BlobStreamDHT.GetValsetConfirm(
+		confirm, err := q.BlobstreamDHT.GetValsetConfirm(
 			ctx,
 			GetValsetConfirmKey(nonce, member.EvmAddress, signBytes),
 		)

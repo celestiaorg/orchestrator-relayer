@@ -106,7 +106,7 @@ func (aq *AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height u
 	return resp.DataCommitment, nil
 }
 
-// QueryLatestDataCommitment query the latest data commitment in BlobStream state machine.
+// QueryLatestDataCommitment query the latest data commitment in Blobstream state machine.
 func (aq *AppQuerier) QueryLatestDataCommitment(ctx context.Context) (*celestiatypes.DataCommitment, error) {
 	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 	resp, err := queryClient.LatestDataCommitment(ctx, &celestiatypes.QueryLatestDataCommitmentRequest{})

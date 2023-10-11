@@ -24,7 +24,7 @@ type Config struct {
 	EVMPassphrase string
 }
 
-// DefaultServicePath constructs the default BlobStream store path for
+// DefaultServicePath constructs the default Blobstream store path for
 // the provided service.
 // It tries to get the home directory from an environment variable
 // called `<service_name_in_upper_case>_HOME`. If not set, then reverts to using

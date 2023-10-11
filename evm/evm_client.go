@@ -31,7 +31,7 @@ type Client struct {
 	GasLimit uint64
 }
 
-// NewClient Creates a new EVM Client that can be used to deploy the BlobStream contract and
+// NewClient Creates a new EVM Client that can be used to deploy the Blobstream contract and
 // interact with it.
 // The wrapper parameter can be nil when creating the client for contract deployment.
 func NewClient(
@@ -62,21 +62,21 @@ func (ec *Client) NewEthClient() (*ethclient.Client, error) {
 	return ethClient, nil
 }
 
-// DeployBlobStreamContract Deploys the BlobStream contract and initializes it with the provided valset.
+// DeployBlobstreamContract Deploys the Blobstream contract and initializes it with the provided valset.
 // The waitToBeMined, when set to true, will wait for the transaction to be included in a block,
 // and log relevant information.
 // The initBridge, when set to true, will assign the newly deployed bridge to the wrapper. This
 // can be used later for further interactions with the new contract.
-// Multiple calls to DeployBlobStreamContract with the initBridge flag set to true will overwrite everytime
+// Multiple calls to DeployBlobstreamContract with the initBridge flag set to true will overwrite everytime
 // the bridge contract.
-func (ec *Client) DeployBlobStreamContract(
+func (ec *Client) DeployBlobstreamContract(
 	opts *bind.TransactOpts,
 	contractBackend bind.ContractBackend,
 	contractInitValset types.Valset,
 	contractInitNonce uint64,
 	initBridge bool,
 ) (gethcommon.Address, *coregethtypes.Transaction, *blobstreamwrapper.Wrappers, error) {
-	// deploy the BlobStream implementation contract
+	// deploy the Blobstream implementation contract
 	impAddr, impTx, _, err := ec.DeployImplementation(opts, contractBackend)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -84,7 +84,7 @@ func (ec *Client) DeployBlobStreamContract(
 
 	ec.logger.Info("deploying QGB implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
 
-	// encode the BlobStream contract initialization data using the chain parameters
+	// encode the Blobstream contract initialization data using the chain parameters
 	ethVsHash, err := contractInitValset.Hash()
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -103,7 +103,7 @@ func (ec *Client) DeployBlobStreamContract(
 		opts.Nonce.Add(opts.Nonce, big.NewInt(1))
 	}
 
-	// deploy the ERC1967 proxy, link it to the BlobStream implementation contract, and initialize it
+	// deploy the ERC1967 proxy, link it to the Blobstream implementation contract, and initialize it
 	proxyAddr, tx, _, err := ec.DeployERC1867Proxy(opts, contractBackend, impAddr, initData)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err

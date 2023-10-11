@@ -25,7 +25,7 @@ import (
 func Command() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "deploy <flags>",
-		Short: "Deploys the BlobStream contract and initializes it using the provided Celestia chain",
+		Short: "Deploys the Blobstream contract and initializes it using the provided Celestia chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseDeployFlags(cmd)
 			if err != nil {
@@ -59,7 +59,7 @@ func Command() *cobra.Command {
 			if err != nil {
 				return errors.Wrap(
 					err,
-					"cannot initialize the BlobStream contract without having a valset request: %s",
+					"cannot initialize the Blobstream contract without having a valset request: %s",
 				)
 			}
 
@@ -110,15 +110,15 @@ func Command() *cobra.Command {
 			}
 			defer backend.Close()
 
-			address, tx, _, err := evmClient.DeployBlobStreamContract(txOpts, backend, *vs, vs.Nonce, false)
+			address, tx, _, err := evmClient.DeployBlobstreamContract(txOpts, backend, *vs, vs.Nonce, false)
 			if err != nil {
-				logger.Error("failed to deploy BlobStream contract")
+				logger.Error("failed to deploy Blobstream contract")
 				return err
 			}
 
 			receipt, err := evmClient.WaitForTransaction(cmd.Context(), backend, tx)
 			if err == nil && receipt != nil && receipt.Status == 1 {
-				logger.Info("deployed BlobStream contract", "proxy_address", address.Hex(), "tx_hash", tx.Hash().String())
+				logger.Info("deployed Blobstream contract", "proxy_address", address.Hex(), "tx_hash", tx.Hash().String())
 			}
 
 			return nil

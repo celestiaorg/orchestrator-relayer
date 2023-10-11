@@ -9,7 +9,7 @@ import (
 func Command(serviceName string) *cobra.Command {
 	keysCmd := &cobra.Command{
 		Use:          "keys",
-		Short:        "BlobStream keys manager",
+		Short:        "Blobstream keys manager",
 		SilenceUsage: true,
 	}
 

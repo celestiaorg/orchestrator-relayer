@@ -302,7 +302,7 @@ services:
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
 #      set the following environment variable to some value
-#      if you want to relay to an existing BlobStream contract
+#      if you want to relay to an existing Blobstream contract
 #      - BLOBSTREAM_CONTRACT=0x123
     entrypoint: [
       "/bin/bash"

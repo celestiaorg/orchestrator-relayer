@@ -27,7 +27,7 @@ func Command() *cobra.Command {
 	relCmd := &cobra.Command{
 		Use:          "relayer",
 		Aliases:      []string{"rel"},
-		Short:        "BlobStream relayer that relays signatures to the target EVM chain",
+		Short:        "Blobstream relayer that relays signatures to the target EVM chain",
 		SilenceUsage: true,
 	}
 
@@ -46,7 +46,7 @@ func Command() *cobra.Command {
 func Init() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "init",
-		Short: "Initialize the BlobStream relayer store. Passed flags have persisted effect.",
+		Short: "Initialize the Blobstream relayer store. Passed flags have persisted effect.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseInitFlags(cmd)
 			if err != nil {
@@ -81,7 +81,7 @@ func Init() *cobra.Command {
 func Start() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "start <flags>",
-		Short: "Runs the BlobStream relayer to submit attestations to the target EVM chain",
+		Short: "Runs the Blobstream relayer to submit attestations to the target EVM chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseRelayerStartFlags(cmd)
 			if err != nil {
@@ -145,7 +145,7 @@ func Start() *cobra.Command {
 				}
 			}()
 
-			// connecting to a BlobStream contract
+			// connecting to a Blobstream contract
 			ethClient, err := ethclient.Dial(config.evmRPC)
 			if err != nil {
 				return err

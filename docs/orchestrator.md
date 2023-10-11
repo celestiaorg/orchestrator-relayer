@@ -1,22 +1,22 @@
 ---
-sidebar_label: BlobStream Orchestrator
-description: Learn about the BlobStream Orchestrator.
+sidebar_label: Blobstream Orchestrator
+description: Learn about the Blobstream Orchestrator.
 ---
 
-# BlobStream Orchestrator
+# Blobstream Orchestrator
 
 <!-- markdownlint-disable MD013 -->
 <!-- markdownlint-disable MD010 -->
 
-The role of the orchestrator is to sign attestations using its corresponding validator EVM private key. These attestations are generated within the BlobStream module of the Celestia-app state machine. To learn more about what attestations are, you can refer to [the BlobStream overview](https://github.com/celestiaorg/celestia-app/tree/main/x/blobstream).
+The role of the orchestrator is to sign attestations using its corresponding validator EVM private key. These attestations are generated within the Blobstream module of the Celestia-app state machine. To learn more about what attestations are, you can refer to [the Blobstream overview](https://github.com/celestiaorg/celestia-app/tree/main/x/blobstream).
 
 ## How it works
 
 The orchestrator does the following:
 
 1. Connect to a Celestia-app full node or validator node via RPC and gRPC and wait for new attestations
-2. Once an attestation is created inside the BlobStream state machine, the orchestrator queries it.
-3. After getting the attestation, the orchestrator signs it using the provided EVM private key. The private key should correspond to the EVM address provided when creating the validator. Read [more about BlobStream keys](https://docs.celestia.org/nodes/blobstream-keys/).
+2. Once an attestation is created inside the Blobstream state machine, the orchestrator queries it.
+3. After getting the attestation, the orchestrator signs it using the provided EVM private key. The private key should correspond to the EVM address provided when creating the validator. Read [more about Blobstream keys](https://docs.celestia.org/nodes/blobstream-keys/).
 4. Then, the orchestrator pushes its signature to the P2P network it is connected to, via adding it as a DHT value.
 5. Listen for new attestations and go back to step 2.
 
@@ -46,9 +46,9 @@ To run an orchestrator, you will need to have access to the following:
 * *A list of bootstrappers for the P2P network. These will be shared by the team for every network we plan on supporting.
 * *Access to your consensus node RPC and gRPC ports.
 
-### Install the BlobStream binary
+### Install the Blobstream binary
 
-Make sure to have the BlobStream binary installed. Check [the BlobStream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
+Make sure to have the Blobstream binary installed. Check [the Blobstream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
 
 ### Init the store
 
@@ -114,7 +114,7 @@ The orchestrator accepts the following flags:
 ```ssh
 bstream orchestrator start --help
 
-Starts the BlobStream orchestrator to sign attestations
+Starts the Blobstream orchestrator to sign attestations
 
 Usage:
   bstream orchestrator start <flags> [flags]
@@ -145,7 +145,7 @@ If not, then the signatures may not be available to the network and relayers wil
 
 #### Register EVM Address
 
-When creating a validator, a random EVM address corresponding to its operator is set in the BlobStream state. This latter will be used by the orchestrator to sign attestations. And since validators will generally not have access to its corresponding private key, that address needs to be edited with one whose private key is known to the validator operator.
+When creating a validator, a random EVM address corresponding to its operator is set in the Blobstream state. This latter will be used by the orchestrator to sign attestations. And since validators will generally not have access to its corresponding private key, that address needs to be edited with one whose private key is known to the validator operator.
 
 To edit an EVM address for a certain validator, its corresponding account needs to send a `RegisterEVMAddress` transaction with the new address.
 
@@ -273,7 +273,7 @@ If you want to start the orchestrator as a `systemd` service, you could use the 
 
 ```text
 [Unit]
-Description=BlobStream orchestrator service
+Description=Blobstream orchestrator service
 After=network.target
 
 [Service]

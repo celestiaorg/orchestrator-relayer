@@ -29,7 +29,7 @@ func Command() *cobra.Command {
 	queryCmd := &cobra.Command{
 		Use:          "query",
 		Aliases:      []string{"q"},
-		Short:        "Query relevant information from a running BlobStream",
+		Short:        "Query relevant information from a running Blobstream",
 		SilenceUsage: true,
 	}
 
@@ -47,8 +47,8 @@ func Signers() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "signers <nonce>",
 		Args:  cobra.ExactArgs(1),
-		Short: "Queries the BlobStream for attestations signers",
-		Long: "Queries the BlobStream for attestations signers. The nonce is the attestation nonce that the command" +
+		Short: "Queries the Blobstream for attestations signers",
+		Long: "Queries the Blobstream for attestations signers. The nonce is the attestation nonce that the command" +
 			" will query signatures for. It should be either a specific nonce starting from 2 and on." +
 			" Or, use 'latest' as argument to check the latest attestation nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -107,7 +107,7 @@ func Signers() *cobra.Command {
 			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
 
 			// creating the dht
-			dht, err := p2p.NewBlobStreamDHT(cmd.Context(), h, dataStore, []peer.AddrInfo{}, logger)
+			dht, err := p2p.NewBlobstreamDHT(cmd.Context(), h, dataStore, []peer.AddrInfo{}, logger)
 			if err != nil {
 				return err
 			}
@@ -390,7 +390,7 @@ func Signature() *cobra.Command {
 			dataStore := dssync.MutexWrap(ds.NewMapDatastore())
 
 			// creating the dht
-			dht, err := p2p.NewBlobStreamDHT(cmd.Context(), h, dataStore, []peer.AddrInfo{}, logger)
+			dht, err := p2p.NewBlobstreamDHT(cmd.Context(), h, dataStore, []peer.AddrInfo{}, logger)
 			if err != nil {
 				return err
 			}

@@ -101,7 +101,7 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 // table is empty.
 func TestEmptyPeersTable(t *testing.T) {
 	_, _, dht := blobstreamtesting.NewTestDHT(context.Background(), nil)
-	defer func(dht *p2p.BlobStreamDHT) {
+	defer func(dht *p2p.BlobstreamDHT) {
 		err := dht.Close()
 		if err != nil {
 			require.NoError(t, err)

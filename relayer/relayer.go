@@ -327,7 +327,7 @@ func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att c
 }
 
 // matchAttestationConfirmSigs matches and sorts the confirm signatures with the valset
-// members as expected by the BlobStream contract.
+// members as expected by the Blobstream contract.
 // Also, it leaves the non provided signatures as nil in the `sigs` slice:
 // https://github.com/celestiaorg/celestia-app/issues/628
 func matchAttestationConfirmSigs(
@@ -335,7 +335,7 @@ func matchAttestationConfirmSigs(
 	currentValset celestiatypes.Valset,
 ) ([]wrapper.Signature, error) {
 	sigs := make([]wrapper.Signature, len(currentValset.Members))
-	// the BlobStream contract expects the signatures to be ordered by validators in valset
+	// the Blobstream contract expects the signatures to be ordered by validators in valset
 	for i, val := range currentValset.Members {
 		sig, has := signatures[val.EvmAddress]
 		if !has {

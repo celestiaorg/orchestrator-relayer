@@ -30,7 +30,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(
 		FlagStartingNonce,
 		"latest",
-		"Specify the nonce to start the BlobStream contract from. "+
+		"Specify the nonce to start the Blobstream contract from. "+
 			"\"earliest\": for genesis, "+
 			"\"latest\": for latest valset nonce, "+
 			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
@@ -40,7 +40,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The BlobStream deployer home directory")
+	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream deployer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
 
 	return cmd

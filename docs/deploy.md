@@ -1,36 +1,36 @@
 ---
-sidebar_label: Deploy the BlobStream contract
-description: Learn how to deploy the BlobStream smart contract.
+sidebar_label: Deploy the Blobstream contract
+description: Learn how to deploy the Blobstream smart contract.
 ---
 
-# Deploy the BlobStream contract
+# Deploy the Blobstream contract
 
 <!-- markdownlint-disable MD013 -->
 
-The `deploy` is a helper command that allows deploying the BlobStream smart contract to a new EVM chain:
+The `deploy` is a helper command that allows deploying the Blobstream smart contract to a new EVM chain:
 
 ```ssh
 bstream deploy --help
 
-Deploys the BlobStream contract and initializes it using the provided Celestia chain
+Deploys the Blobstream contract and initializes it using the provided Celestia chain
 
 Usage:
   bstream deploy <flags> [flags]
   bstream deploy [command]
 
 Available Commands:
-  keys        BlobStream keys manager
+  keys        Blobstream keys manager
 ```
 
 ## How to run
 
-### Install the BlobStream binary
+### Install the Blobstream binary
 
-Make sure to have the BlobStream binary installed. Check [the BlobStream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
+Make sure to have the Blobstream binary installed. Check [the Blobstream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
 
 ### Add keys
 
-In order to deploy a BlobStream smart contract, you will need a funded EVM address and its private key. The `keys` command will help you set up this key:
+In order to deploy a Blobstream smart contract, you will need a funded EVM address and its private key. The `keys` command will help you set up this key:
 
 ```ssh
 bstream deploy keys  --help
@@ -54,7 +54,7 @@ For more information about the `keys` command, check [the `keys` documentation](
 
 ### Deploy the contract
 
-Now, we can deploy the BlobStream contract to a new EVM chain:
+Now, we can deploy the Blobstream contract to a new EVM chain:
 
 ```ssh
 blobstream deploy \
@@ -68,8 +68,8 @@ blobstream deploy \
 
 The `latest` can be replaced by the following:
 
-- `latest`: to deploy the BlobStream contract starting from the latest validator set.
-- `earliest`: to deploy the BlobStream contract starting from genesis.
-- `nonce`: you can provide a custom nonce on where you want the BlobStream to start. If the provided nonce is not a `Valset` attestation, then the one before it will be used to deploy the BlobStream smart contract.
+- `latest`: to deploy the Blobstream contract starting from the latest validator set.
+- `earliest`: to deploy the Blobstream contract starting from genesis.
+- `nonce`: you can provide a custom nonce on where you want the Blobstream to start. If the provided nonce is not a `Valset` attestation, then the one before it will be used to deploy the Blobstream smart contract.
 
-And, now you will see the BlobStream smart contract address in the logs along with the transaction hash.
+And, now you will see the Blobstream smart contract address in the logs along with the transaction hash.

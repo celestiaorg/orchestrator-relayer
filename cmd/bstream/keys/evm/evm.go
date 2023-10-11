@@ -21,7 +21,7 @@ import (
 func Root(serviceName string) *cobra.Command {
 	evmCmd := &cobra.Command{
 		Use:          "evm",
-		Short:        "BlobStream EVM keys manager",
+		Short:        "Blobstream EVM keys manager",
 		SilenceUsage: true,
 	}
 

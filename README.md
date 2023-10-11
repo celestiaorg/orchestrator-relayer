@@ -1,16 +1,16 @@
 # orchestrator-relayer
 
-Contains the implementation of the BlobStream orchestrator and relayer.
+Contains the implementation of the Blobstream orchestrator and relayer.
 
-The orchestrator is the software that signs the BlobStream attestations, and the relayer is the one that relays them to the target EVM chain.
+The orchestrator is the software that signs the Blobstream attestations, and the relayer is the one that relays them to the target EVM chain.
 
-For a high-level overview of how the BlobStream works, check [here](https://github.com/celestiaorg/quantum-gravity-bridge/tree/76efeca0be1a17d32ef633c0fdbd3c8f5e4cc53f#how-it-works) and [here](https://blog.celestia.org/celestiums/).
+For a high-level overview of how the Blobstream works, check [here](https://github.com/celestiaorg/quantum-gravity-bridge/tree/76efeca0be1a17d32ef633c0fdbd3c8f5e4cc53f#how-it-works) and [here](https://blog.celestia.org/celestiums/).
 
 ## Install
 
 1. [Install Go](https://go.dev/doc/install) 1.21.1
 2. Clone this repo
-3. Install the BlobStream CLI
+3. Install the Blobstream CLI
 
  ```shell
 make install
@@ -27,9 +27,9 @@ bstream --help
 
 If you are a Celestia-app validator, all you need to do is run the orchestrator. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/orchestrator.md) for more details.
 
-If you want to post commitments on an EVM chain, you will need to deploy a new BlobStream contract and run a relayer. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) for relayer docs and [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for how to deploy a new BlobStream contract.
+If you want to post commitments on an EVM chain, you will need to deploy a new Blobstream contract and run a relayer. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) for relayer docs and [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for how to deploy a new Blobstream contract.
 
-Note: the BlobStream P2P network is a separate network than the consensus or the data availability one. Thus, you will need its specific bootstrappers to be able to connect to it.
+Note: the Blobstream P2P network is a separate network than the consensus or the data availability one. Thus, you will need its specific bootstrappers to be able to connect to it.
 
 ## Contributing
 
@@ -57,6 +57,6 @@ The smart contract implementation is in [blobstream-contracts](https://github.co
 
 The state machine implementation is in [x/blobstream](https://github.com/celestiaorg/celestia-app/tree/main/x/blobstream).
 
-BlobStream ADRs are in the [docs](https://github.com/celestiaorg/celestia-app/tree/main/docs/architecture).
+Blobstream ADRs are in the [docs](https://github.com/celestiaorg/celestia-app/tree/main/docs/architecture).
 
-BlobStream design explained in this [blog](https://blog.celestia.org/celestiums).
+Blobstream design explained in this [blog](https://blog.celestia.org/celestiums).

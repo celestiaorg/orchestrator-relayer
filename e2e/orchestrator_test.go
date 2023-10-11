@@ -16,10 +16,10 @@ import (
 
 func TestOrchestratorWithOneValidator(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -68,10 +68,10 @@ func TestOrchestratorWithOneValidator(t *testing.T) {
 
 func TestOrchestratorWithTwoValidators(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
@@ -157,10 +157,10 @@ func TestOrchestratorWithTwoValidators(t *testing.T) {
 
 func TestOrchestratorWithMultipleValidators(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	assert.NoError(t, err)
 
 	// to release resources after tests
@@ -246,10 +246,10 @@ func TestOrchestratorWithMultipleValidators(t *testing.T) {
 
 func TestOrchestratorReplayOld(t *testing.T) {
 	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping BlobStream integration tests")
+		t.Skip("Skipping Blobstream integration tests")
 	}
 
-	network, err := NewBlobStreamNetwork()
+	network, err := NewBlobstreamNetwork()
 	HandleNetworkError(t, network, err, false)
 
 	// to release resources after tests
