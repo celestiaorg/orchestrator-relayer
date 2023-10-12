@@ -301,6 +301,10 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		return celestiatypes.ErrAttestationNotFound
 	}
 
+	if nonce == 1 {
+		// there is no need to sign nonce 1 as the Blobstream contract will trust it when deploying.
+		return nil
+	}
 	// check if we need to sign or not
 	if nonce != 1 {
 		previousValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.GetNonce())
