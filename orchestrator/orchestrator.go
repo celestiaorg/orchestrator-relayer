@@ -302,13 +302,15 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 	}
 
 	// check if we need to sign or not
-	previousValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.GetNonce())
-	if err != nil {
-		orch.Logger.Debug("failed to query last valset before nonce (most likely pruned). signing anyway", "err", err.Error())
-	} else if !ValidatorPartOfValset(previousValset.Members, orch.EvmAccount.Address.Hex()) {
-		// no need to sign if the orchestrator is not part of the validator set that needs to sign the attestation
-		orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
-		return nil
+	if nonce != 1 {
+		previousValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.GetNonce())
+		if err != nil {
+			orch.Logger.Debug("failed to query last valset before nonce (most likely pruned). signing anyway", "err", err.Error())
+		} else if !ValidatorPartOfValset(previousValset.Members, orch.EvmAccount.Address.Hex()) {
+			// no need to sign if the orchestrator is not part of the validator set that needs to sign the attestation
+			orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
+			return nil
+		}
 	}
 
 	switch castedAtt := att.(type) {
