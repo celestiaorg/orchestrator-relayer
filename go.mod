@@ -33,7 +33,7 @@ require (
 	github.com/libp2p/go-libp2p v0.31.0
 	github.com/libp2p/go-libp2p-kad-dht v0.25.1
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/multiformats/go-multiaddr v0.11.0
+	github.com/multiformats/go-multiaddr v0.12.0
 	github.com/tendermint/tendermint v0.34.28
 	github.com/testcontainers/testcontainers-go/modules/compose v0.20.1
 )
