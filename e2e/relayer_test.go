@@ -207,8 +207,8 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 }
 
 func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
-	if os.Getenv("BLOBSTREAM_INTEGRATION_TEST") != TRUE {
-		t.Skip("Skipping Blobstream integration tests")
+	if os.Getenv("BLOBSTREAM_DATA_COMMITMENT_UPDATE_TEST") != TRUE {
+		t.Skip("Skipping Blobstream data commitment update integration test")
 	}
 
 	network, err := NewBlobstreamNetwork()
