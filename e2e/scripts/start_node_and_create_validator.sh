@@ -64,7 +64,7 @@ fi
   done
 
   # Register the validator EVM address
-  celestia-appd tx blobstream register \
+  celestia-appd tx qgb register \
     "${VAL_ADDRESS}" \
     "${EVM_ACCOUNT}" \
     --from "${MONIKER}" \
