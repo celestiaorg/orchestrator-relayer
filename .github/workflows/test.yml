@@ -59,6 +59,7 @@ jobs:
             go.mod
             go.sum
       - name: Test
+        working-directory: ./app
         run: go test -test.timeout 60m -failfast -v github.com/celestiaorg/orchestrator-relayer/e2e # yamllint disable-line rule:line-length
         env:
           QGB_INTEGRATION_TEST: true
