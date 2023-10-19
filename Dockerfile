@@ -1,13 +1,22 @@
 # stage 1 Build blobstream binary
 FROM --platform=$BUILDPLATFORM docker.io/golang:1.21.3-alpine3.18 as builder
+
+ARG TARGETOS
+ARG TARGETARCH
+
+ENV CGO_ENABLED=0
+ENV GO111MODULE=on
+
 RUN apk update && apk --no-cache add make gcc musl-dev git bash
 
 COPY . /orchestrator-relayer
 WORKDIR /orchestrator-relayer
-RUN make build
+RUN uname -a &&\
+    CGO_ENABLED=${CGO_ENABLED} GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    make build
 
 # final image
-FROM --platform=$BUILDPLATFORM docker.io/alpine:3.18.4
+FROM docker.io/alpine:3.18.4
 
 ARG UID=10001
 ARG USER_NAME=celestia
