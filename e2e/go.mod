@@ -26,8 +26,8 @@ require (
 )
 
 require (
+	github.com/celestiaorg/blobstream-contracts/v3 v3.0.0
 	github.com/celestiaorg/orchestrator-relayer v0.0.0-00010101000000-000000000000
-	github.com/celestiaorg/quantum-gravity-bridge/v2 v2.1.2
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/libp2p/go-libp2p v0.31.0
 	github.com/tendermint/tendermint v0.34.28
@@ -75,6 +75,7 @@ require (
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/buger/goterm v1.0.4 // indirect
 	github.com/celestiaorg/merkletree v0.0.0-20210714075610-a84dc3ddbbe4 // indirect
+	github.com/celestiaorg/quantum-gravity-bridge/v2 v2.1.2 // indirect
 	github.com/celestiaorg/rsmt2d v0.11.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.0 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
