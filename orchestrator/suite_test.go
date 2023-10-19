@@ -26,9 +26,13 @@ func (s *OrchestratorTestSuite) SetupSuite() {
 	s.Node = qgbtesting.NewTestNode(
 		ctx,
 		t,
-		testnode.ImmediateProposals(codec),
-		qgbtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
-		// qgbtesting.SetVotingParams(codec, v1beta1.VotingParams{VotingPeriod: 100 * time.Hour}),
+		qgbtesting.CelestiaNetworkParams{
+			GenesisOpts: []testnode.GenesisOption{
+				testnode.ImmediateProposals(codec),
+				qgbtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
+			},
+			TimeIotaMs: 1,
+		},
 	)
 	s.Orchestrator = qgbtesting.NewOrchestrator(t, s.Node)
 }

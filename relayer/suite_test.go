@@ -26,7 +26,7 @@ func (s *RelayerTestSuite) SetupSuite() {
 		t.Skip("skipping relayer tests in short mode.")
 	}
 	ctx := context.Background()
-	s.Node = qgbtesting.NewTestNode(ctx, t)
+	s.Node = qgbtesting.NewTestNode(ctx, t, qgbtesting.DefaultCelestiaNetworkParams())
 	_, err := s.Node.CelestiaNetwork.WaitForHeight(2)
 	require.NoError(t, err)
 	s.Orchestrator = qgbtesting.NewOrchestrator(t, s.Node)

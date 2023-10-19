@@ -1,25 +1,25 @@
-# QGB bootstrapper
+# Blobstream bootstrapper
 
-To bootstrap the QGB P2P network, we use the bootstrapper QGB node type to accept connections from freshly created orchestrators/relayers and share its peer table with them.
+To bootstrap the Blobstream P2P network, we use the bootstrapper Blobstream node type to accept connections from freshly created orchestrators/relayers and share its peer table with them.
 
 ## How to run
 
-### Install the QGB binary
+### Install the Blobstream binary
 
-Make sure to have the QGB binary installed. Check [the QGB binary page](https://docs.celestia.org/nodes/qgb-binary) for more details.
+Make sure to have the Blobstream binary installed. Check [the Blobstream binary page](https://docs.celestia.org/nodes/blobstream-binary) for more details.
 
 ### Init the store
 
 Before starting the bootstrapper, we will need to init the store:
 
 ```ssh
-qgb bootstrapper init
+blobstream bootstrapper init
 ```
 
 By default, the store will be created un `~/.bootstrapper`. However, if you want to specify a custom location, you can use the `--home` flag. Or, you can use the following environment variable:
 
 | Variable            | Explanation                         | Default value     | Required |
-|---------------------|-------------------------------------|-------------------|----------|
+| ------------------- | ----------------------------------- | ----------------- | -------- |
 | `BOOTSTRAPPER_HOME` | Home directory for the bootstrapper | `~/.bootstrapper` | Optional |
 
 ### Add keys
@@ -29,7 +29,7 @@ The P2P private key is optional, and a new one will be generated automatically o
 The `p2p` sub-command will help you set up this key if you want to use a specific one:
 
 ```ssh
-qgb bootstrapper p2p  --help
+blobstream bootstrapper p2p  --help
 ```
 
 ### Start the bootstrapper
@@ -37,12 +37,12 @@ qgb bootstrapper p2p  --help
 Now that we have the store initialized, we can start the bootstrapper:
 
 ```shell
-qgb bootstrapper
+blobstream bootstrapper
 
-QGB P2P network bootstrapper command
+Blobstream P2P network bootstrapper command
 
 Usage:
-  qgb bootstrapper [command]
+  blobstream bootstrapper [command]
 
 Aliases:
   bootstrapper, bs
@@ -50,7 +50,7 @@ Aliases:
 Flags:
   -h, --help   help for bootstrapper
 
-Use "qgb bootstrapper [command] --help" for more information about a command.
+Use "blobstream bootstrapper [command] --help" for more information about a command.
 ```
 
 ### Open the P2P port
