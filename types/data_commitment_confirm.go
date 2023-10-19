@@ -57,7 +57,7 @@ func IsEmptyMsgDataCommitmentConfirm(dcc DataCommitmentConfirm) bool {
 }
 
 // DataCommitmentTupleRootSignBytes EncodeDomainSeparatedDataCommitment takes the required input data and
-// produces the required signature to confirm a validator set update on the QGB Ethereum contract.
+// produces the required signature to confirm a validator set update on the Blobstream Ethereum contract.
 // This value will then be signed before being submitted to Cosmos, verified, and then relayed to Ethereum.
 func DataCommitmentTupleRootSignBytes(nonce *big.Int, commitment []byte) ethcmn.Hash {
 	var dataCommitment [32]uint8

@@ -16,23 +16,23 @@ import (
 
 // AppQuerier queries the application for attestations and unbonding periods.
 type AppQuerier struct {
-	qgbRPC     string
-	clientConn *grpc.ClientConn
-	Logger     tmlog.Logger
-	EncCfg     encoding.Config
+	blobStreamRPC string
+	clientConn    *grpc.ClientConn
+	Logger        tmlog.Logger
+	EncCfg        encoding.Config
 }
 
-func NewAppQuerier(logger tmlog.Logger, qgbRPC string, encCft encoding.Config) *AppQuerier {
-	return &AppQuerier{Logger: logger, qgbRPC: qgbRPC, EncCfg: encCft}
+func NewAppQuerier(logger tmlog.Logger, blobStreamRPC string, encCft encoding.Config) *AppQuerier {
+	return &AppQuerier{Logger: logger, blobStreamRPC: blobStreamRPC, EncCfg: encCft}
 }
 
 func (aq *AppQuerier) Start() error {
 	// creating a grpc connection to Celestia-app
-	qgbGRPC, err := grpc.Dial(aq.qgbRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	blobStreamGRPC, err := grpc.Dial(aq.blobStreamRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
-	aq.clientConn = qgbGRPC
+	aq.clientConn = blobStreamGRPC
 	return nil
 }
 
@@ -106,7 +106,7 @@ func (aq *AppQuerier) QueryDataCommitmentForHeight(ctx context.Context, height u
 	return resp.DataCommitment, nil
 }
 
-// QueryLatestDataCommitment query the latest data commitment in QGB state machine.
+// QueryLatestDataCommitment query the latest data commitment in Blobstream state machine.
 func (aq *AppQuerier) QueryLatestDataCommitment(ctx context.Context) (*celestiatypes.DataCommitment, error) {
 	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
 	resp, err := queryClient.LatestDataCommitment(ctx, &celestiatypes.QueryLatestDataCommitmentRequest{})

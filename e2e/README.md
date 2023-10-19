@@ -1,16 +1,16 @@
-# Quantum Gravity Bridge end to end integration test
+# Blobstream end to end integration test
 
-This directory contains the QGB e2e integration tests. It serves as a way to fully test the QGB orchestrator and relayer in real network scenarios
+This directory contains the Blobstream e2e integration tests. It serves as a way to fully test the Blobstream orchestrator and relayer in real network scenarios
 
 ## Topology
 
-as discussed under [#398](https://github.com/celestiaorg/celestia-app/issues/398) The e2e network defined under `qgb_network.go` has the following components:
+as discussed under [#398](https://github.com/celestiaorg/celestia-app/issues/398) The e2e network defined under `blobstream_network.go` has the following components:
 
 - 4 Celestia-app nodes that can be validators
 - 4 Orchestrator nodes that will each run aside of a celestia-app
 - 1 Ethereum node. Probably Ganache as it is easier to set up
 - 1 Relayer node that will listen to Celestia chain and relay attestations
-- 1 Deployer node that can deploy a new QGB contract when needed.
+- 1 Deployer node that can deploy a new Blobstream contract when needed.
 
 For more information on the environment variables required to run these tests, please check the `docker-compose.yml` file and the shell scripts defined under `celestia-app` directory.
 
@@ -22,7 +22,7 @@ In some test scenarios, we only care about running a single orchestrator node. T
 // create dht for querying
 bootstrapper, err := helpers.ParseAddrInfos(network.Logger, BOOTSTRAPPERS)
 HandleNetworkError(t, network, err, false)
-_, _, dht := qgbtesting.NewTestDHT(ctx, bootstrapper)
+_, _, dht := blobstreamtesting.NewTestDHT(ctx, bootstrapper)
 defer dht.Close()
 ```
 
@@ -47,13 +47,13 @@ make test
 To run a single test, run the following:
 
 ```shell
-QGB_INTEGRATION_TEST=true go test -mod=readonly -test.timeout 30m -v -run <test_name>
+BLOBSTREAM_INTEGRATION_TEST=true go test -mod=readonly -test.timeout 30m -v -run <test_name>
 ```
 
 ### Run all the tests using `go` directly
 
 ```shell
-QGB_INTEGRATION_TEST=true go test -mod=readonly -test.timeout 30m -v
+BLOBSTREAM_INTEGRATION_TEST=true go test -mod=readonly -test.timeout 30m -v
 ```
 
 ## Common issues
@@ -62,7 +62,7 @@ Currently, when the tests are run using the above ways, there are possible issue
 
 ### hanging docker containers after a sudden network stop
 
-If the tests were stopped unexpectedly, for example, sending a `SIGINT`, ie, `ctrl+c`, the resources will not be releases correctly (might be fixed in the future). This will result in seeing similar logs to the following :
+If the tests were stopped unexpectedly, for example, sending a `SIGINT`, ie, `ctrl+c`, the resources will not be released correctly (might be fixed in the future). This will result in seeing similar logs to the following :
 
 ```text
 ERROR: for core0  Cannot create container for service core0: Conflict. The container name "/core0" is already in use by container "4bdaf40e2cd26bf549738ea95f53ba49cb5407c3d892b50b5a75e72e08e
@@ -87,4 +87,4 @@ To fix it, run the `cleanup.sh` script under `scripts` directory :
 ./scripts/cleanup.sh
 ```
 
-NB : This will kill and remove hanging containers and networks related to the executed. But, might also delete unrelated ones if they have the same name.
+NB: This will kill and remove hanging containers and networks related to the executed. But might also delete unrelated ones if they have the same name.

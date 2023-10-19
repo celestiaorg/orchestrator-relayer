@@ -19,14 +19,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
+	blobstreamwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/rpc"
-	qgbtypes "github.com/celestiaorg/orchestrator-relayer/types"
+	blobstreamtypes "github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -36,7 +36,7 @@ import (
 	testcontainers "github.com/testcontainers/testcontainers-go/modules/compose"
 )
 
-type QGBNetwork struct {
+type BlobstreamNetwork struct {
 	ComposePaths  []string
 	Identifier    string
 	Instance      *testcontainers.LocalDockerCompose
@@ -53,7 +53,7 @@ type QGBNetwork struct {
 	toStopChan chan<- struct{}
 }
 
-func NewQGBNetwork() (*QGBNetwork, error) {
+func NewBlobstreamNetwork() (*BlobstreamNetwork, error) {
 	id := strings.ToLower(uuid.New().String())
 	paths := []string{"./docker-compose.yml"}
 	instance := testcontainers.NewLocalDockerCompose(paths, id) //nolint:staticcheck
@@ -61,7 +61,7 @@ func NewQGBNetwork() (*QGBNetwork, error) {
 	// given an initial capacity to avoid blocking in case multiple services failed
 	// and wanted to notify the moderator.
 	toStopChan := make(chan struct{}, 10)
-	network := &QGBNetwork{
+	network := &BlobstreamNetwork{
 		Identifier:    id,
 		ComposePaths:  paths,
 		Instance:      instance,
@@ -96,7 +96,7 @@ func registerModerator(stopChan chan<- struct{}, toStopChan <-chan struct{}) {
 // it is not calling `DeleteAll()` here as it is being called inside the tests. No need to call it two times.
 // this comes from the fact that we're sticking with unit tests style tests to be able to run individual tests
 // https://github.com/celestiaorg/celestia-app/issues/428
-func registerGracefulExit(network *QGBNetwork) {
+func registerGracefulExit(network *BlobstreamNetwork) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -117,9 +117,9 @@ func forceExitIfNeeded(exitCode int) {
 	}
 }
 
-// StartAll starts the whole QGB cluster with multiple validators, orchestrators and a relayer
+// StartAll starts the whole Blobstream cluster with multiple validators, orchestrators and a relayer
 // Make sure to release the resources after finishing by calling the `StopAll()` method.
-func (network QGBNetwork) StartAll() error {
+func (network BlobstreamNetwork) StartAll() error {
 	// the reason for building before executing `up` is to avoid rebuilding all the images
 	// if some container accidentally changed some files when running.
 	// This to speed up a bit the execution.
@@ -141,7 +141,7 @@ func (network QGBNetwork) StartAll() error {
 
 // StopAll stops the network and leaves the containers created. This allows to resume
 // execution from the point where they stopped.
-func (network QGBNetwork) StopAll() error {
+func (network BlobstreamNetwork) StopAll() error {
 	err := network.Instance.
 		WithCommand([]string{"stop"}).
 		Invoke()
@@ -152,7 +152,7 @@ func (network QGBNetwork) StopAll() error {
 }
 
 // DeleteAll deletes the containers, network and everything related to the cluster.
-func (network QGBNetwork) DeleteAll() error {
+func (network BlobstreamNetwork) DeleteAll() error {
 	err := network.Instance.
 		WithCommand([]string{"down"}).
 		Invoke()
@@ -163,7 +163,7 @@ func (network QGBNetwork) DeleteAll() error {
 }
 
 // KillAll kills all the containers.
-func (network QGBNetwork) KillAll() error {
+func (network BlobstreamNetwork) KillAll() error {
 	err := network.Instance.
 		WithCommand([]string{"kill"}).
 		Invoke()
@@ -175,7 +175,7 @@ func (network QGBNetwork) KillAll() error {
 
 // Start starts a service from the `Service` enum. Make sure to call `Stop`, in the
 // end, to release the resources.
-func (network QGBNetwork) Start(service Service) error {
+func (network BlobstreamNetwork) Start(service Service) error {
 	serviceName, err := service.toString()
 	if err != nil {
 		return err
@@ -196,10 +196,10 @@ func (network QGBNetwork) Start(service Service) error {
 	return nil
 }
 
-// DeployQGBContract uses the Deployer service to deploy a new QGB contract
+// DeployBlobstreamContract uses the Deployer service to deploy a new Blobstream contract
 // based on the existing running network. If no Celestia-app nor ganache is
 // started, it creates them automatically.
-func (network QGBNetwork) DeployQGBContract() error {
+func (network BlobstreamNetwork) DeployBlobstreamContract() error {
 	fmt.Println("building images...")
 	err := network.Instance.
 		WithCommand([]string{"build", "--quiet", DEPLOYER}).
@@ -218,7 +218,7 @@ func (network QGBNetwork) DeployQGBContract() error {
 
 // StartMultiple start multiple services. Make sure to call `Stop`, in the
 // end, to release the resources.
-func (network QGBNetwork) StartMultiple(services ...Service) error {
+func (network BlobstreamNetwork) StartMultiple(services ...Service) error {
 	if len(services) == 0 {
 		return fmt.Errorf("empty list of services provided")
 	}
@@ -246,7 +246,7 @@ func (network QGBNetwork) StartMultiple(services ...Service) error {
 	return nil
 }
 
-func (network QGBNetwork) Stop(service Service) error {
+func (network BlobstreamNetwork) Stop(service Service) error {
 	serviceName, err := service.toString()
 	if err != nil {
 		return err
@@ -262,7 +262,7 @@ func (network QGBNetwork) Stop(service Service) error {
 
 // StopMultiple start multiple services. Make sure to call `Stop` or `StopMultiple`, in the
 // end, to release the resources.
-func (network QGBNetwork) StopMultiple(services ...Service) error {
+func (network BlobstreamNetwork) StopMultiple(services ...Service) error {
 	if len(services) == 0 {
 		return fmt.Errorf("empty list of services provided")
 	}
@@ -283,7 +283,7 @@ func (network QGBNetwork) StopMultiple(services ...Service) error {
 	return nil
 }
 
-func (network QGBNetwork) ExecCommand(service Service, command []string) error {
+func (network BlobstreamNetwork) ExecCommand(service Service, command []string) error {
 	serviceName, err := service.toString()
 	if err != nil {
 		return err
@@ -299,7 +299,7 @@ func (network QGBNetwork) ExecCommand(service Service, command []string) error {
 
 // StartMinimal starts a network containing: 1 validator, 1 orchestrator, 1 relayer
 // and a ganache instance.
-func (network QGBNetwork) StartMinimal() error {
+func (network BlobstreamNetwork) StartMinimal() error {
 	fmt.Println("building images...")
 	err := network.Instance.
 		WithCommand([]string{"build", "--quiet", "core0", "core0-orch", "relayer", "ganache"}).
@@ -319,7 +319,7 @@ func (network QGBNetwork) StartMinimal() error {
 // StartBase starts the very minimal component to have a network.
 // It consists of starting `core0` as it is the genesis validator, and the docker network
 // will be created along with it, allowing more containers to join it.
-func (network QGBNetwork) StartBase() error {
+func (network BlobstreamNetwork) StartBase() error {
 	fmt.Println("building images...")
 	err := network.Instance.
 		WithCommand([]string{"build", "--quiet", "core0"}).
@@ -336,7 +336,7 @@ func (network QGBNetwork) StartBase() error {
 	return nil
 }
 
-func (network QGBNetwork) WaitForNodeToStart(_ctx context.Context, rpcAddr string) error {
+func (network BlobstreamNetwork) WaitForNodeToStart(_ctx context.Context, rpcAddr string) error {
 	ctx, cancel := context.WithTimeout(_ctx, 5*time.Minute)
 	for {
 		select {
@@ -362,11 +362,11 @@ func (network QGBNetwork) WaitForNodeToStart(_ctx context.Context, rpcAddr strin
 	}
 }
 
-func (network QGBNetwork) WaitForBlock(_ctx context.Context, height int64) error {
+func (network BlobstreamNetwork) WaitForBlock(_ctx context.Context, height int64) error {
 	return network.WaitForBlockWithCustomTimeout(_ctx, height, 5*time.Minute)
 }
 
-func (network QGBNetwork) WaitForBlockWithCustomTimeout(
+func (network BlobstreamNetwork) WaitForBlockWithCustomTimeout(
 	_ctx context.Context,
 	height int64,
 	timeout time.Duration,
@@ -415,7 +415,7 @@ func (network QGBNetwork) WaitForBlockWithCustomTimeout(
 // and for any nonce, but would require adding a new method to the querier. Don't think it is worth it now as
 // the number of valsets that will be signed is trivial and reaching 0 would be in no time).
 // Returns the height and the nonce of some attestation that the orchestrator signed.
-func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *p2p.QgbDHT, evmAddr string) (uint64, uint64, error) {
+func (network BlobstreamNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *p2p.BlobstreamDHT, evmAddr string) (uint64, uint64, error) {
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
@@ -473,7 +473,7 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 					if err != nil {
 						continue
 					}
-					dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
+					dataRootTupleRoot := blobstreamtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 					dcConfirm, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, lastNonce-i, evmAddr, dataRootTupleRoot.Hex())
 					if err == nil && dcConfirm != nil {
 						cancel()
@@ -489,7 +489,7 @@ func (network QGBNetwork) WaitForOrchestratorToStart(_ctx context.Context, dht *
 // GetValsetContainingVals Gets the last valset that contains a certain number of validator.
 // This is used after enabling orchestrators not to sign unless they belong to some valset.
 // Thus, any nonce after the returned valset should be signed by all orchestrators.
-func (network QGBNetwork) GetValsetContainingVals(_ctx context.Context, number int) (*types.Valset, error) {
+func (network BlobstreamNetwork) GetValsetContainingVals(_ctx context.Context, number int) (*types.Valset, error) {
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
 	if err != nil {
@@ -530,12 +530,12 @@ func (network QGBNetwork) GetValsetContainingVals(_ctx context.Context, number i
 
 // GetValsetConfirm Returns the valset confirm for nonce `nonce`
 // signed by orchestrator whose EVM address is `evmAddr`.
-func (network QGBNetwork) GetValsetConfirm(
+func (network BlobstreamNetwork) GetValsetConfirm(
 	_ctx context.Context,
-	dht *p2p.QgbDHT,
+	dht *p2p.BlobstreamDHT,
 	nonce uint64,
 	evmAddr string,
-) (*qgbtypes.ValsetConfirm, error) {
+) (*blobstreamtypes.ValsetConfirm, error) {
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
@@ -583,12 +583,12 @@ func (network QGBNetwork) GetValsetConfirm(
 
 // GetDataCommitmentConfirm Returns the data commitment confirm for nonce `nonce`
 // signed by orchestrator whose EVM address is `evmAddr`.
-func (network QGBNetwork) GetDataCommitmentConfirm(
+func (network BlobstreamNetwork) GetDataCommitmentConfirm(
 	_ctx context.Context,
-	dht *p2p.QgbDHT,
+	dht *p2p.BlobstreamDHT,
 	nonce uint64,
 	evmAddr string,
-) (*qgbtypes.DataCommitmentConfirm, error) {
+) (*blobstreamtypes.DataCommitmentConfirm, error) {
 	// create p2p querier
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
@@ -629,7 +629,7 @@ func (network QGBNetwork) GetDataCommitmentConfirm(
 			if err != nil {
 				continue
 			}
-			dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), commitment)
+			dataRootTupleRoot := blobstreamtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(nonce)), commitment)
 			resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(ctx, nonce, evmAddr, dataRootTupleRoot.Hex())
 			if err == nil && resp != nil {
 				cancel()
@@ -643,12 +643,12 @@ func (network QGBNetwork) GetDataCommitmentConfirm(
 
 // GetDataCommitmentConfirmByHeight Returns the data commitment confirm that commits
 // to height `height` signed by orchestrator whose EVM address is `evmAddr`.
-func (network QGBNetwork) GetDataCommitmentConfirmByHeight(
+func (network BlobstreamNetwork) GetDataCommitmentConfirmByHeight(
 	_ctx context.Context,
-	dht *p2p.QgbDHT,
+	dht *p2p.BlobstreamDHT,
 	height uint64,
 	evmAddr string,
-) (*qgbtypes.DataCommitmentConfirm, error) {
+) (*blobstreamtypes.DataCommitmentConfirm, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
@@ -669,7 +669,7 @@ func (network QGBNetwork) GetDataCommitmentConfirmByHeight(
 }
 
 // GetLatestAttestationNonce Returns the latest attestation nonce.
-func (network QGBNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint64, error) {
+func (network BlobstreamNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint64, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
@@ -686,9 +686,9 @@ func (network QGBNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint6
 }
 
 // WasAttestationSigned Returns true if the attestation confirm exist.
-func (network QGBNetwork) WasAttestationSigned(
+func (network BlobstreamNetwork) WasAttestationSigned(
 	_ctx context.Context,
-	dht *p2p.QgbDHT,
+	dht *p2p.BlobstreamDHT,
 	nonce uint64,
 	evmAddress string,
 ) (bool, error) {
@@ -745,7 +745,7 @@ func (network QGBNetwork) WasAttestationSigned(
 				if err != nil {
 					continue
 				}
-				dataRootTupleRoot := qgbtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
+				dataRootTupleRoot := blobstreamtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
 				resp, err := p2pQuerier.QueryDataCommitmentConfirmByEVMAddress(
 					ctx,
 					castedAtt.Nonce,
@@ -763,14 +763,14 @@ func (network QGBNetwork) WasAttestationSigned(
 	}
 }
 
-func (network QGBNetwork) GetLatestDeployedQGBContract(_ctx context.Context) (*qgbwrapper.Wrappers, error) {
-	return network.GetLatestDeployedQGBContractWithCustomTimeout(_ctx, 5*time.Minute)
+func (network BlobstreamNetwork) GetLatestDeployedBlobstreamContract(_ctx context.Context) (*blobstreamwrapper.Wrappers, error) {
+	return network.GetLatestDeployedBlobstreamContractWithCustomTimeout(_ctx, 5*time.Minute)
 }
 
-func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
+func (network BlobstreamNetwork) GetLatestDeployedBlobstreamContractWithCustomTimeout(
 	_ctx context.Context,
 	timeout time.Duration,
-) (*qgbwrapper.Wrappers, error) {
+) (*blobstreamwrapper.Wrappers, error) {
 	client, err := ethclient.Dial(network.EVMRPC)
 	if err != nil {
 		return nil, err
@@ -786,7 +786,7 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 		case <-ctx.Done():
 			cancel()
 			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-				return nil, fmt.Errorf("timeout. couldn't find deployed qgb contract")
+				return nil, fmt.Errorf("timeout. couldn't find deployed blobstream contract")
 			}
 			return nil, ctx.Err()
 		default:
@@ -820,8 +820,8 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 				if receipt.ContractAddress == (ethcommon.Address{}) {
 					continue
 				}
-				// If the bridge is loaded, then it's the latest-deployed proxy QGB contract
-				bridge, err := qgbwrapper.NewWrappers(receipt.ContractAddress, client)
+				// If the bridge is loaded, then it's the latest-deployed proxy Blobstream contract
+				bridge, err := blobstreamwrapper.NewWrappers(receipt.ContractAddress, client)
 				if err != nil {
 					continue
 				}
@@ -837,7 +837,7 @@ func (network QGBNetwork) GetLatestDeployedQGBContractWithCustomTimeout(
 	}
 }
 
-func (network QGBNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *qgbwrapper.Wrappers) error {
+func (network BlobstreamNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *blobstreamwrapper.Wrappers) error {
 	ctx, cancel := context.WithTimeout(_ctx, 2*time.Minute)
 	for {
 		select {
@@ -862,7 +862,7 @@ func (network QGBNetwork) WaitForRelayerToStart(_ctx context.Context, bridge *qg
 	}
 }
 
-func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *qgbwrapper.Wrappers, n uint64) error {
+func (network BlobstreamNetwork) WaitForEventNonce(ctx context.Context, bridge *blobstreamwrapper.Wrappers, n uint64) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	for {
 		select {
@@ -889,10 +889,10 @@ func (network QGBNetwork) WaitForEventNonce(ctx context.Context, bridge *qgbwrap
 	}
 }
 
-func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWindow uint64) error {
+func (network BlobstreamNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWindow uint64) error {
 	fmt.Printf("updating data commitment window %d\n", newWindow)
 	kr, err := keyring.New(
-		"qgb-tests",
+		"blobstream-tests",
 		"test",
 		"celestia-app/core0",
 		nil,
@@ -901,13 +901,13 @@ func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWin
 	if err != nil {
 		return err
 	}
-	qgbGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	blobStreamGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return err
 	}
-	defer qgbGRPC.Close()
+	defer blobStreamGRPC.Close()
 
-	signer, err := user.SetupSingleSigner(ctx, kr, qgbGRPC, encoding.MakeConfig(app.ModuleEncodingRegisters...))
+	signer, err := user.SetupSingleSigner(ctx, kr, blobStreamGRPC, encoding.MakeConfig(app.ModuleEncodingRegisters...))
 	if err != nil {
 		return err
 	}
@@ -940,7 +940,7 @@ func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWin
 	}
 
 	// query the proposal to get the id
-	gqc := v1.NewQueryClient(qgbGRPC)
+	gqc := v1.NewQueryClient(blobStreamGRPC)
 	gresp, err := gqc.Proposals(
 		ctx,
 		&v1.QueryProposalsRequest{
@@ -983,13 +983,13 @@ func (network QGBNetwork) UpdateDataCommitmentWindow(ctx context.Context, newWin
 	return nil
 }
 
-func (network QGBNetwork) PrintLogs() {
+func (network BlobstreamNetwork) PrintLogs() {
 	_ = network.Instance.
 		WithCommand([]string{"logs"}).
 		Invoke()
 }
 
-func (network QGBNetwork) GetLatestValset(ctx context.Context) (*types.Valset, error) {
+func (network BlobstreamNetwork) GetLatestValset(ctx context.Context) (*types.Valset, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	err := appQuerier.Start()
@@ -1005,15 +1005,15 @@ func (network QGBNetwork) GetLatestValset(ctx context.Context) (*types.Valset, e
 	return valset, nil
 }
 
-func (network QGBNetwork) GetCurrentDataCommitmentWindow(ctx context.Context) (uint64, error) {
+func (network BlobstreamNetwork) GetCurrentDataCommitmentWindow(ctx context.Context) (uint64, error) {
 	var window uint64
 	queryFun := func() error {
-		qgbGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		blobStreamGRPC, err := grpc.Dial("localhost:9090", grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			return err
 		}
-		defer qgbGRPC.Close()
-		bqc := types.NewQueryClient(qgbGRPC)
+		defer blobStreamGRPC.Close()
+		bqc := types.NewQueryClient(blobStreamGRPC)
 		presp, err := bqc.Params(ctx, &types.QueryParamsRequest{})
 		if err != nil {
 			return err

@@ -19,7 +19,7 @@ type DHTNetwork struct {
 	Context context.Context
 	Hosts   []host.Host
 	Stores  []ds.Batching
-	DHTs    []*p2p.QgbDHT
+	DHTs    []*p2p.BlobstreamDHT
 }
 
 // NewDHTNetwork creates a new DHT test network running in-memory.
@@ -34,7 +34,7 @@ func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
 	}
 	hosts := make([]host.Host, count)
 	stores := make([]ds.Batching, count)
-	dhts := make([]*p2p.QgbDHT, count)
+	dhts := make([]*p2p.BlobstreamDHT, count)
 	for i := 0; i < count; i++ {
 		if i == 0 {
 			hosts[i], stores[i], dhts[i] = NewTestDHT(ctx, nil)
@@ -59,13 +59,13 @@ func NewDHTNetwork(ctx context.Context, count int) *DHTNetwork {
 }
 
 // NewTestDHT creates a test DHT not connected to any peers.
-func NewTestDHT(ctx context.Context, bootstrappers []peer.AddrInfo) (host.Host, ds.Batching, *p2p.QgbDHT) {
+func NewTestDHT(ctx context.Context, bootstrappers []peer.AddrInfo) (host.Host, ds.Batching, *p2p.BlobstreamDHT) {
 	h, err := libp2p.New()
 	if err != nil {
 		panic(err)
 	}
 	dataStore := dssync.MutexWrap(ds.NewMapDatastore())
-	dht, err := p2p.NewQgbDHT(ctx, h, dataStore, bootstrappers, tmlog.NewNopLogger())
+	dht, err := p2p.NewBlobstreamDHT(ctx, h, dataStore, bootstrappers, tmlog.NewNopLogger())
 	if err != nil {
 		panic(err)
 	}
@@ -73,7 +73,7 @@ func NewTestDHT(ctx context.Context, bootstrappers []peer.AddrInfo) (host.Host, 
 }
 
 // WaitForPeerTableToUpdate waits for nodes to have updated their peers list
-func WaitForPeerTableToUpdate(ctx context.Context, dhts []*p2p.QgbDHT, timeout time.Duration) error {
+func WaitForPeerTableToUpdate(ctx context.Context, dhts []*p2p.BlobstreamDHT, timeout time.Duration) error {
 	withTimeout, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	ticker := time.NewTicker(time.Millisecond)

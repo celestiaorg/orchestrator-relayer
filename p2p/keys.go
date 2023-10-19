@@ -11,7 +11,7 @@ import (
 // - nonce: in hex format
 // - evm address: the 0x prefixed orchestrator EVM address in hex format
 // - data root tuple root: is the digest, in a 0x prefixed hex format, that is signed over for a
-// data commitment and whose signature is relayed to the QGB smart contract.
+// data commitment and whose signature is relayed to the Blobstream smart contract.
 // Expects the EVM address to be a correct address.
 func GetDataCommitmentConfirmKey(nonce uint64, evmAddr string, dataRootTupleRoot string) string {
 	return "/" + DataCommitmentConfirmNamespace + "/" +
@@ -24,7 +24,7 @@ func GetDataCommitmentConfirmKey(nonce uint64, evmAddr string, dataRootTupleRoot
 // - nonce: in hex format
 // - evm address: the orchestrator EVM address in hex format
 // - sign bytes: is the digest, in a 0x prefixed hex format, that is signed over for a valset and
-// whose signature is relayed to the QGB smart contract.
+// whose signature is relayed to the Blobstream smart contract.
 // Expects the EVM address to be a correct address.
 func GetValsetConfirmKey(nonce uint64, evmAddr string, signBytes string) string {
 	return "/" + ValsetConfirmNamespace + "/" +

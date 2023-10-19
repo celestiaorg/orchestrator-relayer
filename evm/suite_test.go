@@ -9,7 +9,7 @@ import (
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ import (
 
 type EVMTestSuite struct {
 	suite.Suite
-	Chain        *qgbtesting.EVMChain
+	Chain        *blobstreamtesting.EVMChain
 	Client       *evm.Client
 	InitVs       *celestiatypes.Valset
 	VsPrivateKey *ecdsa.PrivateKey
@@ -29,7 +29,7 @@ func (s *EVMTestSuite) SetupTest() {
 	testPrivateKey, err := crypto.HexToECDSA("64a1d6f0e760a8d62b4afdde4096f16f51b401eaaecc915740f71770ea76a8ad")
 	s.VsPrivateKey = testPrivateKey
 	require.NoError(t, err)
-	s.Chain = qgbtesting.NewEVMChain(testPrivateKey)
+	s.Chain = blobstreamtesting.NewEVMChain(testPrivateKey)
 
 	ks := keystore.NewKeyStore(t.TempDir(), keystore.LightScryptN, keystore.LightScryptP)
 	acc, err := ks.ImportECDSA(testPrivateKey, "123")
@@ -37,7 +37,7 @@ func (s *EVMTestSuite) SetupTest() {
 	err = ks.Unlock(acc, "123")
 	require.NoError(t, err)
 
-	s.Client = qgbtesting.NewEVMClient(ks, &acc)
+	s.Client = blobstreamtesting.NewEVMClient(ks, &acc)
 	s.InitVs, err = celestiatypes.NewValset(
 		1,
 		10,

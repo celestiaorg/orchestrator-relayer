@@ -15,7 +15,7 @@ import (
 
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	proxywrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/ERC1967Proxy.sol"
-	qgbwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
+	blobstreamwrapper "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
@@ -24,19 +24,19 @@ const DefaultEVMGasLimit = uint64(2500000)
 
 type Client struct {
 	logger   tmlog.Logger
-	Wrapper  *qgbwrapper.Wrappers
+	Wrapper  *blobstreamwrapper.Wrappers
 	Ks       *keystore.KeyStore
 	Acc      *accounts.Account
 	EvmRPC   string
 	GasLimit uint64
 }
 
-// NewClient Creates a new EVM Client that can be used to deploy the QGB contract and
+// NewClient Creates a new EVM Client that can be used to deploy the Blobstream contract and
 // interact with it.
 // The wrapper parameter can be nil when creating the client for contract deployment.
 func NewClient(
 	logger tmlog.Logger,
-	wrapper *qgbwrapper.Wrappers,
+	wrapper *blobstreamwrapper.Wrappers,
 	ks *keystore.KeyStore,
 	acc *accounts.Account,
 	evmRPC string,
@@ -62,21 +62,21 @@ func (ec *Client) NewEthClient() (*ethclient.Client, error) {
 	return ethClient, nil
 }
 
-// DeployQGBContract Deploys the QGB contract and initializes it with the provided valset.
+// DeployBlobstreamContract Deploys the Blobstream contract and initializes it with the provided valset.
 // The waitToBeMined, when set to true, will wait for the transaction to be included in a block,
 // and log relevant information.
 // The initBridge, when set to true, will assign the newly deployed bridge to the wrapper. This
 // can be used later for further interactions with the new contract.
-// Multiple calls to DeployQGBContract with the initBridge flag set to true will overwrite everytime
+// Multiple calls to DeployBlobstreamContract with the initBridge flag set to true will overwrite everytime
 // the bridge contract.
-func (ec *Client) DeployQGBContract(
+func (ec *Client) DeployBlobstreamContract(
 	opts *bind.TransactOpts,
 	contractBackend bind.ContractBackend,
 	contractInitValset types.Valset,
 	contractInitNonce uint64,
 	initBridge bool,
-) (gethcommon.Address, *coregethtypes.Transaction, *qgbwrapper.Wrappers, error) {
-	// deploy the QGB implementation contract
+) (gethcommon.Address, *coregethtypes.Transaction, *blobstreamwrapper.Wrappers, error) {
+	// deploy the Blobstream implementation contract
 	impAddr, impTx, _, err := ec.DeployImplementation(opts, contractBackend)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -84,16 +84,16 @@ func (ec *Client) DeployQGBContract(
 
 	ec.logger.Info("deploying QGB implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
 
-	// encode the QGB contract initialization data using the chain parameters
+	// encode the Blobstream contract initialization data using the chain parameters
 	ethVsHash, err := contractInitValset.Hash()
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
-	qgbABI, err := qgbwrapper.WrappersMetaData.GetAbi()
+	blobStreamABI, err := blobstreamwrapper.WrappersMetaData.GetAbi()
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
-	initData, err := qgbABI.Pack("initialize", big.NewInt(int64(contractInitNonce)), big.NewInt(int64(contractInitValset.TwoThirdsThreshold())), ethVsHash)
+	initData, err := blobStreamABI.Pack("initialize", big.NewInt(int64(contractInitNonce)), big.NewInt(int64(contractInitValset.TwoThirdsThreshold())), ethVsHash)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
@@ -103,7 +103,7 @@ func (ec *Client) DeployQGBContract(
 		opts.Nonce.Add(opts.Nonce, big.NewInt(1))
 	}
 
-	// deploy the ERC1967 proxy, link it to the QGB implementation contract, and initialize it
+	// deploy the ERC1967 proxy, link it to the Blobstream implementation contract, and initialize it
 	proxyAddr, tx, _, err := ec.DeployERC1867Proxy(opts, contractBackend, impAddr, initData)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
@@ -111,7 +111,7 @@ func (ec *Client) DeployQGBContract(
 
 	ec.logger.Info("deploying QGB proxy contract...", "address", proxyAddr, "tx_hash", tx.Hash().Hex())
 
-	bridge, err := qgbwrapper.NewWrappers(proxyAddr, contractBackend)
+	bridge, err := blobstreamwrapper.NewWrappers(proxyAddr, contractBackend)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
@@ -128,7 +128,7 @@ func (ec *Client) UpdateValidatorSet(
 	opts *bind.TransactOpts,
 	newNonce, newThreshHold uint64,
 	currentValset, newValset types.Valset,
-	sigs []qgbwrapper.Signature,
+	sigs []blobstreamwrapper.Signature,
 ) (*coregethtypes.Transaction, error) {
 	// TODO in addition to the nonce, log more interesting information
 	ec.logger.Info("relaying valset", "nonce", newNonce)
@@ -171,7 +171,7 @@ func (ec *Client) SubmitDataRootTupleRoot(
 	tupleRoot gethcommon.Hash,
 	newNonce uint64,
 	currentValset types.Valset,
-	sigs []qgbwrapper.Signature,
+	sigs []blobstreamwrapper.Signature,
 ) (*coregethtypes.Transaction, error) {
 	ethVals, err := ethValset(currentValset)
 	if err != nil {
@@ -236,10 +236,10 @@ func (ec *Client) WaitForTransaction(
 func (ec *Client) DeployImplementation(opts *bind.TransactOpts, backend bind.ContractBackend) (
 	gethcommon.Address,
 	*coregethtypes.Transaction,
-	*qgbwrapper.Wrappers,
+	*blobstreamwrapper.Wrappers,
 	error,
 ) {
-	return qgbwrapper.DeployWrappers(
+	return blobstreamwrapper.DeployWrappers(
 		opts,
 		backend,
 	)
@@ -259,14 +259,14 @@ func (ec *Client) DeployERC1867Proxy(
 	)
 }
 
-func ethValset(valset types.Valset) ([]qgbwrapper.Validator, error) {
-	ethVals := make([]qgbwrapper.Validator, len(valset.Members))
+func ethValset(valset types.Valset) ([]blobstreamwrapper.Validator, error) {
+	ethVals := make([]blobstreamwrapper.Validator, len(valset.Members))
 	for i, v := range valset.Members {
 		if ok := gethcommon.IsHexAddress(v.EvmAddress); !ok {
 			return nil, errors.New("invalid ethereum address found in validator set")
 		}
 		addr := gethcommon.HexToAddress(v.EvmAddress)
-		ethVals[i] = qgbwrapper.Validator{
+		ethVals[i] = blobstreamwrapper.Validator{
 			Addr:  addr,
 			Power: big.NewInt(int64(v.Power)),
 		}

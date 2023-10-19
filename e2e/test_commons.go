@@ -15,7 +15,7 @@ import (
 
 const TRUE = "true"
 
-func HandleNetworkError(t *testing.T, network *QGBNetwork, err error, expectError bool) {
+func HandleNetworkError(t *testing.T, network *BlobstreamNetwork, err error, expectError bool) {
 	if expectError && err == nil {
 		network.PrintLogs()
 		assert.Error(t, err)
@@ -31,7 +31,7 @@ func HandleNetworkError(t *testing.T, network *QGBNetwork, err error, expectErro
 	}
 }
 
-func ConnectToDHT(ctx context.Context, h host.Host, dht *p2p.QgbDHT, target peer.AddrInfo) error {
+func ConnectToDHT(ctx context.Context, h host.Host, dht *p2p.BlobstreamDHT, target peer.AddrInfo) error {
 	timeout := time.NewTimer(time.Minute)
 	for {
 		select {

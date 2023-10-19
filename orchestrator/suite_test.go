@@ -9,13 +9,13 @@ import (
 	"github.com/celestiaorg/celestia-app/test/util/testnode"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 	"github.com/stretchr/testify/suite"
 )
 
 type OrchestratorTestSuite struct {
 	suite.Suite
-	Node         *qgbtesting.TestNode
+	Node         *blobstreamtesting.TestNode
 	Orchestrator *orchestrator.Orchestrator
 }
 
@@ -23,18 +23,18 @@ func (s *OrchestratorTestSuite) SetupSuite() {
 	t := s.T()
 	ctx := context.Background()
 	codec := encoding.MakeConfig(app.ModuleEncodingRegisters...).Codec
-	s.Node = qgbtesting.NewTestNode(
+	s.Node = blobstreamtesting.NewTestNode(
 		ctx,
 		t,
-		qgbtesting.CelestiaNetworkParams{
+		blobstreamtesting.CelestiaNetworkParams{
 			GenesisOpts: []testnode.GenesisOption{
 				testnode.ImmediateProposals(codec),
-				qgbtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
+				blobstreamtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
 			},
 			TimeIotaMs: 1,
 		},
 	)
-	s.Orchestrator = qgbtesting.NewOrchestrator(t, s.Node)
+	s.Orchestrator = blobstreamtesting.NewOrchestrator(t, s.Node)
 }
 
 func (s *OrchestratorTestSuite) TearDownSuite() {

@@ -35,7 +35,7 @@ type InitOptions struct {
 	NeedP2PKeyStore    bool
 }
 
-// Init initializes the qgb file system in the directory under
+// Init initializes the Blobstream file system in the directory under
 // 'path'.
 // It also creates a lock under that directory, so it can't be used
 // by multiple processes.

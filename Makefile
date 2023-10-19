@@ -7,8 +7,8 @@ DOCKER := $(shell which docker)
 all: install
 
 install: go.sum
-	@echo "--> Installing qgb"
-	@go install -mod=readonly ./cmd/qgb
+	@echo "--> Installing blobstream"
+	@go install -mod=readonly ./cmd/blobstream
 
 go.sum: mod
 	@echo "--> Verifying dependencies have expected content"
@@ -24,7 +24,7 @@ pre-build:
 
 build: mod
 	@mkdir -p build/
-	@go build -o build ./cmd/qgb
+	@go build -o build ./cmd/blobstream
 
 build-docker:
 	@echo "--> Building Docker image"

@@ -118,9 +118,9 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, params CelestiaNetwor
 // SetDataCommitmentWindowParams will set the provided data commitment window as genesis state.
 func SetDataCommitmentWindowParams(codec codec.Codec, params types.Params) celestiatestnode.GenesisOption {
 	return func(state map[string]json.RawMessage) map[string]json.RawMessage {
-		qgbGenState := types.DefaultGenesis()
-		qgbGenState.Params = &params
-		state[types.ModuleName] = codec.MustMarshalJSON(qgbGenState)
+		blobStreamGenState := types.DefaultGenesis()
+		blobStreamGenState.Params = &params
+		state[types.ModuleName] = codec.MustMarshalJSON(blobStreamGenState)
 		return state
 	}
 }

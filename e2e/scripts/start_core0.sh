@@ -40,7 +40,7 @@ fi
     --home /opt \
     --fees "30000utia" \
     -b block \
-    --chain-id="qgb-e2e" \
+    --chain-id="blobstream-e2e" \
     --yes
 } &
 

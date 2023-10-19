@@ -22,6 +22,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v5.0.0
         with:
           args: release --rm-dist
-          workdir: ./cmd/qgb
+          workdir: ./cmd/blobstream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
