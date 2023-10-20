@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	github.com/celestiaorg/blobstream-contracts/v3 v3.0.0
+	github.com/celestiaorg/blobstream-contracts/v3 v3.1.0
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/ipfs/boxo v0.13.1
