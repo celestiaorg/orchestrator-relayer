@@ -24,3 +24,13 @@ updates:
       - dependencies
     reviewers: 
       - "sweexordious"
+  - package-ecosystem: gomod e2e
+    directory: "e2e"
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 10
+    labels:
+      - automerge
+      - dependencies
+    reviewers: 
+      - "sweexordious"
