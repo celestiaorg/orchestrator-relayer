@@ -119,3 +119,17 @@ func (s *QuerierTestSuite) TestQueryLastUnbondingHeight() {
 	s.NoError(err)
 	s.Equal(int64(0), unbondingHeight)
 }
+
+func (s *QuerierTestSuite) TestQueryEarliestAttestationNonce() {
+	appQuerier := rpc.NewAppQuerier(
+		s.Logger,
+		s.Network.GRPCAddr,
+		s.EncConf,
+	)
+	require.NoError(s.T(), appQuerier.Start())
+	defer appQuerier.Stop() //nolint:errcheck
+
+	earliestNonce, err := appQuerier.QueryEarliestAttestationNonce(context.Background())
+	s.NoError(err)
+	s.Equal(int64(1), earliestNonce)
+}
