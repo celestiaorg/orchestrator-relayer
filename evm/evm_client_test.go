@@ -6,10 +6,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
+	wrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/types"
-	wrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 )
 
