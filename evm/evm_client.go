@@ -13,9 +13,9 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
-	"github.com/celestiaorg/celestia-app/x/qgb/types"
-	proxywrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/ERC1967Proxy.sol"
 	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
+	proxywrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/ERC1967Proxy.sol"
+	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
 
