@@ -181,6 +181,17 @@ func (aq *AppQuerier) QueryLastUnbondingHeight(ctx context.Context) (int64, erro
 	return int64(resp.Height), nil
 }
 
+// QueryEarliestAttestationNonce query the earliest attestation nonce from state machine.
+func (aq *AppQuerier) QueryEarliestAttestationNonce(ctx context.Context) (int64, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+	resp, err := queryClient.EarliestAttestationNonce(ctx, &celestiatypes.QueryEarliestAttestationNonceRequest{})
+	if err != nil {
+		return 0, err
+	}
+
+	return int64(resp.Nonce), nil
+}
+
 // unmarshallAttestation unmarshal a wrapper protobuf `Any` type to an `AttestationRequestI`.
 func (aq *AppQuerier) unmarshallAttestation(attestation *cdctypes.Any) (celestiatypes.AttestationRequestI, error) {
 	var unmarshalledAttestation celestiatypes.AttestationRequestI

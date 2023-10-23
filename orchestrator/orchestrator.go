@@ -203,50 +203,19 @@ func (orch Orchestrator) EnqueueMissingEvents(
 		return err
 	}
 
-	lastUnbondingHeight, err := orch.AppQuerier.QueryLastUnbondingHeight(ctx)
+	earliestAttestationNonce, err := orch.AppQuerier.QueryEarliestAttestationNonce(ctx)
 	if err != nil {
 		return err
 	}
-	var startingNonce uint64
-	if lastUnbondingHeight == 0 {
-		// chain startup case
-		startingNonce = 1
-	} else {
-		lastDc, err := orch.AppQuerier.QueryLatestDataCommitment(ctx)
-		if err != nil {
-			return err
-		}
-		if lastUnbondingHeight >= int64(lastDc.EndBlock) {
-			// if no data commitment has committed to the last unbonding height,
-			// then, the orchestrator should start signing at the latest valset
-			vs, err := orch.AppQuerier.QueryLatestValset(ctx)
-			if err != nil {
-				return err
-			}
-			startingNonce = vs.Nonce
-		} else {
-			// some data commitment has committed to the last unbonding height,
-			// so, we start signing from the valset that attests to that one
-			dc, err := orch.AppQuerier.QueryDataCommitmentForHeight(ctx, uint64(lastUnbondingHeight))
-			if err != nil {
-				return err
-			}
-			startingValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, dc.Nonce)
-			if err != nil {
-				return err
-			}
-			startingNonce = startingValset.Nonce
-		}
-	}
 
-	orch.Logger.Info("syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", startingNonce)
+	orch.Logger.Info("syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", earliestAttestationNonce)
 
 	// To accommodate the delay that might happen between starting the two go routines above.
 	// Probably, it would be a good idea to further refactor the orchestrator to the relayer style
 	// as it is entirely synchronous. Probably, enqueuing separately old nonces and new ones, is not
 	// the best design.
 	// TODO decide on this later
-	for i := uint64(0); i < latestNonce-startingNonce+1; i++ {
+	for i := uint64(0); i < latestNonce-uint64(earliestAttestationNonce)+1; i++ {
 		select {
 		case <-signalChan:
 			return ErrSignalChanNotif
@@ -263,7 +232,7 @@ func (orch Orchestrator) EnqueueMissingEvents(
 			}
 		}
 	}
-	orch.Logger.Info("finished syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", startingNonce)
+	orch.Logger.Info("finished syncing missing nonces", "latest_nonce", latestNonce, "first_nonce", earliestAttestationNonce)
 	return nil
 }
 
