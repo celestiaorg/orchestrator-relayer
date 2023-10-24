@@ -9,9 +9,9 @@ description: Learn about the Blobstream Relayer.
 
 The role of the relayer is to gather attestations' signatures from the orchestrators, and submit them to a target EVM chain. The attestations are generated within the Blobstream module of the Celestia-app state machine. To learn more about what attestations are, you can refer to [the Blobstream overview](https://github.com/celestiaorg/celestia-app/tree/main/x/blobstream).
 
-Also, while every validator in the Celestia validator set needs to run an orchestrator, we only need one entity to run the relayer, and it can be anyone. Thus, if you're a validator, most likely you want to read [the orchestrator documentation](https://docs.celestia.org/nodes/blobstream-orchestrator/).
+Also, while every validator in the Celestia validator set needs to run an orchestrator, we only need one entity to run the relayer, and it can be anyone. Thus, if you're a validator, most likely you want to read [the orchestrator documentation](https://docs.celestia.org/nodes/blobstream-orchestrator).
 
-Every relayer needs to target a Blobstream smart contract. This latter can be deployed, if not already, using the `blobstream deploy` command. More details in the [Deploy the Blobstream contract guide](https://docs.celestia.org/nodes/blobstream-deploy/).
+Every relayer needs to target a Blobstream smart contract. This latter can be deployed, if not already, using the `blobstream deploy` command. More details in the [Deploy the Blobstream contract guide](https://docs.celestia.org/nodes/blobstream-deploy).
 
 ## How it works
 
