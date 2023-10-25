@@ -12,7 +12,7 @@ import (
 // ValsetConfirmValidator runs stateless checks on valset confirms when submitting them to the DHT.
 type ValsetConfirmValidator struct{}
 
-// Validate runs stateless checks on the provided confirm key and value.
+// Validate runs stateless checks on the provided confirm key and values.
 func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 	namespace, _, evmAddr, signBytes, err := ParseKey(key)
 	if err != nil {
@@ -71,14 +71,57 @@ func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 	return nil
 }
 
-// Select selects a valid dht confirm value from multiple ones.
-// returns an error of no valid value is found.
+// LatestValsetValidator runs stateless checks on the latest valset when submitting it to the DHT.
+type LatestValsetValidator struct{}
+
+// Validate runs stateless checks on the provided valset key and values.
+func (lcv LatestValsetValidator) Validate(key string, value []byte) error {
+	vs, err := types.UnmarshalValset(value)
+	if err != nil {
+		return err
+	}
+	if types.IsEmptyValset(vs) {
+		return ErrEmptyValset
+	}
+	if key != GetLatestValsetKey() {
+		return ErrInvalidLatestValsetKey
+	}
+	return nil
+}
+
+// Select selects a valid dht valset values from multiple ones.
+// returns the latest one ordered by nonces.
+// returns an error of no valid values is found.
+func (lcv LatestValsetValidator) Select(key string, values [][]byte) (int, error) {
+	if key != GetLatestValsetKey() {
+		return 0, ErrInvalidLatestValsetKey
+	}
+	if len(values) == 0 {
+		return 0, ErrNoValues
+	}
+	latestNonce := uint64(0)
+	latestIndex := 0
+	for index, value := range values {
+		valset, err := types.UnmarshalValset(value)
+		if err != nil {
+			return 0, err
+		}
+		if valset.Nonce > latestNonce {
+			latestIndex = index
+		}
+		latestNonce = valset.Nonce
+	}
+	return latestIndex, nil
+}
+
+// Select selects a valid dht confirm values from multiple ones.
+// returns an error of no valid values is found.
 func (vcv ValsetConfirmValidator) Select(key string, values [][]byte) (int, error) {
 	if len(values) == 0 {
 		return 0, ErrNoValues
 	}
 	for index, value := range values {
-		// choose the first correct value
+		// choose the first correct values
 		if err := vcv.Validate(key, value); err == nil {
 			return index, nil
 		}
@@ -89,7 +132,7 @@ func (vcv ValsetConfirmValidator) Select(key string, values [][]byte) (int, erro
 // DataCommitmentConfirmValidator runs stateless checks on data commitment confirms when submitting to the DHT.
 type DataCommitmentConfirmValidator struct{}
 
-// Validate runs stateless checks on the provided confirm key and value.
+// Validate runs stateless checks on the provided confirm key and values.
 func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) error {
 	namespace, _, evmAddr, dataRootTupleRoot, err := ParseKey(key)
 	if err != nil {
@@ -148,14 +191,14 @@ func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) err
 	return nil
 }
 
-// Select selects a valid dht confirm value from multiple ones.
-// returns an error of no valid value is found.
+// Select selects a valid dht confirm values from multiple ones.
+// returns an error of no valid values is found.
 func (dcv DataCommitmentConfirmValidator) Select(key string, values [][]byte) (int, error) {
 	if len(values) == 0 {
 		return 0, ErrNoValues
 	}
 	for index, value := range values {
-		// choose the first correct value
+		// choose the first correct values
 		if err := dcv.Validate(key, value); err == nil {
 			return index, nil
 		}

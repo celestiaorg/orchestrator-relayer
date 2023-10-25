@@ -279,7 +279,13 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		previousValset, err := orch.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.GetNonce())
 		if err != nil {
 			orch.Logger.Debug("failed to query last valset before nonce (most likely pruned). signing anyway", "err", err.Error())
-		} else if !ValidatorPartOfValset(previousValset.Members, orch.EvmAccount.Address.Hex()) {
+		}
+
+		// add the valset to the p2p network
+		// it's alright if this fails, we can expect other nodes to do it successfully
+		_ = orch.Broadcaster.ProvideLatestValset(ctx, *previousValset)
+
+		if !ValidatorPartOfValset(previousValset.Members, orch.EvmAccount.Address.Hex()) {
 			// no need to sign if the orchestrator is not part of the validator set that needs to sign the attestation
 			orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
 			return nil
@@ -341,6 +347,10 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 }
 
 func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestiatypes.Valset) error {
+	// add the valset to the p2p network
+	// it's alright if this fails, we can expect other nodes to do it successfully
+	_ = orch.Broadcaster.ProvideLatestValset(ctx, valset)
+
 	signBytes, err := valset.SignBytes()
 	if err != nil {
 		return err

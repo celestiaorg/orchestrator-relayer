@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"testing"
 
+	types2 "github.com/celestiaorg/celestia-app/x/qgb/types"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
@@ -445,6 +447,119 @@ func TestDataCommitmentConfirmSelect(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tt.expectedIndex, actualIndex)
+			}
+		})
+	}
+}
+
+func TestLatestValsetValidatorValidate(t *testing.T) {
+	emptyVs, _ := types.MarshalValset(types2.Valset{})
+	tests := []struct {
+		name    string
+		key     string
+		value   []byte
+		wantErr bool
+	}{
+		{
+			name:    "valid key and values",
+			key:     GetLatestValsetKey(),
+			value:   []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			wantErr: false,
+		},
+		{
+			name:    "invalid key",
+			key:     "invalid_key",
+			value:   []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			wantErr: true,
+		},
+		{
+			name:    "empty valset",
+			key:     GetLatestValsetKey(),
+			value:   emptyVs,
+			wantErr: true,
+		},
+		{
+			name:    "invalid values",
+			key:     GetLatestValsetKey(),
+			value:   []byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			wantErr: true,
+		},
+	}
+
+	lcv := LatestValsetValidator{}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := lcv.Validate(test.key, test.value)
+			if test.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestLatestValsetValidatorSelect(t *testing.T) {
+	tests := []struct {
+		name    string
+		key     string
+		values  [][]byte
+		wantErr bool
+		index   int
+	}{
+		{
+			name:    "no values",
+			key:     GetLatestValsetKey(),
+			values:  [][]byte{},
+			wantErr: true,
+		},
+		{
+			name:    "single value",
+			key:     GetLatestValsetKey(),
+			values:  [][]byte{[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`)},
+			wantErr: false,
+			index:   0,
+		},
+		{
+			name: "multiple values and last is latest",
+			key:  GetLatestValsetKey(),
+			values: [][]byte{
+				[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+				[]byte(`{"nonce":11,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+				[]byte(`{"nonce":12,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			},
+			wantErr: false,
+			index:   2,
+		},
+		{
+			name: "multiple values and middle one is invalid",
+			key:  GetLatestValsetKey(),
+			values: [][]byte{
+				[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+				[]byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+				[]byte(`{"nonce":12,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			},
+			wantErr: true,
+		},
+		{
+			name:    "invalid key",
+			key:     "invalid key",
+			values:  [][]byte{[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`)},
+			wantErr: true,
+		},
+	}
+
+	lcv := LatestValsetValidator{}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			index, err := lcv.Select(test.key, test.values)
+			if test.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, test.index, index)
 			}
 		})
 	}

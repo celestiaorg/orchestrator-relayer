@@ -141,12 +141,17 @@ func (r *Relayer) Start(ctx context.Context) error {
 }
 
 func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, attI celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
-	switch att := attI.(type) {
-	case *celestiatypes.Valset:
-		previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.Nonce)
+	previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, attI.GetNonce())
+	if err != nil {
+		r.logger.Error("failed to query the last valset before nonce (probably pruned). recovering via falling back to the P2P network", "err", err.Error())
+		previousValset, err = r.P2PQuerier.QueryLatestValset(ctx)
 		if err != nil {
 			return nil, err
 		}
+		r.logger.Info("using the latest valset from P2P network. if the valset is malicious, the Blobstream contract will not accept it", "nonce", previousValset.Nonce)
+	}
+	switch att := attI.(type) {
+	case *celestiatypes.Valset:
 		signBytes, err := att.SignBytes()
 		if err != nil {
 			return nil, err
@@ -165,16 +170,12 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		}
 		return tx, nil
 	case *celestiatypes.DataCommitment:
-		valset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, att.Nonce)
-		if err != nil {
-			return nil, err
-		}
 		commitment, err := r.TmQuerier.QueryCommitment(ctx, att.BeginBlock, att.EndBlock)
 		if err != nil {
 			return nil, err
 		}
 		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)
-		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *valset, att.Nonce, dataRootHash.Hex())
+		confirms, err := r.P2PQuerier.QueryTwoThirdsDataCommitmentConfirms(ctx, 30*time.Minute, 10*time.Second, *previousValset, att.Nonce, dataRootHash.Hex())
 		if err != nil {
 			return nil, err
 		}
@@ -182,7 +183,7 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		if err != nil {
 			return nil, err
 		}
-		tx, err := r.SubmitDataRootTupleRoot(opts, *att, *valset, commitment.String(), confirms)
+		tx, err := r.SubmitDataRootTupleRoot(opts, *att, *previousValset, commitment.String(), confirms)
 		if err != nil {
 			return nil, err
 		}
