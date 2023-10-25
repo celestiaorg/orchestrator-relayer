@@ -12,7 +12,7 @@ Make sure to have the Blobstream binary installed. Check [the Blobstream binary 
 
 Before starting the bootstrapper, we will need to init the store:
 
-```ssh
+```sh
 blobstream bootstrapper init
 ```
 
@@ -28,7 +28,7 @@ The P2P private key is optional, and a new one will be generated automatically o
 
 The `p2p` sub-command will help you set up this key if you want to use a specific one:
 
-```ssh
+```sh
 blobstream bootstrapper p2p  --help
 ```
 
