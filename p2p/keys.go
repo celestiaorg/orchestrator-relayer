@@ -34,7 +34,7 @@ func GetValsetConfirmKey(nonce uint64, evmAddr string, signBytes string) string 
 
 // GetLatestValsetKey creates the latest valset key.
 func GetLatestValsetKey() string {
-	return "/" + LatestValsetNamespace + "/" + "latest"
+	return "/" + LatestValsetNamespace + "/latest"
 }
 
 // ParseKey parses a key and returns its fields.
