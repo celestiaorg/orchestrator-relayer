@@ -509,7 +509,7 @@ func TestLatestValsetValidatorSelect(t *testing.T) {
 		index   int
 	}{
 		{
-			name:    "no values",
+			name:    "no value",
 			key:     GetLatestValsetKey(),
 			values:  [][]byte{},
 			wantErr: true,
