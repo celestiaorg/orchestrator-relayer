@@ -25,7 +25,7 @@ func UnmarshalValset(encoded []byte) (types.Valset, error) {
 	return valset, nil
 }
 
-// IsEmptyValset takes a msg valset and checks if it is empty.
+// IsEmptyValset takes a valset and checks if it is empty.
 func IsEmptyValset(valset types.Valset) bool {
 	emptyVs := types.Valset{}
 	return valset.Time.Equal(emptyVs.Time) &&
