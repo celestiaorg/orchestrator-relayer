@@ -165,7 +165,7 @@ func (q BlobstreamDHT) GetValsetConfirm(ctx context.Context, key string) (types.
 // PutLatestValset encodes a valset then puts its value to the DHT.
 // The key will be returned by the `GetValsetKey` method.
 // If the valset is not the latest, it will fail.
-// Returns an error if it fails to do so.
+// Returns an error if it fails.
 func (q BlobstreamDHT) PutLatestValset(ctx context.Context, v types2.Valset) error {
 	encodedData, err := types.MarshalValset(v)
 	if err != nil {
