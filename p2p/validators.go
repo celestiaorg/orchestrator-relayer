@@ -191,8 +191,8 @@ func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) err
 	return nil
 }
 
-// Select selects a valid dht confirm values from multiple ones.
-// returns an error of no valid values is found.
+// Select selects a valid dht confirm value from multiple ones.
+// returns an error of no valid value is found.
 func (dcv DataCommitmentConfirmValidator) Select(key string, values [][]byte) (int, error) {
 	if len(values) == 0 {
 		return 0, ErrNoValues
