@@ -479,7 +479,7 @@ func TestLatestValsetValidatorValidate(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:    "invalid values",
+			name:    "invalid value",
 			key:     GetLatestValsetKey(),
 			value:   []byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
 			wantErr: true,
