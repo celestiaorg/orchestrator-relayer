@@ -15,7 +15,7 @@ var (
 	ErrNotTheSameEVMAddress            = errors.New("not the same evm address")
 	ErrInvalidConfirmKey               = errors.New("invalid confirm key")
 	ErrNoValues                        = errors.New("can't select from no values")
-	ErrNoValidValueFound               = errors.New("no valid dht confirm values found")
+	ErrNoValidValueFound               = errors.New("no valid dht confirm value found")
 	ErrEmptyNamespace                  = errors.New("empty namespace")
 	ErrEmptyEVMAddr                    = errors.New("empty evm address")
 	ErrEmptyDigest                     = errors.New("empty digest")
