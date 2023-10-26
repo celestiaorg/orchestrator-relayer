@@ -132,7 +132,7 @@ func (q BlobstreamDHT) GetDataCommitmentConfirm(ctx context.Context, key string)
 	return confirm, nil
 }
 
-// PutValsetConfirm encodes a valset confirm then puts its values to the DHT.
+// PutValsetConfirm encodes a valset confirm then puts its value to the DHT.
 // The key can be generated using the `GetValsetConfirmKey` method.
 // Returns an error if it fails to do so.
 func (q BlobstreamDHT) PutValsetConfirm(ctx context.Context, key string, vc types.ValsetConfirm) error {
