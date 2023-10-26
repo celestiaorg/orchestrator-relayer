@@ -12,7 +12,7 @@ import (
 // ValsetConfirmValidator runs stateless checks on valset confirms when submitting them to the DHT.
 type ValsetConfirmValidator struct{}
 
-// Validate runs stateless checks on the provided confirm key and values.
+// Validate runs stateless checks on the provided confirm key and value.
 func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 	namespace, _, evmAddr, signBytes, err := ParseKey(key)
 	if err != nil {
