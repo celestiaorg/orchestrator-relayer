@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	types2 "github.com/celestiaorg/celestia-app/x/qgb/types"
+	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -105,10 +105,10 @@ func TestBroadcastLatestValset(t *testing.T) {
 	defer network.Stop()
 
 	// create a test Valset
-	expectedValset := types2.Valset{
+	expectedValset := celestiatypes.Valset{
 		Time:   time.UnixMicro(10),
 		Height: 5,
-		Members: []types2.BridgeValidator{
+		Members: []celestiatypes.BridgeValidator{
 			{
 				Power:      100,
 				EvmAddress: "evm_addr1",

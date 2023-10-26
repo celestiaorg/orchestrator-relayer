@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	types2 "github.com/celestiaorg/celestia-app/x/qgb/types"
+	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -102,11 +102,11 @@ func TestPutLatestValset(t *testing.T) {
 	defer network.Stop()
 
 	// create a test Valset
-	expectedValset := types2.Valset{
+	expectedValset := celestiatypes.Valset{
 		Nonce:  10,
 		Time:   time.UnixMicro(10),
 		Height: 5,
-		Members: []types2.BridgeValidator{
+		Members: []celestiatypes.BridgeValidator{
 			{
 				Power:      100,
 				EvmAddress: "evm_addr1",
@@ -135,11 +135,11 @@ func TestPutMultipleLatestValset(t *testing.T) {
 	defer network.Stop()
 
 	// create test Valsets
-	valset1 := types2.Valset{
+	valset1 := celestiatypes.Valset{
 		Nonce:  10,
 		Time:   time.UnixMicro(10),
 		Height: 5,
-		Members: []types2.BridgeValidator{
+		Members: []celestiatypes.BridgeValidator{
 			{
 				Power:      100,
 				EvmAddress: "evm_addr1",
@@ -150,11 +150,11 @@ func TestPutMultipleLatestValset(t *testing.T) {
 			},
 		},
 	}
-	valset2 := types2.Valset{
+	valset2 := celestiatypes.Valset{
 		Nonce:  11,
 		Time:   time.UnixMicro(10),
 		Height: 5,
-		Members: []types2.BridgeValidator{
+		Members: []celestiatypes.BridgeValidator{
 			{
 				Power:      100,
 				EvmAddress: "evm_addr1",
@@ -165,11 +165,11 @@ func TestPutMultipleLatestValset(t *testing.T) {
 			},
 		},
 	}
-	valset3 := types2.Valset{
+	valset3 := celestiatypes.Valset{
 		Nonce:  9,
 		Time:   time.UnixMicro(10),
 		Height: 5,
-		Members: []types2.BridgeValidator{
+		Members: []celestiatypes.BridgeValidator{
 			{
 				Power:      100,
 				EvmAddress: "evm_addr1",

@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	types2 "github.com/celestiaorg/celestia-app/x/qgb/types"
+	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -453,7 +453,7 @@ func TestDataCommitmentConfirmSelect(t *testing.T) {
 }
 
 func TestLatestValsetValidatorValidate(t *testing.T) {
-	emptyVs, _ := types.MarshalValset(types2.Valset{})
+	emptyVs, _ := types.MarshalValset(celestiatypes.Valset{})
 	tests := []struct {
 		name    string
 		key     string
