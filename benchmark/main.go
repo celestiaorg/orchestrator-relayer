@@ -10,11 +10,11 @@ import (
 	"syscall"
 	"time"
 
+	wrappers "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/celestiaorg/orchestrator-relayer/store"
-	types2 "github.com/celestiaorg/orchestrator-relayer/types"
-	wrappers "github.com/celestiaorg/quantum-gravity-bridge/v2/wrappers/QuantumGravityBridge.sol"
+	orchtypes "github.com/celestiaorg/orchestrator-relayer/types"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 	ethcmn "github.com/ethereum/go-ethereum/common"
@@ -105,7 +105,7 @@ func DeployContractAndSubmitDataCommitment() error {
 		Time:    time.Now(),
 	}
 
-	address, tx, bridge, err := evmClient.DeployQGBContract(txOpts, backend, vs, vs.Nonce, true)
+	address, tx, bridge, err := evmClient.DeployBlobstreamContract(txOpts, backend, vs, vs.Nonce, true)
 	if err != nil {
 		logger.Error("failed to deploy QGB contract")
 		return err
@@ -119,7 +119,7 @@ func DeployContractAndSubmitDataCommitment() error {
 	txOpts.Nonce.Add(txOpts.Nonce, big.NewInt(1))
 
 	commitment := []byte{0x12}
-	dataRootHash := types2.DataCommitmentTupleRootSignBytes(big.NewInt(int64(2)), commitment)
+	dataRootHash := orchtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(2)), commitment)
 	signatures := make([]wrappers.Signature, NumberOfValidators)
 	cumulatedPower := int64(0)
 	for i, val := range valsetValidators {
