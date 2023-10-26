@@ -91,7 +91,7 @@ func (lcv LatestValsetValidator) Validate(key string, value []byte) error {
 
 // Select selects a valid dht valset value from multiple ones.
 // returns the latest one ordered by nonces.
-// returns an error of no valid values is found.
+// returns an error of no valid value is found.
 func (lcv LatestValsetValidator) Select(key string, values [][]byte) (int, error) {
 	if key != GetLatestValsetKey() {
 		return 0, ErrInvalidLatestValsetKey
