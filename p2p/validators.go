@@ -74,7 +74,7 @@ func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 // LatestValsetValidator runs stateless checks on the latest valset when submitting it to the DHT.
 type LatestValsetValidator struct{}
 
-// Validate runs stateless checks on the provided valset key and values.
+// Validate runs stateless checks on the provided valset key and value.
 func (lcv LatestValsetValidator) Validate(key string, value []byte) error {
 	vs, err := types.UnmarshalValset(value)
 	if err != nil {
