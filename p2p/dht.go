@@ -178,7 +178,7 @@ func (q BlobstreamDHT) PutLatestValset(ctx context.Context, v types2.Valset) err
 	return nil
 }
 
-// GetLatestValset looks for a valset referenced by its key in the DHT.
+// GetLatestValset looks for the latest valset in the DHT.
 // The key will be returned by the `GetValsetKey` method.
 // Returns an error if it fails to get the valset.
 func (q BlobstreamDHT) GetLatestValset(ctx context.Context) (types2.Valset, error) {
