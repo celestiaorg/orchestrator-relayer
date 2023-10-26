@@ -114,7 +114,7 @@ func (lcv LatestValsetValidator) Select(key string, values [][]byte) (int, error
 	return latestIndex, nil
 }
 
-// Select selects a valid dht confirm values from multiple ones.
+// Select selects a valid dht confirm value from multiple ones.
 // returns an error of no valid values is found.
 func (vcv ValsetConfirmValidator) Select(key string, values [][]byte) (int, error) {
 	if len(values) == 0 {
