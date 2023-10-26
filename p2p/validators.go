@@ -198,7 +198,7 @@ func (dcv DataCommitmentConfirmValidator) Select(key string, values [][]byte) (i
 		return 0, ErrNoValues
 	}
 	for index, value := range values {
-		// choose the first correct values
+		// choose the first correct value
 		if err := dcv.Validate(key, value); err == nil {
 			return index, nil
 		}
