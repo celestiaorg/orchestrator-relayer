@@ -132,7 +132,7 @@ func (vcv ValsetConfirmValidator) Select(key string, values [][]byte) (int, erro
 // DataCommitmentConfirmValidator runs stateless checks on data commitment confirms when submitting to the DHT.
 type DataCommitmentConfirmValidator struct{}
 
-// Validate runs stateless checks on the provided confirm key and values.
+// Validate runs stateless checks on the provided confirm key and value.
 func (dcv DataCommitmentConfirmValidator) Validate(key string, value []byte) error {
 	namespace, _, evmAddr, dataRootTupleRoot, err := ParseKey(key)
 	if err != nil {
