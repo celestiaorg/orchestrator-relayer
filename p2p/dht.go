@@ -162,7 +162,7 @@ func (q BlobstreamDHT) GetValsetConfirm(ctx context.Context, key string) (types.
 	return confirm, nil
 }
 
-// PutLatestValset encodes a valset then puts its values to the DHT.
+// PutLatestValset encodes a valset then puts its value to the DHT.
 // The key will be returned by the `GetValsetKey` method.
 // If the valset is not the latest, it will fail.
 // Returns an error if it fails to do so.
