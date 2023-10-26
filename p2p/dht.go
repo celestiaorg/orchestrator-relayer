@@ -180,7 +180,7 @@ func (q BlobstreamDHT) PutLatestValset(ctx context.Context, v types2.Valset) err
 
 // GetLatestValset looks for the latest valset in the DHT.
 // The key will be returned by the `GetValsetKey` method.
-// Returns an error if it fails to get the valset.
+// Returns an error if it fails.
 func (q BlobstreamDHT) GetLatestValset(ctx context.Context) (types2.Valset, error) {
 	encoded, err := q.GetValue(ctx, GetLatestValsetKey()) // this is a blocking call, we should probably use timeout and channel
 	if err != nil {
