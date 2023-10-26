@@ -30,7 +30,7 @@ func TestMarshalValset(t *testing.T) {
 	jsonData, err := types.MarshalValset(valset)
 	assert.NoError(t, err)
 	expectedJSON := `{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"},{"power":200,"evm_address":"evm_addr2"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`
-	assert.Equal(t, string(jsonData), expectedJSON)
+	assert.Equal(t, expectedJSON, string(jsonData))
 }
 
 func TestUnmarshalValset(t *testing.T) {
