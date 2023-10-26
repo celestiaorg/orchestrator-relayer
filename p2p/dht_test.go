@@ -119,7 +119,7 @@ func TestPutLatestValset(t *testing.T) {
 	}
 
 	// put the test Valset in the DHT
-	err := network.DHTs[0].PutLatestValset(context.Background(), expectedValset)
+	err := network.DHTs[0].PutLatestValset(context.Background(), *types.ToLatestValset(expectedValset))
 	assert.NoError(t, err)
 
 	// try to get the latest valset from the same peer
@@ -127,7 +127,7 @@ func TestPutLatestValset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, actualValset)
 
-	assert.Equal(t, expectedValset, actualValset)
+	assert.True(t, types.IsValsetEqualToLatestValset(expectedValset, actualValset))
 }
 
 func TestPutMultipleLatestValset(t *testing.T) {
@@ -182,14 +182,14 @@ func TestPutMultipleLatestValset(t *testing.T) {
 	}
 
 	// put the valsets in the DHT
-	err := network.DHTs[0].PutLatestValset(context.Background(), valset1)
+	err := network.DHTs[0].PutLatestValset(context.Background(), *types.ToLatestValset(valset1))
 	assert.NoError(t, err)
 
-	err = network.DHTs[1].PutLatestValset(context.Background(), valset2)
+	err = network.DHTs[1].PutLatestValset(context.Background(), *types.ToLatestValset(valset2))
 	assert.NoError(t, err)
 
 	// this one should fail since it puts an older valset than ones in store
-	err = network.DHTs[2].PutLatestValset(context.Background(), valset3)
+	err = network.DHTs[2].PutLatestValset(context.Background(), *types.ToLatestValset(valset3))
 	assert.Error(t, err)
 
 	// try to get the valset from the same peer
@@ -197,7 +197,7 @@ func TestPutMultipleLatestValset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, actualValset)
 
-	assert.Equal(t, valset2, actualValset)
+	assert.True(t, types.IsValsetEqualToLatestValset(valset2, actualValset))
 }
 
 func TestNetworkPutDataCommitmentConfirm(t *testing.T) {

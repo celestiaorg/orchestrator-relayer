@@ -322,10 +322,10 @@ func (q Querier) QueryValsetConfirms(ctx context.Context, nonce uint64, valset c
 // QueryLatestValset get the latest valset from the p2p network.
 func (q Querier) QueryLatestValset(
 	ctx context.Context,
-) (*celestiatypes.Valset, error) {
-	valset, err := q.BlobstreamDHT.GetLatestValset(ctx)
+) (*types.LatestValset, error) {
+	latestValset, err := q.BlobstreamDHT.GetLatestValset(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return &valset, nil
+	return &latestValset, nil
 }

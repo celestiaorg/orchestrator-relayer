@@ -144,10 +144,11 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 	previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, attI.GetNonce())
 	if err != nil {
 		r.logger.Error("failed to query the last valset before nonce (probably pruned). recovering via falling back to the P2P network", "err", err.Error())
-		previousValset, err = r.P2PQuerier.QueryLatestValset(ctx)
+		latestValset, err := r.P2PQuerier.QueryLatestValset(ctx)
 		if err != nil {
 			return nil, err
 		}
+		previousValset = latestValset.ToValset()
 		r.logger.Info("using the latest valset from P2P network. if the valset is malicious, the Blobstream contract will not accept it", "nonce", previousValset.Nonce)
 	}
 	switch att := attI.(type) {

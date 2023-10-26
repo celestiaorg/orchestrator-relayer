@@ -76,11 +76,11 @@ type LatestValsetValidator struct{}
 
 // Validate runs stateless checks on the provided valset key and value.
 func (lcv LatestValsetValidator) Validate(key string, value []byte) error {
-	vs, err := types.UnmarshalValset(value)
+	vs, err := types.UnmarshalLatestValset(value)
 	if err != nil {
 		return err
 	}
-	if types.IsEmptyValset(vs) {
+	if types.IsEmptyLatestValset(vs) {
 		return ErrEmptyValset
 	}
 	if key != GetLatestValsetKey() {
@@ -102,7 +102,7 @@ func (lcv LatestValsetValidator) Select(key string, values [][]byte) (int, error
 	latestNonce := uint64(0)
 	latestIndex := 0
 	for index, value := range values {
-		valset, err := types.UnmarshalValset(value)
+		valset, err := types.UnmarshalLatestValset(value)
 		if err != nil {
 			return 0, err
 		}

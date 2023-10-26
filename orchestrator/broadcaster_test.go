@@ -122,15 +122,15 @@ func TestBroadcastLatestValset(t *testing.T) {
 
 	// Broadcast the valset
 	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
-	err := broadcaster.ProvideLatestValset(context.Background(), expectedValset)
+	err := broadcaster.ProvideLatestValset(context.Background(), *types.ToLatestValset(expectedValset))
 	assert.NoError(t, err)
 
 	// try to get the valset from another peer
-	actualConfirm, err := network.DHTs[3].GetLatestValset(context.Background())
+	actualValset, err := network.DHTs[3].GetLatestValset(context.Background())
 	assert.NoError(t, err)
-	assert.NotNil(t, actualConfirm)
+	assert.NotNil(t, actualValset)
 
-	assert.Equal(t, expectedValset, actualConfirm)
+	assert.True(t, types.IsValsetEqualToLatestValset(expectedValset, actualValset))
 }
 
 // TestEmptyPeersTable tests that values are not broadcasted if the DHT peers

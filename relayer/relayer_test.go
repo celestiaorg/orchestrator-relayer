@@ -103,7 +103,7 @@ func TestUseValsetFromP2P(t *testing.T) {
 
 	relayer := qgbtesting.NewRelayer(t, node)
 	go node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
-	_, _, _, err = relayer.EVMClient.DeployBlobstreamContract(node.EVMChain.Auth, node.EVMChain.Backend, *latestValset, latestValset.Nonce, true)
+	_, _, _, err = relayer.EVMClient.DeployBlobstreamContract(node.EVMChain.Auth, node.EVMChain.Backend, *latestValset.ToValset(), latestValset.Nonce, true)
 	require.NoError(t, err)
 
 	// make sure the relayer is able to relay the signature using the pruned valset

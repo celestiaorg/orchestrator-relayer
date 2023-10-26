@@ -5,8 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
-
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
@@ -453,7 +451,7 @@ func TestDataCommitmentConfirmSelect(t *testing.T) {
 }
 
 func TestLatestValsetValidatorValidate(t *testing.T) {
-	emptyVs, _ := types.MarshalValset(celestiatypes.Valset{})
+	emptyVs, _ := types.MarshalLatestValset(types.LatestValset{})
 	tests := []struct {
 		name    string
 		key     string
@@ -463,13 +461,13 @@ func TestLatestValsetValidatorValidate(t *testing.T) {
 		{
 			name:    "valid key and value",
 			key:     GetLatestValsetKey(),
-			value:   []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			value:   []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
 			wantErr: false,
 		},
 		{
 			name:    "invalid key",
 			key:     "invalid_key",
-			value:   []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			value:   []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
 			wantErr: true,
 		},
 		{
@@ -481,7 +479,7 @@ func TestLatestValsetValidatorValidate(t *testing.T) {
 		{
 			name:    "invalid value",
 			key:     GetLatestValsetKey(),
-			value:   []byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+			value:   []byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5"}`),
 			wantErr: true,
 		},
 	}
@@ -517,7 +515,7 @@ func TestLatestValsetValidatorSelect(t *testing.T) {
 		{
 			name:    "single value",
 			key:     GetLatestValsetKey(),
-			values:  [][]byte{[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`)},
+			values:  [][]byte{[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`)},
 			wantErr: false,
 			index:   0,
 		},
@@ -525,9 +523,9 @@ func TestLatestValsetValidatorSelect(t *testing.T) {
 			name: "multiple values and last is latest",
 			key:  GetLatestValsetKey(),
 			values: [][]byte{
-				[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
-				[]byte(`{"nonce":11,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
-				[]byte(`{"nonce":12,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+				[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
+				[]byte(`{"nonce":11,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
+				[]byte(`{"nonce":12,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
 			},
 			wantErr: false,
 			index:   2,
@@ -536,16 +534,16 @@ func TestLatestValsetValidatorSelect(t *testing.T) {
 			name: "multiple values and middle one is invalid",
 			key:  GetLatestValsetKey(),
 			values: [][]byte{
-				[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
-				[]byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
-				[]byte(`{"nonce":12,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`),
+				[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
+				[]byte(`{"nonce":"invalid nonce","members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
+				[]byte(`{"nonce":12,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`),
 			},
 			wantErr: true,
 		},
 		{
 			name:    "invalid key",
 			key:     "invalid key",
-			values:  [][]byte{[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`)},
+			values:  [][]byte{[]byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"}],"height":5}`)},
 			wantErr: true,
 		},
 	}

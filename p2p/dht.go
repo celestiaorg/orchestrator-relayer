@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/libp2p/go-libp2p-kad-dht/providers"
 
 	"github.com/celestiaorg/orchestrator-relayer/types"
@@ -166,8 +165,8 @@ func (q BlobstreamDHT) GetValsetConfirm(ctx context.Context, key string) (types.
 // The key will be returned by the `GetValsetKey` method.
 // If the valset is not the latest, it will fail.
 // Returns an error if it fails.
-func (q BlobstreamDHT) PutLatestValset(ctx context.Context, v celestiatypes.Valset) error {
-	encodedData, err := types.MarshalValset(v)
+func (q BlobstreamDHT) PutLatestValset(ctx context.Context, v types.LatestValset) error {
+	encodedData, err := types.MarshalLatestValset(v)
 	if err != nil {
 		return err
 	}
@@ -181,14 +180,14 @@ func (q BlobstreamDHT) PutLatestValset(ctx context.Context, v celestiatypes.Vals
 // GetLatestValset looks for the latest valset in the DHT.
 // The key will be returned by the `GetValsetKey` method.
 // Returns an error if it fails.
-func (q BlobstreamDHT) GetLatestValset(ctx context.Context) (celestiatypes.Valset, error) {
+func (q BlobstreamDHT) GetLatestValset(ctx context.Context) (types.LatestValset, error) {
 	encoded, err := q.GetValue(ctx, GetLatestValsetKey()) // this is a blocking call, we should probably use timeout and channel
 	if err != nil {
-		return celestiatypes.Valset{}, err
+		return types.LatestValset{}, err
 	}
-	valset, err := types.UnmarshalValset(encoded)
+	valset, err := types.UnmarshalLatestValset(encoded)
 	if err != nil {
-		return celestiatypes.Valset{}, err
+		return types.LatestValset{}, err
 	}
 	return valset, nil
 }

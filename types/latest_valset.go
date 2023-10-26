@@ -2,12 +2,41 @@ package types
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 )
 
-// MarshalValset Encodes a valset to Json bytes.
-func MarshalValset(lv types.Valset) ([]byte, error) {
+// LatestValset a replica of the types.Valset to omit marshalling `time` as it bears different results on different machines.
+type LatestValset struct {
+	// Universal nonce defined under:
+	// https://github.com/celestiaorg/celestia-app/pull/464
+	Nonce uint64 `json:"nonce,omitempty"`
+	// List of BridgeValidator containing the current validator set.
+	Members []types.BridgeValidator `json:"members"`
+	// Current chain height
+	Height uint64 `json:"height,omitempty"`
+}
+
+func (v LatestValset) ToValset() *types.Valset {
+	return &types.Valset{
+		Nonce:   v.Nonce,
+		Members: v.Members,
+		Height:  v.Height,
+		Time:    time.UnixMicro(1), // it's alright to put an arbitrary value in here since the time is not used in hash creation nor the threshold.
+	}
+}
+
+func ToLatestValset(vs types.Valset) *LatestValset {
+	return &LatestValset{
+		Nonce:   vs.Nonce,
+		Members: vs.Members,
+		Height:  vs.Height,
+	}
+}
+
+// MarshalLatestValset Encodes a valset to Json bytes.
+func MarshalLatestValset(lv LatestValset) ([]byte, error) {
 	encoded, err := json.Marshal(lv)
 	if err != nil {
 		return nil, err
@@ -15,21 +44,30 @@ func MarshalValset(lv types.Valset) ([]byte, error) {
 	return encoded, nil
 }
 
-// UnmarshalValset Decodes a valset from Json bytes.
-func UnmarshalValset(encoded []byte) (types.Valset, error) {
-	var valset types.Valset
+// UnmarshalLatestValset Decodes a valset from Json bytes.
+func UnmarshalLatestValset(encoded []byte) (LatestValset, error) {
+	var valset LatestValset
 	err := json.Unmarshal(encoded, &valset)
 	if err != nil {
-		return types.Valset{}, err
+		return LatestValset{}, err
 	}
 	return valset, nil
 }
 
-// IsEmptyValset takes a valset and checks if it is empty.
-func IsEmptyValset(valset types.Valset) bool {
+// IsEmptyLatestValset takes a valset and checks if it is empty.
+func IsEmptyLatestValset(latestValset LatestValset) bool {
 	emptyVs := types.Valset{}
-	return valset.Time.Equal(emptyVs.Time) &&
-		valset.Nonce == emptyVs.Nonce &&
-		valset.Height == emptyVs.Height &&
-		len(valset.Members) == 0
+	return latestValset.Nonce == emptyVs.Nonce &&
+		latestValset.Height == emptyVs.Height &&
+		len(latestValset.Members) == 0
+}
+
+func IsValsetEqualToLatestValset(vs types.Valset, lvs LatestValset) bool {
+	for index, value := range vs.Members {
+		if value.EvmAddress != lvs.Members[index].EvmAddress ||
+			value.Power != lvs.Members[index].Power {
+			return false
+		}
+	}
+	return vs.Nonce == lvs.Nonce && vs.Height == lvs.Height
 }

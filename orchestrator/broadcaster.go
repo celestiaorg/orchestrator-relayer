@@ -3,8 +3,6 @@ package orchestrator
 import (
 	"context"
 
-	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
-
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 
 	"github.com/celestiaorg/orchestrator-relayer/types"
@@ -32,9 +30,9 @@ func (b Broadcaster) ProvideValsetConfirm(ctx context.Context, nonce uint64, con
 	return b.BlobstreamDHT.PutValsetConfirm(ctx, p2p.GetValsetConfirmKey(nonce, confirm.EthAddress, signBytes), confirm)
 }
 
-func (b Broadcaster) ProvideLatestValset(ctx context.Context, valset celestiatypes.Valset) error {
+func (b Broadcaster) ProvideLatestValset(ctx context.Context, latestValset types.LatestValset) error {
 	if len(b.BlobstreamDHT.RoutingTable().ListPeers()) == 0 {
 		return ErrEmptyPeersTable
 	}
-	return b.BlobstreamDHT.PutLatestValset(ctx, valset)
+	return b.BlobstreamDHT.PutLatestValset(ctx, latestValset)
 }

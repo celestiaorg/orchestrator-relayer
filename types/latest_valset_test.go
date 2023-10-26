@@ -11,9 +11,8 @@ import (
 )
 
 func TestMarshalValset(t *testing.T) {
-	valset := celestiatypes.Valset{
+	valset := types.LatestValset{
 		Nonce:  10,
-		Time:   time.UnixMicro(10),
 		Height: 5,
 		Members: []celestiatypes.BridgeValidator{
 			{
@@ -27,14 +26,14 @@ func TestMarshalValset(t *testing.T) {
 		},
 	}
 
-	jsonData, err := types.MarshalValset(valset)
+	jsonData, err := types.MarshalLatestValset(valset)
 	assert.NoError(t, err)
-	expectedJSON := `{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"},{"power":200,"evm_address":"evm_addr2"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`
+	expectedJSON := `{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"},{"power":200,"evm_address":"evm_addr2"}],"height":5}`
 	assert.Equal(t, expectedJSON, string(jsonData))
 }
 
 func TestUnmarshalValset(t *testing.T) {
-	jsonData := []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"},{"power":200,"evm_address":"evm_addr2"}],"height":5,"time":"1970-01-01T01:00:00.00001+01:00"}`)
+	jsonData := []byte(`{"nonce":10,"members":[{"power":100,"evm_address":"evm_addr1"},{"power":200,"evm_address":"evm_addr2"}],"height":5}`)
 	expectedValset := celestiatypes.Valset{
 		Nonce:  10,
 		Time:   time.UnixMicro(10),
@@ -51,7 +50,7 @@ func TestUnmarshalValset(t *testing.T) {
 		},
 	}
 
-	valset, err := types.UnmarshalValset(jsonData)
+	valset, err := types.UnmarshalLatestValset(jsonData)
 	assert.NoError(t, err)
-	assert.Equal(t, valset, expectedValset)
+	assert.True(t, types.IsValsetEqualToLatestValset(expectedValset, valset))
 }
