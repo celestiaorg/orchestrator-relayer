@@ -102,7 +102,7 @@ func (q BlobstreamDHT) WaitForPeers(ctx context.Context, timeout time.Duration, 
 // and valset confirms. The checks are supposed to be handled by the validators under `p2p/validators.go`.
 // Same goes for the Marshal and Unmarshal methods (as long as they're using simple Json encoding).
 
-// PutDataCommitmentConfirm encodes a data commitment confirm then puts its values to the DHT.
+// PutDataCommitmentConfirm encodes a data commitment confirm then puts its value to the DHT.
 // The key can be generated using the `GetDataCommitmentConfirmKey` method.
 // Returns an error if it fails to do so.
 func (q BlobstreamDHT) PutDataCommitmentConfirm(ctx context.Context, key string, dcc types.DataCommitmentConfirm) error {
