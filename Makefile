@@ -1,14 +1,15 @@
 #!/usr/bin/make -f
 
 VERSION := $(shell echo $(shell git describe --tags 2>/dev/null || git log -1 --format='%h') | sed 's/^v//')
-COMMIT := $(shell git log -1 --format='%H')
 DOCKER := $(shell which docker)
+versioningPath := "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/version"
+LDFLAGS=-ldflags="-X '$(versioningPath).buildTime=$(shell date)' -X '$(versioningPath).lastCommit=$(shell git rev-parse HEAD)' -X '$(versioningPath).semanticVersion=$(shell git describe --tags --dirty=-dev 2>/dev/null || git rev-parse --abbrev-ref HEAD)'"
 
 all: install
 
 install: go.sum
 	@echo "--> Installing blobstream"
-	@go install -mod=readonly ./cmd/blobstream
+	@go install -mod=readonly ${LDFLAGS} ./cmd/blobstream
 
 go.sum: mod
 	@echo "--> Verifying dependencies have expected content"
@@ -24,7 +25,7 @@ pre-build:
 
 build: mod
 	@mkdir -p build/
-	@go build -o build ./cmd/blobstream
+	@go build -o build ${LDFLAGS} ./cmd/blobstream
 
 build-docker:
 	@echo "--> Building Docker image"
