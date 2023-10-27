@@ -216,6 +216,14 @@ func (ec *Client) StateLastEventNonce(opts *bind.CallOpts) (uint64, error) {
 	return nonce.Uint64(), nil
 }
 
+func (ec *Client) StateLastValidatorSetCheckpoint(opts *bind.CallOpts) ([32]byte, error) {
+	checkpoint, err := ec.Wrapper.StateLastValidatorSetCheckpoint(opts)
+	if err != nil {
+		return [32]byte{}, err
+	}
+	return checkpoint, nil
+}
+
 func (ec *Client) WaitForTransaction(
 	ctx context.Context,
 	backend bind.DeployBackend,

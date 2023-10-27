@@ -1,6 +1,7 @@
 package relayer_test
 
 import (
+	"bytes"
 	"context"
 	"math/big"
 	"testing"
@@ -117,4 +118,38 @@ func TestUseValsetFromP2P(t *testing.T) {
 	lastNonce, err := relayer.EVMClient.StateLastEventNonce(nil)
 	require.NoError(t, err)
 	assert.Equal(t, att.Nonce, lastNonce)
+}
+
+func (s *RelayerTestSuite) TestQueryValsetFromP2P() {
+	t := s.T()
+	_, err := s.Node.CelestiaNetwork.WaitForHeightWithTimeout(400, 30*time.Second)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// process valset nonce so that it is added to the DHT
+	vs, err := s.Orchestrator.AppQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+	err = s.Orchestrator.ProcessValsetEvent(ctx, *vs)
+	require.NoError(t, err)
+
+	// the valset should be in the DHT
+	_, err = s.Orchestrator.P2PQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+
+	// query the valset and authenticate it
+	p2pVS, err := s.Relayer.QueryValsetFromP2PNetworkAndValidateIt(ctx)
+	require.NoError(t, err)
+
+	// check if the valset is the same
+	assert.Equal(t, vs.Nonce, p2pVS.Nonce)
+	assert.Equal(t, vs.Height, p2pVS.Height)
+
+	// check if the hash is the same
+	appVSHash, err := vs.Hash()
+	require.NoError(t, err)
+	p2pVSHash, err := p2pVS.Hash()
+	require.NoError(t, err)
+
+	assert.True(t, bytes.Equal(appVSHash.Bytes(), p2pVSHash.Bytes()))
 }
