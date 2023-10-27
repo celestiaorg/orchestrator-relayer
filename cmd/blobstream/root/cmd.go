@@ -4,6 +4,7 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/bootstrapper"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/generate"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/query"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/version"
 
 	"github.com/celestiaorg/celestia-app/x/qgb/client"
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/deploy"
@@ -30,6 +31,7 @@ func Cmd() *cobra.Command {
 		generate.Command(),
 		query.Command(),
 		bootstrapper.Command(),
+		version.Cmd,
 	)
 
 	rootCmd.SetHelpCommand(&cobra.Command{})
