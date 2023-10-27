@@ -5,7 +5,7 @@ go 1.21.1
 replace github.com/celestiaorg/orchestrator-relayer => ../
 
 require (
-	github.com/celestiaorg/celestia-app v1.2.0
+	github.com/celestiaorg/celestia-app v1.3.0
 	github.com/celestiaorg/nmt v0.20.0 // indirect
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/gogo/protobuf v1.3.3 // indirect
@@ -392,7 +392,7 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.18.1-sdk-v0.46.14
+	github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.18.3-sdk-v0.46.14
 	github.com/docker/docker => github.com/docker/docker v23.0.5+incompatible
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
