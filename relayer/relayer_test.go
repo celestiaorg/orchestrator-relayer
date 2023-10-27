@@ -1,9 +1,16 @@
 package relayer_test
 
 import (
+	"bytes"
 	"context"
 	"math/big"
+	"testing"
 	"time"
+
+	"github.com/celestiaorg/celestia-app/app"
+	"github.com/celestiaorg/celestia-app/app/encoding"
+	"github.com/celestiaorg/celestia-app/test/util/testnode"
+	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/ipfs/go-datastore"
@@ -46,4 +53,103 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 	has, err := s.Relayer.SignatureStore.Has(ctx, key)
 	require.NoError(t, err)
 	assert.True(t, has)
+}
+
+func TestUseValsetFromP2P(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	codec := encoding.MakeConfig(app.ModuleEncodingRegisters...).Codec
+	node := qgbtesting.NewTestNode(
+		ctx,
+		t,
+		qgbtesting.CelestiaNetworkParams{
+			GenesisOpts: []testnode.GenesisOption{
+				testnode.ImmediateProposals(codec),
+				qgbtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
+			},
+			TimeIotaMs: 2000000, // so attestations are pruned after they're queried
+		},
+	)
+
+	// process valset nonce so that it is added to the DHT
+	orch := qgbtesting.NewOrchestrator(t, node)
+	vs, err := orch.AppQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+	err = orch.ProcessValsetEvent(ctx, *vs)
+	require.NoError(t, err)
+
+	_, err = node.CelestiaNetwork.WaitForHeight(400)
+	require.NoError(t, err)
+
+	for {
+		time.Sleep(time.Second)
+		// Wait until the valset is pruned
+		_, err = orch.AppQuerier.QueryLatestValset(ctx)
+		if err != nil {
+			break
+		}
+	}
+
+	// the valset should be in the DHT
+	latestValset, err := orch.P2PQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+
+	att := types.NewDataCommitment(latestValset.Nonce+1, 10, 100, time.Now())
+	commitment, err := orch.TmQuerier.QueryCommitment(ctx, att.BeginBlock, att.EndBlock)
+	require.NoError(t, err)
+	dataRootTupleRoot := blobstreamtypes.DataCommitmentTupleRootSignBytes(big.NewInt(int64(att.Nonce)), commitment)
+	err = orch.ProcessDataCommitmentEvent(ctx, *att, dataRootTupleRoot)
+	require.NoError(t, err)
+
+	relayer := qgbtesting.NewRelayer(t, node)
+	go node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
+	_, _, _, err = relayer.EVMClient.DeployBlobstreamContract(node.EVMChain.Auth, node.EVMChain.Backend, *latestValset.ToValset(), latestValset.Nonce, true)
+	require.NoError(t, err)
+
+	// make sure the relayer is able to relay the signature using the pruned valset
+	tx, err := relayer.ProcessAttestation(ctx, node.EVMChain.Auth, att)
+	require.NoError(t, err)
+
+	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend, tx)
+	assert.NoError(t, err)
+	assert.Equal(t, uint64(1), receipt.Status)
+
+	lastNonce, err := relayer.EVMClient.StateLastEventNonce(nil)
+	require.NoError(t, err)
+	assert.Equal(t, att.Nonce, lastNonce)
+}
+
+func (s *RelayerTestSuite) TestQueryValsetFromP2P() {
+	t := s.T()
+	_, err := s.Node.CelestiaNetwork.WaitForHeightWithTimeout(400, 30*time.Second)
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// process valset nonce so that it is added to the DHT
+	vs, err := s.Orchestrator.AppQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+	err = s.Orchestrator.ProcessValsetEvent(ctx, *vs)
+	require.NoError(t, err)
+
+	// the valset should be in the DHT
+	_, err = s.Orchestrator.P2PQuerier.QueryLatestValset(ctx)
+	require.NoError(t, err)
+
+	// query the valset and authenticate it
+	p2pVS, err := s.Relayer.QueryValsetFromP2PNetworkAndValidateIt(ctx)
+	require.NoError(t, err)
+
+	// check if the valset is the same
+	assert.Equal(t, vs.Nonce, p2pVS.Nonce)
+	assert.Equal(t, vs.Height, p2pVS.Height)
+
+	// check if the hash is the same
+	appVSHash, err := vs.Hash()
+	require.NoError(t, err)
+	p2pVSHash, err := p2pVS.Hash()
+	require.NoError(t, err)
+
+	assert.True(t, bytes.Equal(appVSHash.Bytes(), p2pVSHash.Bytes()))
 }

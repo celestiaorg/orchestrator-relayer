@@ -79,6 +79,32 @@ func (s *OrchestratorTestSuite) TestProcessValsetEvent() {
 	assert.Equal(t, s.Orchestrator.EvmAccount.Address.Hex(), confirm.EthAddress)
 }
 
+func (s *OrchestratorTestSuite) TestProcessValsetEventAndProvideValset() {
+	t := s.T()
+	_, err := s.Node.CelestiaNetwork.WaitForHeight(50)
+	require.NoError(t, err)
+
+	vs, err := celestiatypes.NewValset(
+		2,
+		10,
+		[]*celestiatypes.InternalBridgeValidator{{
+			Power:      10,
+			EVMAddress: s.Orchestrator.EvmAccount.Address,
+		}},
+		time.Now(),
+	)
+	require.NoError(t, err)
+
+	// signing and submitting the signature and also providing the valset event
+	err = s.Orchestrator.ProcessValsetEvent(s.Node.Context, *vs)
+	require.NoError(t, err)
+
+	// retrieving the valset
+	actualVs, err := s.Node.DHTNetwork.DHTs[0].GetLatestValset(s.Node.Context)
+	require.NoError(t, err)
+	assert.Equal(t, vs.Nonce, actualVs.Nonce)
+}
+
 func TestValidatorPartOfValset(t *testing.T) {
 	tests := []struct {
 		name           string

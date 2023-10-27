@@ -284,6 +284,12 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			orch.Logger.Debug("validator not part of valset. won't sign", "nonce", nonce)
 			return nil
 		}
+
+		if err == nil && previousValset != nil {
+			// add the valset to the p2p network
+			// it's alright if this fails, we can expect other nodes to do it successfully
+			_ = orch.Broadcaster.ProvideLatestValset(ctx, *types.ToLatestValset(*previousValset))
+		}
 	}
 
 	switch castedAtt := att.(type) {
@@ -341,6 +347,10 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 }
 
 func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestiatypes.Valset) error {
+	// add the valset to the p2p network
+	// it's alright if this fails, we can expect other nodes to do it successfully
+	_ = orch.Broadcaster.ProvideLatestValset(ctx, *types.ToLatestValset(valset))
+
 	signBytes, err := valset.SignBytes()
 	if err != nil {
 		return err

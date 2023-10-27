@@ -71,6 +71,49 @@ func (vcv ValsetConfirmValidator) Validate(key string, value []byte) error {
 	return nil
 }
 
+// LatestValsetValidator runs stateless checks on the latest valset when submitting it to the DHT.
+type LatestValsetValidator struct{}
+
+// Validate runs stateless checks on the provided valset key and value.
+func (lcv LatestValsetValidator) Validate(key string, value []byte) error {
+	vs, err := types.UnmarshalLatestValset(value)
+	if err != nil {
+		return err
+	}
+	if types.IsEmptyLatestValset(vs) {
+		return ErrEmptyValset
+	}
+	if key != GetLatestValsetKey() {
+		return ErrInvalidLatestValsetKey
+	}
+	return nil
+}
+
+// Select selects a valid dht valset value from multiple ones.
+// returns the latest one ordered by nonces.
+// returns an error of no valid value is found.
+func (lcv LatestValsetValidator) Select(key string, values [][]byte) (int, error) {
+	if key != GetLatestValsetKey() {
+		return 0, ErrInvalidLatestValsetKey
+	}
+	if len(values) == 0 {
+		return 0, ErrNoValues
+	}
+	latestNonce := uint64(0)
+	latestIndex := 0
+	for index, value := range values {
+		valset, err := types.UnmarshalLatestValset(value)
+		if err != nil {
+			return 0, err
+		}
+		if valset.Nonce > latestNonce {
+			latestIndex = index
+		}
+		latestNonce = valset.Nonce
+	}
+	return latestIndex, nil
+}
+
 // Select selects a valid dht confirm value from multiple ones.
 // returns an error of no valid value is found.
 func (vcv ValsetConfirmValidator) Select(key string, values [][]byte) (int, error) {
@@ -78,7 +121,7 @@ func (vcv ValsetConfirmValidator) Select(key string, values [][]byte) (int, erro
 		return 0, ErrNoValues
 	}
 	for index, value := range values {
-		// choose the first correct value
+		// choose the first correct values
 		if err := vcv.Validate(key, value); err == nil {
 			return index, nil
 		}

@@ -29,3 +29,10 @@ func (b Broadcaster) ProvideValsetConfirm(ctx context.Context, nonce uint64, con
 	}
 	return b.BlobstreamDHT.PutValsetConfirm(ctx, p2p.GetValsetConfirmKey(nonce, confirm.EthAddress, signBytes), confirm)
 }
+
+func (b Broadcaster) ProvideLatestValset(ctx context.Context, latestValset types.LatestValset) error {
+	if len(b.BlobstreamDHT.RoutingTable().ListPeers()) == 0 {
+		return ErrEmptyPeersTable
+	}
+	return b.BlobstreamDHT.PutLatestValset(ctx, latestValset)
+}

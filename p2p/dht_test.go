@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
@@ -93,6 +95,109 @@ func TestPutDataCommitmentConfirm(t *testing.T) {
 	assert.NotNil(t, actualConfirm)
 
 	assert.Equal(t, expectedConfirm, actualConfirm)
+}
+
+func TestPutLatestValset(t *testing.T) {
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 2)
+	defer network.Stop()
+
+	// create a test Valset
+	expectedValset := celestiatypes.Valset{
+		Nonce:  10,
+		Time:   time.UnixMicro(10),
+		Height: 5,
+		Members: []celestiatypes.BridgeValidator{
+			{
+				Power:      100,
+				EvmAddress: "evm_addr1",
+			},
+			{
+				Power:      200,
+				EvmAddress: "evm_addr2",
+			},
+		},
+	}
+
+	// put the test Valset in the DHT
+	err := network.DHTs[0].PutLatestValset(context.Background(), *types.ToLatestValset(expectedValset))
+	assert.NoError(t, err)
+
+	// try to get the latest valset from the same peer
+	actualValset, err := network.DHTs[0].GetLatestValset(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, actualValset)
+
+	assert.True(t, types.IsValsetEqualToLatestValset(expectedValset, actualValset))
+}
+
+func TestPutMultipleLatestValset(t *testing.T) {
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 3)
+	defer network.Stop()
+
+	// create test Valsets
+	valset1 := celestiatypes.Valset{
+		Nonce:  10,
+		Time:   time.UnixMicro(10),
+		Height: 5,
+		Members: []celestiatypes.BridgeValidator{
+			{
+				Power:      100,
+				EvmAddress: "evm_addr1",
+			},
+			{
+				Power:      200,
+				EvmAddress: "evm_addr2",
+			},
+		},
+	}
+	valset2 := celestiatypes.Valset{
+		Nonce:  11,
+		Time:   time.UnixMicro(10),
+		Height: 5,
+		Members: []celestiatypes.BridgeValidator{
+			{
+				Power:      100,
+				EvmAddress: "evm_addr1",
+			},
+			{
+				Power:      200,
+				EvmAddress: "evm_addr2",
+			},
+		},
+	}
+	valset3 := celestiatypes.Valset{
+		Nonce:  9,
+		Time:   time.UnixMicro(10),
+		Height: 5,
+		Members: []celestiatypes.BridgeValidator{
+			{
+				Power:      100,
+				EvmAddress: "evm_addr1",
+			},
+			{
+				Power:      200,
+				EvmAddress: "evm_addr2",
+			},
+		},
+	}
+
+	// put the valsets in the DHT
+	err := network.DHTs[0].PutLatestValset(context.Background(), *types.ToLatestValset(valset1))
+	assert.NoError(t, err)
+
+	err = network.DHTs[1].PutLatestValset(context.Background(), *types.ToLatestValset(valset2))
+	assert.NoError(t, err)
+
+	// this one should fail since it puts an older valset than ones in store
+	err = network.DHTs[2].PutLatestValset(context.Background(), *types.ToLatestValset(valset3))
+	assert.Error(t, err)
+
+	// try to get the valset from the same peer
+	actualValset, err := network.DHTs[0].GetLatestValset(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, actualValset)
+
+	assert.True(t, types.IsValsetEqualToLatestValset(valset2, actualValset))
 }
 
 func TestNetworkPutDataCommitmentConfirm(t *testing.T) {

@@ -1,6 +1,8 @@
 package p2p
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	ErrPeersTimeout                    = errors.New("timeout while waiting for peers")
@@ -17,4 +19,6 @@ var (
 	ErrEmptyNamespace                  = errors.New("empty namespace")
 	ErrEmptyEVMAddr                    = errors.New("empty evm address")
 	ErrEmptyDigest                     = errors.New("empty digest")
+	ErrEmptyValset                     = errors.New("empty valset")
+	ErrInvalidLatestValsetKey          = errors.New("invalid latest valset key")
 )

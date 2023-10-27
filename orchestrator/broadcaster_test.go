@@ -5,6 +5,9 @@ import (
 	"encoding/hex"
 	"math/big"
 	"testing"
+	"time"
+
+	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -95,6 +98,39 @@ func TestBroadcastValsetConfirm(t *testing.T) {
 	assert.NotNil(t, actualConfirm)
 
 	assert.Equal(t, *expectedConfirm, actualConfirm)
+}
+
+func TestBroadcastLatestValset(t *testing.T) {
+	network := blobstreamtesting.NewDHTNetwork(context.Background(), 4)
+	defer network.Stop()
+
+	// create a test Valset
+	expectedValset := celestiatypes.Valset{
+		Time:   time.UnixMicro(10),
+		Height: 5,
+		Members: []celestiatypes.BridgeValidator{
+			{
+				Power:      100,
+				EvmAddress: "evm_addr1",
+			},
+			{
+				Power:      200,
+				EvmAddress: "evm_addr2",
+			},
+		},
+	}
+
+	// Broadcast the valset
+	broadcaster := orchestrator.NewBroadcaster(network.DHTs[1])
+	err := broadcaster.ProvideLatestValset(context.Background(), *types.ToLatestValset(expectedValset))
+	assert.NoError(t, err)
+
+	// try to get the valset from another peer
+	actualValset, err := network.DHTs[3].GetLatestValset(context.Background())
+	assert.NoError(t, err)
+	assert.NotNil(t, actualValset)
+
+	assert.True(t, types.IsValsetEqualToLatestValset(expectedValset, actualValset))
 }
 
 // TestEmptyPeersTable tests that values are not broadcasted if the DHT peers
