@@ -3,7 +3,7 @@ module github.com/celestiaorg/orchestrator-relayer
 go 1.21.1
 
 require (
-	github.com/celestiaorg/celestia-app v1.2.0
+	github.com/celestiaorg/celestia-app v1.3.0
 	github.com/celestiaorg/nmt v0.20.0 // indirect
 	github.com/ethereum/go-ethereum v1.13.4
 	github.com/gogo/protobuf v1.3.3 // indirect
@@ -271,6 +271,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.15.1 // indirect
+	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.15.1 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.uber.org/dig v1.17.0 // indirect
@@ -301,29 +302,8 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.18.1-sdk-v0.46.14
-	github.com/docker/docker => github.com/docker/docker v23.0.5+incompatible
+	github.com/cosmos/cosmos-sdk => github.com/celestiaorg/cosmos-sdk v1.18.3-sdk-v0.46.14
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tendermint/tendermint => github.com/celestiaorg/celestia-core v1.29.0-tm-v0.34.29
-)
-
-// testcontainers required replaces:
-// https://golang.testcontainers.org/features/docker_compose/#using-docker-compose-directly
-replace (
-	github.com/cucumber/godog => github.com/laurazard/godog v0.0.0-20220922095256-4c4b17abdae7
-	go.opentelemetry.io/otel => go.opentelemetry.io/otel v1.14.0
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace => go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.14.0
-	go.opentelemetry.io/otel/metric => go.opentelemetry.io/otel/metric v0.27.0
-	go.opentelemetry.io/otel/sdk => go.opentelemetry.io/otel/sdk v1.14.0
-	go.opentelemetry.io/otel/trace => go.opentelemetry.io/otel/trace v1.14.0
-
-	// For k8s dependencies, we use a replace directive, to prevent them being
-	// upgraded to the version specified in containerd, which is not relevant to the
-	// version needed.
-	// See https://github.com/docker/buildx/pull/948 for details.
-	// https://github.com/docker/buildx/blob/v0.8.1/go.mod#L62-L64
-	k8s.io/api => k8s.io/api v0.22.4
-	k8s.io/apimachinery => k8s.io/apimachinery v0.22.4
-	k8s.io/client-go => k8s.io/client-go v0.22.4
 )
