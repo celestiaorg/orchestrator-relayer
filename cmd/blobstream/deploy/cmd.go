@@ -57,6 +57,7 @@ func Command() *cobra.Command {
 
 			vs, err := getStartingValset(cmd.Context(), querier, config.startingNonce)
 			if err != nil {
+				logger.Error("couldn't get valset from state (probably pruned). connect to an archive node to be able to deploy the contract")
 				return errors.Wrap(
 					err,
 					"cannot initialize the Blobstream contract without having a valset request: %s",
