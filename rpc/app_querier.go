@@ -255,11 +255,10 @@ func (aq *AppQuerier) QueryRecursiveLatestValset(ctx context.Context, height uin
 			return nil, err
 		}
 
-		var latestValset *celestiatypes.Valset
 		if vs, err := aq.QueryHistoricalValsetByNonce(ctx, latestNonce, currentHeight); err == nil {
-			latestValset = vs
+			return vs, nil
 		} else {
-			latestValset, err = aq.QueryHistoricalLastValsetBeforeNonce(ctx, latestNonce, currentHeight)
+			latestValset, err := aq.QueryHistoricalLastValsetBeforeNonce(ctx, latestNonce, currentHeight)
 			if err == nil {
 				return latestValset, nil
 			}

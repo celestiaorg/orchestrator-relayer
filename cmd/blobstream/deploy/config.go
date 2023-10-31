@@ -77,6 +77,9 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 		return deployConfig{}, err
 	}
 	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
+	if err != nil {
+		return deployConfig{}, err
+	}
 	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
 	if err != nil {
 		return deployConfig{}, err
