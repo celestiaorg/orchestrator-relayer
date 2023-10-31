@@ -68,6 +68,8 @@ echo "deploying Blobstream contract..."
   --evm.account "${EVM_ACCOUNT}" \
   --core.grpc.host "${CORE_GRPC_HOST}" \
   --core.grpc.port "${CORE_GRPC_PORT}" \
+  --core.rpc.host "${CORE_RPC_HOST}" \
+  --core.rpc.port "${CORE_RPC_PORT}" \
   --starting-nonce "${STARTING_NONCE}" \
   --evm.rpc "${EVM_ENDPOINT}" \
   --evm.passphrase=123 > /opt/output

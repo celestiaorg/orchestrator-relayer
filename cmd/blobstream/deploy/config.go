@@ -17,6 +17,8 @@ const (
 	FlagEVMGasLimit     = "evm.gas-limit"
 	FlagCoreGRPCHost    = "core.grpc.host"
 	FlagCoreGRPCPort    = "core.grpc.port"
+	FlagCoreRPCHost     = "core.rpc.host"
+	FlagCoreRPCPort     = "core.rpc.port"
 	FlagStartingNonce   = "starting-nonce"
 	ServiceNameDeployer = "deployer"
 )
@@ -26,6 +28,8 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().Uint64(FlagEVMChainID, 5, "Specify the evm chain id")
 	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
 	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
+	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rpc address host")
+	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rpc address port")
 	cmd.Flags().String(FlagEVMRPC, "http://localhost:8545", "Specify the ethereum rpc address")
 	cmd.Flags().String(
 		FlagStartingNonce,
@@ -48,11 +52,12 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 
 type deployConfig struct {
 	*base.Config
-	evmRPC, coreGRPC string
-	evmChainID       uint64
-	evmAccAddress    string
-	startingNonce    string
-	evmGasLimit      uint64
+	evmRPC            string
+	coreRPC, coreGRPC string
+	evmChainID        uint64
+	evmAccAddress     string
+	startingNonce     string
+	evmGasLimit       uint64
 }
 
 func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
@@ -72,6 +77,11 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 		return deployConfig{}, err
 	}
 	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
+	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
 	if err != nil {
 		return deployConfig{}, err
 	}
@@ -107,6 +117,7 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 		evmAccAddress: evmAccAddr,
 		evmChainID:    evmChainID,
 		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
+		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
 		evmRPC:        evmRPC,
 		startingNonce: startingNonce,
 		evmGasLimit:   evmGasLimit,

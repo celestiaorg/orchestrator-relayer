@@ -148,7 +148,15 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		r.logger.Error("failed to query the last valset before nonce (probably pruned). recovering via falling back to the P2P network", "err", err.Error())
 		previousValset, err = r.QueryValsetFromP2PNetworkAndValidateIt(ctx)
 		if err != nil {
-			return nil, err
+			r.logger.Error("failed to query the last valset before nonce from p2p network. trying using an archive node", "err", err.Error())
+			currentHeight, err := r.TmQuerier.QueryHeight(ctx)
+			if err != nil {
+				return nil, err
+			}
+			previousValset, err = r.AppQuerier.QueryRecursiveHistoricalLastValsetBeforeNonce(ctx, attI.GetNonce(), uint64(currentHeight))
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	switch att := attI.(type) {
