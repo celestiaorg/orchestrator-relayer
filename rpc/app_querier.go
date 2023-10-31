@@ -257,12 +257,13 @@ func (aq *AppQuerier) QueryRecursiveLatestValset(ctx context.Context, height uin
 
 		if vs, err := aq.QueryHistoricalValsetByNonce(ctx, latestNonce, currentHeight); err == nil {
 			return vs, nil
-		} else {
-			latestValset, err := aq.QueryHistoricalLastValsetBeforeNonce(ctx, latestNonce, currentHeight)
-			if err == nil {
-				return latestValset, nil
-			}
 		}
+
+		latestValset, err := aq.QueryHistoricalLastValsetBeforeNonce(ctx, latestNonce, currentHeight)
+		if err == nil {
+			return latestValset, nil
+		}
+
 		aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
 		currentHeight -= uint64(BlocksIn20DaysPeriod)
 	}
