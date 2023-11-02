@@ -20,6 +20,8 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
+// BlocksIn20DaysPeriod represents the number of blocks in 20-days period.
+// It uses the timeout commit constant, defined in app, for the computation
 var BlocksIn20DaysPeriod = 20 * 24 * 60 * 60 / appconsts.TimeoutCommit.Seconds()
 
 // AppQuerier queries the application for attestations and unbonding periods.
