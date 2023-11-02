@@ -122,6 +122,9 @@ func (aq *AppQuerier) QueryRecursiveHistoricalAttestationByNonce(ctx context.Con
 				}
 				return unmarshalledAttestation, nil
 			}
+			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
+				return nil, ErrNotFound
+			}
 			aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
 			currentHeight -= uint64(BlocksIn20DaysPeriod)
 		}
@@ -278,6 +281,9 @@ func (aq *AppQuerier) QueryRecursiveLatestValset(ctx context.Context, height uin
 				return latestValset, nil
 			}
 
+			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
+				return nil, ErrNotFound
+			}
 			aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
 			currentHeight -= uint64(BlocksIn20DaysPeriod)
 		}
@@ -338,6 +344,9 @@ func (aq *AppQuerier) QueryRecursiveHistoricalLastValsetBeforeNonce(ctx context.
 			)
 			if err == nil {
 				return resp.Valset, err
+			}
+			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
+				return nil, ErrNotFound
 			}
 			aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
 			currentHeight -= uint64(BlocksIn20DaysPeriod)
