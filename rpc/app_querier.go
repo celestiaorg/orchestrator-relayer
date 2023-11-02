@@ -326,30 +326,23 @@ func (aq *AppQuerier) QueryHistoricalLastValsetBeforeNonce(ctx context.Context, 
 
 // QueryRecursiveHistoricalLastValsetBeforeNonce recursively looks for the last historical valset before nonce for a certain height until genesis.
 func (aq *AppQuerier) QueryRecursiveHistoricalLastValsetBeforeNonce(ctx context.Context, nonce uint64, height uint64) (*celestiatypes.Valset, error) {
-	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
-
-	currentHeight := height
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-	for currentHeight >= 1 {
+	currentNonce := nonce - 1
+	for currentNonce > 0 {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
-			var header metadata.MD
-			resp, err := queryClient.LatestValsetRequestBeforeNonce(
-				metadata.AppendToOutgoingContext(ctx, cosmosgrpc.GRPCBlockHeightHeader, strconv.FormatUint(height, 10)),
-				&celestiatypes.QueryLatestValsetRequestBeforeNonceRequest{Nonce: nonce},
-				grpc.Header(&header),
-			)
-			if err == nil {
-				return resp.Valset, err
+			n, err := aq.QueryRecursiveHistoricalAttestationByNonce(ctx, currentNonce, height)
+			if err != nil {
+				return nil, err
 			}
-			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
-				return nil, ErrNotFound
+			vs, ok := n.(*celestiatypes.Valset)
+			if ok {
+				return vs, nil
 			}
-			aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
-			currentHeight -= uint64(BlocksIn20DaysPeriod)
+			nonce -= 1
 		}
 	}
 	return nil, ErrNotFound
