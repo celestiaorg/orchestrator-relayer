@@ -41,11 +41,24 @@ func (s *HistoricQuerierTestSuite) SetupSuite() {
 		},
 	)
 	_, err := s.Network.WaitForHeightWithTimeout(401, 30*time.Second)
-	s.Logger = tmlog.NewNopLogger()
 	require.NoError(t, err)
+	s.Logger = tmlog.NewNopLogger()
 	rpc.BlocksIn20DaysPeriod = 100
 }
 
 func TestHistoricQueriers(t *testing.T) {
 	suite.Run(t, new(HistoricQuerierTestSuite))
+}
+
+func (s *HistoricQuerierTestSuite) setupAppQuerier() *rpc.AppQuerier {
+	appQuerier := rpc.NewAppQuerier(
+		s.Logger,
+		s.Network.GRPCAddr,
+		s.EncConf,
+	)
+	require.NoError(s.T(), appQuerier.Start())
+	s.T().Cleanup(func() {
+		appQuerier.Stop() //nolint:errcheck
+	})
+	return appQuerier
 }

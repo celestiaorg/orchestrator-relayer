@@ -2,20 +2,10 @@ package rpc_test
 
 import (
 	"context"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/celestiaorg/orchestrator-relayer/rpc"
 )
 
 func (s *HistoricQuerierTestSuite) TestQueryHistoricAttestationByNonce() {
-	appQuerier := rpc.NewAppQuerier(
-		s.Logger,
-		s.Network.GRPCAddr,
-		s.EncConf,
-	)
-	require.NoError(s.T(), appQuerier.Start())
-	defer appQuerier.Stop() //nolint:errcheck
+	appQuerier := s.setupAppQuerier()
 
 	// this one should fail because the attestation is deleted from the state
 	_, err := appQuerier.QueryAttestationByNonce(context.Background(), 1)
@@ -28,13 +18,7 @@ func (s *HistoricQuerierTestSuite) TestQueryHistoricAttestationByNonce() {
 }
 
 func (s *HistoricQuerierTestSuite) TestQueryRecursiveHistoricAttestationByNonce() {
-	appQuerier := rpc.NewAppQuerier(
-		s.Logger,
-		s.Network.GRPCAddr,
-		s.EncConf,
-	)
-	require.NoError(s.T(), appQuerier.Start())
-	defer appQuerier.Stop() //nolint:errcheck
+	appQuerier := s.setupAppQuerier()
 
 	// this one should fail because the attestation is deleted from the state
 	_, err := appQuerier.QueryAttestationByNonce(context.Background(), 1)
@@ -49,13 +33,7 @@ func (s *HistoricQuerierTestSuite) TestQueryRecursiveHistoricAttestationByNonce(
 }
 
 func (s *HistoricQuerierTestSuite) TestQueryHistoricalLatestAttestationNonce() {
-	appQuerier := rpc.NewAppQuerier(
-		s.Logger,
-		s.Network.GRPCAddr,
-		s.EncConf,
-	)
-	require.NoError(s.T(), appQuerier.Start())
-	defer appQuerier.Stop() //nolint:errcheck
+	appQuerier := s.setupAppQuerier()
 
 	nonce, err := appQuerier.QueryHistoricalLatestAttestationNonce(context.Background(), 2)
 	s.Require().NoError(err)
@@ -63,13 +41,7 @@ func (s *HistoricQuerierTestSuite) TestQueryHistoricalLatestAttestationNonce() {
 }
 
 func (s *HistoricQuerierTestSuite) TestQueryHistoricalValsetByNonce() {
-	appQuerier := rpc.NewAppQuerier(
-		s.Logger,
-		s.Network.GRPCAddr,
-		s.EncConf,
-	)
-	require.NoError(s.T(), appQuerier.Start())
-	defer appQuerier.Stop() //nolint:errcheck
+	appQuerier := s.setupAppQuerier()
 
 	// this one should fail because the attestation is deleted from the state
 	_, err := appQuerier.QueryValsetByNonce(context.Background(), 1)
@@ -82,13 +54,7 @@ func (s *HistoricQuerierTestSuite) TestQueryHistoricalValsetByNonce() {
 }
 
 func (s *HistoricQuerierTestSuite) TestQueryHistoricalLastValsetBeforeNonce() {
-	appQuerier := rpc.NewAppQuerier(
-		s.Logger,
-		s.Network.GRPCAddr,
-		s.EncConf,
-	)
-	require.NoError(s.T(), appQuerier.Start())
-	defer appQuerier.Stop() //nolint:errcheck
+	appQuerier := s.setupAppQuerier()
 
 	// this one should fail because the attestation is deleted from the state
 	_, err := appQuerier.QueryLastValsetBeforeNonce(context.Background(), 2)
@@ -101,13 +67,7 @@ func (s *HistoricQuerierTestSuite) TestQueryHistoricalLastValsetBeforeNonce() {
 }
 
 func (s *HistoricQuerierTestSuite) TestQueryRecursiveHistoricalLastValsetBeforeNonce() {
-	appQuerier := rpc.NewAppQuerier(
-		s.Logger,
-		s.Network.GRPCAddr,
-		s.EncConf,
-	)
-	require.NoError(s.T(), appQuerier.Start())
-	defer appQuerier.Stop() //nolint:errcheck
+	appQuerier := s.setupAppQuerier()
 
 	// this one should fail because the attestation is deleted from the state
 	_, err := appQuerier.QueryLastValsetBeforeNonce(context.Background(), 2)
