@@ -344,7 +344,7 @@ func (aq *AppQuerier) QueryRecursiveHistoricalLastValsetBeforeNonce(ctx context.
 			if ok {
 				return vs, nil
 			}
-			nonce -= 1
+			nonce--
 		}
 	}
 	return nil, ErrNotFound
