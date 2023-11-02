@@ -27,7 +27,7 @@ require (
 	github.com/celestiaorg/blobstream-contracts/v3 v3.1.0
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/dgraph-io/badger/v2 v2.2007.4
-	github.com/ipfs/boxo v0.13.1
+	github.com/ipfs/boxo v0.14.0
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/ipfs/go-ds-badger2 v0.1.3
 	github.com/libp2p/go-libp2p v0.31.0
