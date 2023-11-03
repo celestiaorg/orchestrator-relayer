@@ -127,7 +127,6 @@ func (aq *AppQuerier) QueryRecursiveHistoricalAttestationByNonce(ctx context.Con
 			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
 				return nil, ErrNotFound
 			}
-			aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
 			currentHeight -= uint64(BlocksIn20DaysPeriod)
 		}
 	}
@@ -286,7 +285,6 @@ func (aq *AppQuerier) QueryRecursiveLatestValset(ctx context.Context, height uin
 			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
 				return nil, ErrNotFound
 			}
-			aq.Logger.Debug("keeping looking for attestation in archival state", "err", err.Error())
 			currentHeight -= uint64(BlocksIn20DaysPeriod)
 		}
 	}
@@ -331,11 +329,14 @@ func (aq *AppQuerier) QueryRecursiveHistoricalLastValsetBeforeNonce(ctx context.
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	currentNonce := nonce - 1
-	for currentNonce > 0 {
+	for {
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
+			if currentNonce == 0 {
+				return nil, ErrNotFound
+			}
 			n, err := aq.QueryRecursiveHistoricalAttestationByNonce(ctx, currentNonce, height)
 			if err != nil {
 				return nil, err
@@ -344,10 +345,9 @@ func (aq *AppQuerier) QueryRecursiveHistoricalLastValsetBeforeNonce(ctx context.
 			if ok {
 				return vs, nil
 			}
-			nonce--
+			currentNonce--
 		}
 	}
-	return nil, ErrNotFound
 }
 
 // QueryLastUnbondingHeight query the last unbonding height from state machine.

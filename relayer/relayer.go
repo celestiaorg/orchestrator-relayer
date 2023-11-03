@@ -145,10 +145,10 @@ func (r *Relayer) Start(ctx context.Context) error {
 func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpts, attI celestiatypes.AttestationRequestI) (*coregethtypes.Transaction, error) {
 	previousValset, err := r.AppQuerier.QueryLastValsetBeforeNonce(ctx, attI.GetNonce())
 	if err != nil {
-		r.logger.Error("failed to query the last valset before nonce (probably pruned). recovering via falling back to the P2P network", "err", err.Error())
+		r.logger.Debug("failed to query the last valset before nonce (probably pruned). recovering via falling back to the P2P network", "err", err.Error())
 		previousValset, err = r.QueryValsetFromP2PNetworkAndValidateIt(ctx)
 		if err != nil {
-			r.logger.Error("failed to query the last valset before nonce from p2p network. trying using an archive node", "err", err.Error())
+			r.logger.Debug("failed to query the last valset before nonce from p2p network. attempting via using an archive node (might take some time)", "err", err.Error())
 			currentHeight, err := r.TmQuerier.QueryHeight(ctx)
 			if err != nil {
 				return nil, err
@@ -158,6 +158,7 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 				return nil, err
 			}
 		}
+		r.logger.Debug("found the needed valset")
 	}
 	switch att := attI.(type) {
 	case *celestiatypes.Valset:
