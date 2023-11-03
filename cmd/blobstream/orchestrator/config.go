@@ -37,6 +37,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
+	base.AddGRPCInsecureFlag(cmd)
 	return cmd
 }
 
@@ -46,6 +47,7 @@ type StartConfig struct {
 	evmAccAddress                string
 	bootstrappers, p2pListenAddr string
 	p2pNickname                  string
+	grpcInsecure                 bool
 }
 
 func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
@@ -99,6 +101,10 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 	if err != nil {
 		return StartConfig{}, err
 	}
+	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
+	if err != nil {
+		return StartConfig{}, err
+	}
 
 	return StartConfig{
 		evmAccAddress: evmAccAddr,
@@ -111,6 +117,7 @@ func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
 			Home:          homeDir,
 			EVMPassphrase: passphrase,
 		},
+		grpcInsecure: grpcInsecure,
 	}, nil
 }
 

@@ -2,8 +2,10 @@ package rpc
 
 import (
 	"context"
+	"crypto/tls"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/celestiaorg/orchestrator-relayer/types"
@@ -26,9 +28,18 @@ func NewAppQuerier(logger tmlog.Logger, blobStreamRPC string, encCft encoding.Co
 	return &AppQuerier{Logger: logger, blobStreamRPC: blobStreamRPC, EncCfg: encCft}
 }
 
-func (aq *AppQuerier) Start() error {
+func (aq *AppQuerier) Start(grpcInsecure bool) error {
 	// creating a grpc connection to Celestia-app
-	blobStreamGRPC, err := grpc.Dial(aq.blobStreamRPC, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	var dialOpts []grpc.DialOption
+
+	if grpcInsecure {
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{
+			MinVersion: tls.VersionTLS12,
+		})))
+	}
+	blobStreamGRPC, err := grpc.Dial(aq.blobStreamRPC, dialOpts...)
 	if err != nil {
 		return err
 	}

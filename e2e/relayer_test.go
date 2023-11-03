@@ -183,7 +183,7 @@ func TestRelayerWithMultipleValidators(t *testing.T) {
 	// check whether the four validators are up and running
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	HandleNetworkError(t, network, err, false)
-	err = appQuerier.Start()
+	err = appQuerier.Start(true)
 	HandleNetworkError(t, network, err, false)
 	defer appQuerier.Stop() //nolint:errcheck
 
@@ -270,7 +270,7 @@ func TestUpdatingTheDataCommitmentWindow(t *testing.T) {
 	// check whether the four validators are up and running
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
 	HandleNetworkError(t, network, err, false)
-	err = appQuerier.Start()
+	err = appQuerier.Start(true)
 	HandleNetworkError(t, network, err, false)
 	defer appQuerier.Stop() //nolint:errcheck
 
