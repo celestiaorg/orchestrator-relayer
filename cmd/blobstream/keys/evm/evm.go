@@ -1,10 +1,17 @@
 package evm
 
 import (
+	"bufio"
 	"bytes"
+	"crypto/ecdsa"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/go-bip39"
 
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 
@@ -17,6 +24,8 @@ import (
 	tmlog "github.com/tendermint/tendermint/libs/log"
 	"golang.org/x/term"
 )
+
+const mnemonicEntropySize = 256
 
 func Root(serviceName string) *cobra.Command {
 	evmCmd := &cobra.Command{
@@ -83,11 +92,33 @@ func Add(serviceName string) *cobra.Command {
 				}
 			}
 
-			account, err := s.EVMKeyStore.NewAccount(passphrase)
+			// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
+			entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
 			if err != nil {
 				return err
 			}
+
+			mnemonic, err := bip39.NewMnemonic(entropySeed)
+			if err != nil {
+				return err
+			}
+
+			// get the private key
+			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, passphrase)
+			if err != nil {
+				return err
+			}
+
+			account, err := s.EVMKeyStore.ImportECDSA(ethPrivKey, passphrase)
+			if err != nil {
+				return err
+			}
+
 			logger.Info("account created successfully", "address", account.Address.String())
+
+			fmt.Println("\n\n**Important** write this mnemonic phrase in a safe place." +
+				"\nIt is the only way to recover your account if you ever forget your password.")
+			fmt.Printf("\n%s\n\n", mnemonic)
 			return nil
 		},
 	}
@@ -221,6 +252,7 @@ func Import(serviceName string) *cobra.Command {
 	importCmd.AddCommand(
 		ImportFile(serviceName),
 		ImportECDSA(serviceName),
+		ImportMnemonic(serviceName),
 	)
 
 	importCmd.SetHelpCommand(&cobra.Command{})
@@ -379,6 +411,82 @@ func ImportECDSA(serviceName string) *cobra.Command {
 	return keysConfigFlags(&cmd, serviceName)
 }
 
+func ImportMnemonic(serviceName string) *cobra.Command {
+	cmd := cobra.Command{
+		Use:   "mnemonic",
+		Args:  cobra.ExactArgs(0),
+		Short: "import an EVM address from a 24 words BIP39 mnemonic phrase",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			config, err := parseKeysConfigFlags(cmd, serviceName)
+			if err != nil {
+				return err
+			}
+
+			logger := tmlog.NewTMLogger(os.Stdout)
+
+			initOptions := store.InitOptions{NeedEVMKeyStore: true}
+			isInit := store.IsInit(logger, config.Home, initOptions)
+
+			// initialize the store if not initialized
+			if !isInit {
+				err := store.Init(logger, config.Home, initOptions)
+				if err != nil {
+					return err
+				}
+			}
+
+			// open store
+			openOptions := store.OpenOptions{HasEVMKeyStore: true}
+			s, err := store.OpenStore(logger, config.Home, openOptions)
+			if err != nil {
+				return err
+			}
+			defer func(s *store.Store, log tmlog.Logger) {
+				err := s.Close(log, openOptions)
+				if err != nil {
+					logger.Error(err.Error())
+				}
+			}(s, logger)
+
+			// get the mnemonic from user input
+			inBuf := bufio.NewReader(os.Stdin)
+			mnemonic, err := input.GetString("Enter your bip39 mnemonic", inBuf)
+			if err != nil {
+				return err
+			}
+			if !bip39.IsMnemonicValid(mnemonic) {
+				return errors.New("invalid mnemonic")
+			}
+
+			// get the passphrase to use for the seed
+			passphrase := config.EVMPassphrase
+			// if the passphrase is not specified as a flag, ask for it.
+			if passphrase == "" {
+				passphrase, err = GetNewPassphrase()
+				if err != nil {
+					return err
+				}
+			}
+
+			logger.Info("importing account")
+
+			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, passphrase)
+			if err != nil {
+				return err
+			}
+
+			account, err := s.EVMKeyStore.ImportECDSA(ethPrivKey, passphrase)
+			if err != nil {
+				return err
+			}
+
+			logger.Info("successfully imported key", "address", account.Address.String())
+			return nil
+		},
+	}
+	return keysConfigFlags(&cmd, serviceName)
+}
+
 func Update(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "update <account address in hex>",
@@ -520,9 +628,35 @@ func GetNewPassphrase() (string, error) {
 			return "", err
 		}
 		if bytes.Equal(bzPassphrase, bzPassphraseConfirm) {
+			fmt.Println()
 			break
 		}
 		fmt.Print("\npassphrase and confirmation mismatch.\n")
 	}
 	return string(bzPassphrase), nil
+}
+
+// MnemonicToPrivateKey derives a private key from the provided mnemonic
+// It uses the geth.LegacyLedgerBaseDerivationPath, i.e. m/44'/60'/0'/0, to generate
+// the first private key.
+func MnemonicToPrivateKey(mnemonic string, passphrase string) (*ecdsa.PrivateKey, error) {
+	// create the master key
+	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, passphrase)
+	if err != nil {
+		return nil, err
+	}
+
+	secret, chainCode := hd.ComputeMastersFromSeed(seed)
+
+	// derive the first private key from the master key
+	key, err := hd.DerivePrivateKeyForPath(secret, chainCode, accounts.LegacyLedgerBaseDerivationPath.String())
+	if err != nil {
+		return nil, err
+	}
+
+	ethPrivKey, err := ethcrypto.ToECDSA(key)
+	if err != nil {
+		return nil, err
+	}
+	return ethPrivKey, nil
 }
