@@ -92,6 +92,9 @@ func Add(serviceName string) *cobra.Command {
 				}
 			}
 
+			fmt.Printf("\nThe provided password is **not** BIP39 passphrase but the store encryption.\n" +
+				"The account can be retrieved using the mnemonic only, without using this password.\n\n")
+
 			// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
 			entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
 			if err != nil {
@@ -103,8 +106,9 @@ func Add(serviceName string) *cobra.Command {
 				return err
 			}
 
-			// get the private key
-			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, passphrase)
+			// get the private key using an empty passphrase so that only the mnemonic
+			// is enough to recover the account
+			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, "")
 			if err != nil {
 				return err
 			}
@@ -457,6 +461,9 @@ func ImportMnemonic(serviceName string) *cobra.Command {
 			if !bip39.IsMnemonicValid(mnemonic) {
 				return errors.New("invalid mnemonic")
 			}
+
+			fmt.Printf("\n\nThe provided password is **not** BIP39 passphrase but the store encryption.\n" +
+				"The account can be retrieved using the mnemonic only, without using this password.\n\n")
 
 			// get the passphrase to use for the seed
 			passphrase := config.EVMPassphrase
