@@ -26,6 +26,7 @@ require (
 require (
 	github.com/celestiaorg/blobstream-contracts/v3 v3.1.0
 	github.com/cosmos/cosmos-sdk v0.46.14
+	github.com/cosmos/go-bip39 v1.0.0
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/ipfs/boxo v0.14.0
 	github.com/ipfs/go-datastore v0.6.0
@@ -84,7 +85,6 @@ require (
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
-	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.11 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.6 // indirect
