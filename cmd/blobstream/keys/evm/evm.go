@@ -637,7 +637,7 @@ func GetNewPassphrase() (string, error) {
 }
 
 // MnemonicToPrivateKey derives a private key from the provided mnemonic
-// It uses the geth.LegacyLedgerBaseDerivationPath, i.e. m/44'/60'/0'/0, to generate
+// It uses the Ledger derivation path, geth.LegacyLedgerBaseDerivationPath, i.e. m/44'/60'/0'/0, to generate
 // the first private key.
 func MnemonicToPrivateKey(mnemonic string, passphrase string) (*ecdsa.PrivateKey, error) {
 	// create the master key
