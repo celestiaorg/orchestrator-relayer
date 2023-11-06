@@ -97,7 +97,7 @@ func Start() *cobra.Command {
 
 			stopFuncs := make([]func() error, 0)
 
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err

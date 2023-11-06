@@ -46,6 +46,7 @@ const (
 	FlagBootstrappers    = "p2p.bootstrappers"
 	FlagP2PListenAddress = "p2p.listen-addr"
 	FlagP2PNickname      = "p2p.nickname"
+	FlagGRPCInsecure     = "grpc.insecure"
 )
 
 func AddP2PNicknameFlag(cmd *cobra.Command) {
@@ -58,4 +59,8 @@ func AddP2PListenAddressFlag(cmd *cobra.Command) {
 
 func AddBootstrappersFlag(cmd *cobra.Command) {
 	cmd.Flags().String(FlagBootstrappers, "", "Comma-separated multiaddresses of p2p peers to connect to")
+}
+
+func AddGRPCInsecureFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool(FlagGRPCInsecure, false, "allow gRPC over insecure channels, if not TLS the server must use TLS")
 }
