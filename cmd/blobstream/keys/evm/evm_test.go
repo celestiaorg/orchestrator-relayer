@@ -8,20 +8,32 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestMnemonicToPrivateKey tests the generation of private keys using mnemonics.
+// The test vectors were generated and verified using a Ledger Nano X with Ethereum accounts.
 func TestMnemonicToPrivateKey(t *testing.T) {
 	tests := []struct {
 		name            string
 		mnemonic        string
+		passphrase      string
 		expectedError   bool
 		expectedResult  string
 		expectedAddress string
 	}{
 		{
-			name:            "Valid Mnemonic and Passphrase",
-			mnemonic:        "rescue any open drink foster thing scale country embark stable segment stem portion ostrich spoon hat debate diesel morning galaxy weird firm capital census",
+			name:            "Valid Mnemonic with passphrase",
+			mnemonic:        "eight moment square film same crystal trophy diagram awkward defense crazy garlic exile rabbit coast truck foam broken shed attract bamboo drum dry cage",
+			passphrase:      "abcd",
 			expectedError:   false,
-			expectedResult:  "cb4851012ea2e0421fee67c496b1ae43f0f863903f4e2b57459d3f49f365e926",
-			expectedAddress: "0x082d835d29b0519e55401084Ef60fC3D720b62b6",
+			expectedResult:  "5dfb97434a8a31cca1d1c2c6b6b9cf09b4946823331ec434894f204acf79d850",
+			expectedAddress: "0x6Ca3653B3B50892e051Da60b1E14540f2f7EBdBF",
+		},
+		{
+			name:            "Valid Mnemonic without passphrase",
+			mnemonic:        "eight moment square film same crystal trophy diagram awkward defense crazy garlic exile rabbit coast truck foam broken shed attract bamboo drum dry cage",
+			passphrase:      "",
+			expectedError:   false,
+			expectedResult:  "4252916c6e7f80dc96928c66a885be5a362790ad2fb3552ab781cd9112aef3a2",
+			expectedAddress: "0x33bb23EB923C284fC76D93C26aFd1FdCAf770Ea2",
 		},
 		{
 			name:          "Invalid Mnemonic",
@@ -32,7 +44,7 @@ func TestMnemonicToPrivateKey(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			privateKey, err := evm.MnemonicToPrivateKey(test.mnemonic, "1234")
+			privateKey, err := evm.MnemonicToPrivateKey(test.mnemonic, test.passphrase)
 
 			if test.expectedError {
 				assert.Error(t, err)

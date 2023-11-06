@@ -83,6 +83,15 @@ func Add(serviceName string) *cobra.Command {
 				}
 			}(s, logger)
 
+			bip39Passphrase, err := GetBIP39Passphrase()
+			if err != nil {
+				return err
+			}
+
+			if bip39Passphrase != "" {
+				fmt.Println("\nThe provided passphrase will be the 25th word in your mnemonic. Make sure to save it as you won't be able to recover your accounts without it.")
+			}
+
 			passphrase := config.EVMPassphrase
 			// if the passphrase is not specified as a flag, ask for it.
 			if passphrase == "" {
@@ -91,9 +100,6 @@ func Add(serviceName string) *cobra.Command {
 					return err
 				}
 			}
-
-			fmt.Printf("\nThe provided password is **not** BIP39 passphrase but the store encryption.\n" +
-				"The account can be retrieved using the mnemonic only, without using this password.\n\n")
 
 			// read entropy seed straight from tmcrypto.Rand and convert to mnemonic
 			entropySeed, err := bip39.NewEntropy(mnemonicEntropySize)
@@ -108,7 +114,7 @@ func Add(serviceName string) *cobra.Command {
 
 			// get the private key using an empty passphrase so that only the mnemonic
 			// is enough to recover the account
-			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, "")
+			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, bip39Passphrase)
 			if err != nil {
 				return err
 			}
@@ -121,8 +127,13 @@ func Add(serviceName string) *cobra.Command {
 			logger.Info("account created successfully", "address", account.Address.String())
 
 			fmt.Println("\n\n**Important** write this mnemonic phrase in a safe place." +
-				"\nIt is the only way to recover your account if you ever forget your password.")
-			fmt.Printf("\n%s\n\n", mnemonic)
+				"\nIt is the only way to recover your account if you ever forget your storage password.")
+
+			if bip39Passphrase == "" {
+				fmt.Printf("\n%s\n\n", mnemonic)
+			} else {
+				fmt.Printf("\n%s <your_bip39_passphrase>\n\n", mnemonic)
+			}
 			return nil
 		},
 	}
@@ -462,8 +473,10 @@ func ImportMnemonic(serviceName string) *cobra.Command {
 				return errors.New("invalid mnemonic")
 			}
 
-			fmt.Printf("\n\nThe provided password is **not** BIP39 passphrase but the store encryption.\n" +
-				"The account can be retrieved using the mnemonic only, without using this password.\n\n")
+			bip39Passphrase, err := GetBIP39Passphrase()
+			if err != nil {
+				return err
+			}
 
 			// get the passphrase to use for the seed
 			passphrase := config.EVMPassphrase
@@ -477,7 +490,7 @@ func ImportMnemonic(serviceName string) *cobra.Command {
 
 			logger.Info("importing account")
 
-			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, passphrase)
+			ethPrivKey, err := MnemonicToPrivateKey(mnemonic, bip39Passphrase)
 			if err != nil {
 				return err
 			}
@@ -624,7 +637,7 @@ func GetNewPassphrase() (string, error) {
 	var err error
 	var bzPassphrase []byte
 	for {
-		fmt.Print("please provide the account new passphrase: ")
+		fmt.Print("\nplease provide the account new passphrase (Note: this is for the store encryption and not the BIP39 passphrase. This means that you can recover your account without providing it): ")
 		bzPassphrase, err = term.ReadPassword(int(os.Stdin.Fd()))
 		if err != nil {
 			return "", err
@@ -643,9 +656,36 @@ func GetNewPassphrase() (string, error) {
 	return string(bzPassphrase), nil
 }
 
+func GetBIP39Passphrase() (string, error) {
+	var err error
+	var bzPassphrase []byte
+	for {
+		fmt.Print("\nplease provide the BIP39 passphrase (leave empty if you don't want to set a BIP39 passphrase, i.e. 25th mnemonic word): ")
+		bzPassphrase, err = term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return "", err
+		}
+		if len(string(bzPassphrase)) > 100 {
+			fmt.Println("\n\nThe BIP39 passphrase cannot have more than 100 characters! Please try again.")
+			continue
+		}
+		fmt.Print("\nenter the same passphrase again: ")
+		bzPassphraseConfirm, err := term.ReadPassword(int(os.Stdin.Fd()))
+		if err != nil {
+			return "", err
+		}
+		if bytes.Equal(bzPassphrase, bzPassphraseConfirm) {
+			fmt.Println()
+			break
+		}
+		fmt.Print("\npassphrase and confirmation mismatch.\n")
+	}
+	return string(bzPassphrase), nil
+}
+
 // MnemonicToPrivateKey derives a private key from the provided mnemonic.
-// It uses the Ledger derivation path, geth.LegacyLedgerBaseDerivationPath, i.e. m/44'/60'/0'/0, to generate
-// the first private key.
+// It uses the default derivation path, geth.DefaultBaseDerivationPath, i.e. m/44'/60'/0'/0, to generate
+// the first private key. The generated account is of path m/44'/60'/0'/0/0.
 func MnemonicToPrivateKey(mnemonic string, passphrase string) (*ecdsa.PrivateKey, error) {
 	// create the master key
 	seed, err := bip39.NewSeedWithErrorChecking(mnemonic, passphrase)
@@ -656,7 +696,7 @@ func MnemonicToPrivateKey(mnemonic string, passphrase string) (*ecdsa.PrivateKey
 	secret, chainCode := hd.ComputeMastersFromSeed(seed)
 
 	// derive the first private key from the master key
-	key, err := hd.DerivePrivateKeyForPath(secret, chainCode, accounts.LegacyLedgerBaseDerivationPath.String())
+	key, err := hd.DerivePrivateKeyForPath(secret, chainCode, accounts.DefaultBaseDerivationPath.String())
 	if err != nil {
 		return nil, err
 	}
