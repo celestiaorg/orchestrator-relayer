@@ -430,7 +430,7 @@ func ImportMnemonic(serviceName string) *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "mnemonic",
 		Args:  cobra.ExactArgs(0),
-		Short: "import an EVM address from a 24 words BIP39 mnemonic phrase",
+		Short: "import an EVM private key from a 24 words BIP39 mnemonic phrase",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			config, err := parseKeysConfigFlags(cmd, serviceName)
 			if err != nil {
