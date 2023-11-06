@@ -32,7 +32,7 @@ func NewRelayer(
 	logger := tmlog.NewNopLogger()
 	node.CelestiaNetwork.GRPCClient.Close()
 	appQuerier := rpc.NewAppQuerier(logger, node.CelestiaNetwork.GRPCAddr, encoding.MakeConfig(app.ModuleEncodingRegisters...))
-	require.NoError(t, appQuerier.Start())
+	require.NoError(t, appQuerier.Start(true))
 	t.Cleanup(func() {
 		_ = appQuerier.Stop()
 	})
@@ -66,7 +66,7 @@ func NewOrchestrator(
 ) *orchestrator.Orchestrator {
 	logger := tmlog.NewNopLogger()
 	appQuerier := rpc.NewAppQuerier(logger, node.CelestiaNetwork.GRPCAddr, encoding.MakeConfig(app.ModuleEncodingRegisters...))
-	require.NoError(t, appQuerier.Start())
+	require.NoError(t, appQuerier.Start(true))
 	t.Cleanup(func() {
 		_ = appQuerier.Stop()
 	})

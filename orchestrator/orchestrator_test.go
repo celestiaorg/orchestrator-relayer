@@ -182,7 +182,7 @@ func (s *OrchestratorTestSuite) TestEnqueuingAttestationNonces() {
 		s.Node.CelestiaNetwork.GRPCAddr,
 		ecfg,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	latestNonce, err := appQuerier.QueryLatestAttestationNonce(ctx)

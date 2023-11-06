@@ -24,7 +24,7 @@ import (
 
 // NewTmAndAppQuerier helper function that creates a new TmQuerier and AppQuerier and registers their stop functions in the
 // stopFuncs slice.
-func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC string) (*rpc.TmQuerier, *rpc.AppQuerier, []func() error, error) {
+func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC string, grpcInsecure bool) (*rpc.TmQuerier, *rpc.AppQuerier, []func() error, error) {
 	// load app encoding configuration
 	encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
@@ -45,7 +45,7 @@ func NewTmAndAppQuerier(logger tmlog.Logger, tendermintRPC string, celesGRPC str
 
 	// creating the application querier
 	appQuerier := rpc.NewAppQuerier(logger, celesGRPC, encCfg)
-	err = appQuerier.Start()
+	err = appQuerier.Start(grpcInsecure)
 	if err != nil {
 		return nil, nil, stopFuncs, err
 	}

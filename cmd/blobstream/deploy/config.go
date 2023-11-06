@@ -46,7 +46,7 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	}
 	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream deployer home directory")
 	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
-
+	base.AddGRPCInsecureFlag(cmd)
 	return cmd
 }
 
@@ -58,6 +58,7 @@ type deployConfig struct {
 	evmAccAddress     string
 	startingNonce     string
 	evmGasLimit       uint64
+  grpcInsecure      bool
 }
 
 func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
@@ -115,6 +116,10 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 	if err != nil {
 		return deployConfig{}, err
 	}
+	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
+	if err != nil {
+		return deployConfig{}, err
+	}
 
 	return deployConfig{
 		evmAccAddress: evmAccAddr,
@@ -128,5 +133,6 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 			Home:          homeDir,
 			EVMPassphrase: passphrase,
 		},
+		grpcInsecure: grpcInsecure,
 	}, nil
 }
