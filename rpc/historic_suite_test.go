@@ -56,7 +56,7 @@ func (s *HistoricQuerierTestSuite) setupAppQuerier() *rpc.AppQuerier {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	s.T().Cleanup(func() {
 		appQuerier.Stop() //nolint:errcheck
 	})
