@@ -42,14 +42,18 @@ type CelestiaNetwork struct {
 }
 
 type CelestiaNetworkParams struct {
-	GenesisOpts []celestiatestnode.GenesisOption
-	TimeIotaMs  int64
+	GenesisOpts   []celestiatestnode.GenesisOption
+	TimeIotaMs    int64
+	Pruning       string
+	TimeoutCommit time.Duration
 }
 
 func DefaultCelestiaNetworkParams() CelestiaNetworkParams {
 	return CelestiaNetworkParams{
-		GenesisOpts: nil,
-		TimeIotaMs:  1,
+		GenesisOpts:   nil,
+		TimeIotaMs:    1,
+		Pruning:       "default",
+		TimeoutCommit: 5 * time.Millisecond,
 	}
 }
 
@@ -73,8 +77,9 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, params CelestiaNetwor
 	}
 
 	tmCfg := celestiatestnode.DefaultTendermintConfig()
-	tmCfg.Consensus.TimeoutCommit = time.Millisecond * 5
+	tmCfg.Consensus.TimeoutCommit = params.TimeoutCommit
 	appConf := celestiatestnode.DefaultAppConfig()
+	appConf.Pruning = params.Pruning
 	consensusParams := celestiatestnode.DefaultParams()
 	consensusParams.Block.TimeIotaMs = params.TimeIotaMs
 

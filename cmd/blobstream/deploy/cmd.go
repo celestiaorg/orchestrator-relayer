@@ -43,21 +43,33 @@ func Command() *cobra.Command {
 
 			encCfg := encoding.MakeConfig(app.ModuleEncodingRegisters...)
 
-			querier := rpc.NewAppQuerier(logger, config.coreGRPC, encCfg)
-			err = querier.Start(config.grpcInsecure)
+			appQuerier := rpc.NewAppQuerier(logger, config.coreGRPC, encCfg)
+			err = appQuerier.Start(config.grpcInsecure)
 			if err != nil {
 				return err
 			}
 			defer func() {
-				err := querier.Stop()
+				err := appQuerier.Stop()
 				if err != nil {
 					logger.Error(err.Error())
 				}
 			}()
 
-			vs, err := getStartingValset(cmd.Context(), querier, config.startingNonce)
+			tmQuerier := rpc.NewTmQuerier(config.coreRPC, logger)
+			err = tmQuerier.Start()
 			if err != nil {
-				logger.Error("couldn't get valset from state (probably pruned). connect to an archive node to be able to deploy the contract")
+				return err
+			}
+			defer func(tmQuerier *rpc.TmQuerier) {
+				err := tmQuerier.Stop()
+				if err != nil {
+					logger.Error(err.Error())
+				}
+			}(tmQuerier)
+
+			vs, err := getStartingValset(cmd.Context(), *tmQuerier, appQuerier, config.startingNonce)
+			if err != nil {
+				logger.Error("couldn't get valset from state (probably pruned). connect to an archive node to be able to deploy the contract", "err", err.Error())
 				return errors.Wrap(
 					err,
 					"cannot initialize the Blobstream contract without having a valset request: %s",
@@ -130,15 +142,29 @@ func Command() *cobra.Command {
 }
 
 // getStartingValset get the valset that will be used to init the bridge contract.
-func getStartingValset(ctx context.Context, querier *rpc.AppQuerier, startingNonce string) (*types.Valset, error) {
+func getStartingValset(ctx context.Context, tmQuerier rpc.TmQuerier, appQuerier *rpc.AppQuerier, startingNonce string) (*types.Valset, error) {
 	switch startingNonce {
 	case "latest":
-		return querier.QueryLatestValset(ctx)
+		vs, err := appQuerier.QueryLatestValset(ctx)
+		if err != nil {
+			appQuerier.Logger.Debug("couldn't get the attestation from node state. trying with historical data if the target node is archival", "nonce", 1, "err", err.Error())
+			currentHeight, err := tmQuerier.QueryHeight(ctx)
+			if err != nil {
+				return nil, err
+			}
+			return appQuerier.QueryRecursiveLatestValset(ctx, uint64(currentHeight))
+		}
+		return vs, nil
 	case "earliest":
 		// TODO make the first nonce 1 a const
-		att, err := querier.QueryAttestationByNonce(ctx, 1)
+		att, err := appQuerier.QueryAttestationByNonce(ctx, 1)
 		if err != nil {
-			return nil, err
+			appQuerier.Logger.Debug("couldn't get the attestation from node state. trying with historical data if the target node is archival", "nonce", 1, "err", err.Error())
+			historicalAtt, err := appQuerier.QueryHistoricalAttestationByNonce(ctx, 1, 1)
+			if err != nil {
+				return nil, err
+			}
+			att = historicalAtt
 		}
 		vs, ok := att.(*types.Valset)
 		if !ok {
@@ -150,17 +176,23 @@ func getStartingValset(ctx context.Context, querier *rpc.AppQuerier, startingNon
 		if err != nil {
 			return nil, err
 		}
-		attestation, err := querier.QueryAttestationByNonce(ctx, nonce)
+		currentHeight, err := tmQuerier.QueryHeight(ctx)
+		if err != nil {
+			return nil, err
+		}
+		attestation, err := appQuerier.QueryRecursiveHistoricalAttestationByNonce(ctx, nonce, uint64(currentHeight))
 		if err != nil {
 			return nil, err
 		}
 		if attestation == nil {
 			return nil, types.ErrNilAttestation
 		}
-		value, ok := attestation.(*types.Valset)
-		if ok {
+		switch value := attestation.(type) {
+		case *types.Valset:
 			return value, nil
+		case *types.DataCommitment:
+			return appQuerier.QueryRecursiveHistoricalLastValsetBeforeNonce(ctx, nonce, value.EndBlock)
 		}
-		return querier.QueryLastValsetBeforeNonce(ctx, nonce)
 	}
+	return nil, ErrNotFound
 }

@@ -3,6 +3,12 @@ package rpc
 import (
 	"context"
 	"crypto/tls"
+	"strconv"
+	"time"
+
+	"github.com/celestiaorg/celestia-app/pkg/appconsts"
+	cosmosgrpc "github.com/cosmos/cosmos-sdk/types/grpc"
+	"google.golang.org/grpc/metadata"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -15,6 +21,10 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 )
+
+// BlocksIn20DaysPeriod represents the number of blocks in 20-days period.
+// It uses the timeout commit constant, defined in app, for the computation
+var BlocksIn20DaysPeriod = 20 * 24 * 60 * 60 / appconsts.TimeoutCommit.Seconds()
 
 // AppQuerier queries the application for attestations and unbonding periods.
 type AppQuerier struct {
@@ -74,6 +84,66 @@ func (aq *AppQuerier) QueryAttestationByNonce(ctx context.Context, nonce uint64)
 	return unmarshalledAttestation, nil
 }
 
+// QueryHistoricalAttestationByNonce query an attestation by nonce from the state machine at a certain height.
+func (aq *AppQuerier) QueryHistoricalAttestationByNonce(ctx context.Context, nonce uint64, height uint64) (celestiatypes.AttestationRequestI, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+
+	var header metadata.MD
+	atResp, err := queryClient.AttestationRequestByNonce(
+		metadata.AppendToOutgoingContext(ctx, cosmosgrpc.GRPCBlockHeightHeader, strconv.FormatUint(height, 10)), // Add metadata to request
+		&celestiatypes.QueryAttestationRequestByNonceRequest{Nonce: nonce},
+		grpc.Header(&header), // Retrieve header from response
+	)
+	if err != nil {
+		return nil, err
+	}
+	if atResp.Attestation == nil {
+		return nil, nil
+	}
+
+	unmarshalledAttestation, err := aq.unmarshallAttestation(atResp.Attestation)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalledAttestation, nil
+}
+
+// QueryRecursiveHistoricalAttestationByNonce query an attestation by nonce from the state machine
+// via going over the history step by step starting from height.
+func (aq *AppQuerier) QueryRecursiveHistoricalAttestationByNonce(ctx context.Context, nonce uint64, height uint64) (celestiatypes.AttestationRequestI, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+
+	currentHeight := height
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+	for currentHeight >= 1 {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			var header metadata.MD
+			atResp, err := queryClient.AttestationRequestByNonce(
+				metadata.AppendToOutgoingContext(ctx, cosmosgrpc.GRPCBlockHeightHeader, strconv.FormatUint(currentHeight, 10)), // Add metadata to request
+				&celestiatypes.QueryAttestationRequestByNonceRequest{Nonce: nonce},
+				grpc.Header(&header), // Retrieve header from response
+			)
+			if err == nil {
+				unmarshalledAttestation, err := aq.unmarshallAttestation(atResp.Attestation)
+				if err != nil {
+					return nil, err
+				}
+				return unmarshalledAttestation, nil
+			}
+			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
+				return nil, ErrNotFound
+			}
+			currentHeight -= uint64(BlocksIn20DaysPeriod)
+		}
+	}
+	return nil, ErrNotFound
+}
+
 // QueryLatestAttestationNonce query the latest attestation nonce from the state machine.
 func (aq *AppQuerier) QueryLatestAttestationNonce(ctx context.Context) (uint64, error) {
 	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
@@ -81,6 +151,23 @@ func (aq *AppQuerier) QueryLatestAttestationNonce(ctx context.Context) (uint64, 
 	resp, err := queryClient.LatestAttestationNonce(
 		ctx,
 		&celestiatypes.QueryLatestAttestationNonceRequest{},
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	return resp.Nonce, nil
+}
+
+// QueryHistoricalLatestAttestationNonce query the historical latest attestation nonce from the state machine at a certain nonce.
+func (aq *AppQuerier) QueryHistoricalLatestAttestationNonce(ctx context.Context, height uint64) (uint64, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+
+	var header metadata.MD
+	resp, err := queryClient.LatestAttestationNonce(
+		metadata.AppendToOutgoingContext(ctx, cosmosgrpc.GRPCBlockHeightHeader, strconv.FormatUint(height, 10)),
+		&celestiatypes.QueryLatestAttestationNonceRequest{},
+		grpc.Header(&header),
 	)
 	if err != nil {
 		return 0, err
@@ -145,6 +232,24 @@ func (aq *AppQuerier) QueryValsetByNonce(ctx context.Context, nonce uint64) (*ce
 	return value, nil
 }
 
+// QueryHistoricalValsetByNonce query a historical valset by nonce.
+func (aq *AppQuerier) QueryHistoricalValsetByNonce(ctx context.Context, nonce uint64, height uint64) (*celestiatypes.Valset, error) {
+	attestation, err := aq.QueryHistoricalAttestationByNonce(ctx, nonce, height)
+	if err != nil {
+		return nil, err
+	}
+	if attestation == nil {
+		return nil, types.ErrAttestationNotFound
+	}
+
+	value, ok := attestation.(*celestiatypes.Valset)
+	if !ok {
+		return nil, types.ErrUnmarshalValset
+	}
+
+	return value, nil
+}
+
 // QueryLatestValset query the latest recorded valset in the state machine.
 func (aq *AppQuerier) QueryLatestValset(ctx context.Context) (*celestiatypes.Valset, error) {
 	latestNonce, err := aq.QueryLatestAttestationNonce(ctx)
@@ -164,6 +269,39 @@ func (aq *AppQuerier) QueryLatestValset(ctx context.Context) (*celestiatypes.Val
 	return latestValset, nil
 }
 
+// QueryRecursiveLatestValset query the latest recorded valset in the state machine in history.
+func (aq *AppQuerier) QueryRecursiveLatestValset(ctx context.Context, height uint64) (*celestiatypes.Valset, error) {
+	currentHeight := height
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+	for currentHeight >= 1 {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			latestNonce, err := aq.QueryHistoricalLatestAttestationNonce(ctx, currentHeight)
+			if err != nil {
+				return nil, err
+			}
+
+			if vs, err := aq.QueryHistoricalValsetByNonce(ctx, latestNonce, currentHeight); err == nil {
+				return vs, nil
+			}
+
+			latestValset, err := aq.QueryHistoricalLastValsetBeforeNonce(ctx, latestNonce, currentHeight)
+			if err == nil {
+				return latestValset, nil
+			}
+
+			if currentHeight <= uint64(BlocksIn20DaysPeriod) {
+				return nil, ErrNotFound
+			}
+			currentHeight -= uint64(BlocksIn20DaysPeriod)
+		}
+	}
+	return nil, ErrNotFound
+}
+
 // QueryLastValsetBeforeNonce returns the last valset before nonce.
 // This will be needed when signing to know the validator set at that particular nonce.
 // the provided `nonce` can be a valset, but this will return the valset before it.
@@ -179,6 +317,48 @@ func (aq *AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint
 	}
 
 	return resp.Valset, nil
+}
+
+// QueryHistoricalLastValsetBeforeNonce returns the last historical valset before nonce for a certain height.
+func (aq *AppQuerier) QueryHistoricalLastValsetBeforeNonce(ctx context.Context, nonce uint64, height uint64) (*celestiatypes.Valset, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+	var header metadata.MD
+	resp, err := queryClient.LatestValsetRequestBeforeNonce(
+		metadata.AppendToOutgoingContext(ctx, cosmosgrpc.GRPCBlockHeightHeader, strconv.FormatUint(height, 10)),
+		&celestiatypes.QueryLatestValsetRequestBeforeNonceRequest{Nonce: nonce},
+		grpc.Header(&header),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Valset, nil
+}
+
+// QueryRecursiveHistoricalLastValsetBeforeNonce recursively looks for the last historical valset before nonce for a certain height until genesis.
+func (aq *AppQuerier) QueryRecursiveHistoricalLastValsetBeforeNonce(ctx context.Context, nonce uint64, height uint64) (*celestiatypes.Valset, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+	currentNonce := nonce - 1
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			if currentNonce == 0 {
+				return nil, ErrNotFound
+			}
+			n, err := aq.QueryRecursiveHistoricalAttestationByNonce(ctx, currentNonce, height)
+			if err != nil {
+				return nil, err
+			}
+			vs, ok := n.(*celestiatypes.Valset)
+			if ok {
+				return vs, nil
+			}
+			currentNonce--
+		}
+	}
 }
 
 // QueryLastUnbondingHeight query the last unbonding height from state machine.
