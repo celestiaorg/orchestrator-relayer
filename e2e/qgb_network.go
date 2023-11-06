@@ -420,7 +420,7 @@ func (network BlobstreamNetwork) WaitForOrchestratorToStart(_ctx context.Context
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -491,7 +491,7 @@ func (network BlobstreamNetwork) WaitForOrchestratorToStart(_ctx context.Context
 // Thus, any nonce after the returned valset should be signed by all orchestrators.
 func (network BlobstreamNetwork) GetValsetContainingVals(_ctx context.Context, number int) (*types.Valset, error) {
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +539,7 @@ func (network BlobstreamNetwork) GetValsetConfirm(
 	p2pQuerier := p2p.NewQuerier(dht, network.Logger)
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return nil, err
 	}
@@ -602,7 +602,7 @@ func (network BlobstreamNetwork) GetDataCommitmentConfirm(
 
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err = appQuerier.Start()
+	err = appQuerier.Start(true)
 	if err != nil {
 		return nil, err
 	}
@@ -651,7 +651,7 @@ func (network BlobstreamNetwork) GetDataCommitmentConfirmByHeight(
 ) (*blobstreamtypes.DataCommitmentConfirm, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return nil, err
 	}
@@ -672,7 +672,7 @@ func (network BlobstreamNetwork) GetDataCommitmentConfirmByHeight(
 func (network BlobstreamNetwork) GetLatestAttestationNonce(_ctx context.Context) (uint64, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return 0, err
 	}
@@ -694,7 +694,7 @@ func (network BlobstreamNetwork) WasAttestationSigned(
 ) (bool, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return false, err
 	}
@@ -992,7 +992,7 @@ func (network BlobstreamNetwork) PrintLogs() {
 func (network BlobstreamNetwork) GetLatestValset(ctx context.Context) (*types.Valset, error) {
 	// create app querier
 	appQuerier := rpc.NewAppQuerier(network.Logger, network.CelestiaGRPC, network.EncCfg)
-	err := appQuerier.Start()
+	err := appQuerier.Start(true)
 	if err != nil {
 		return nil, err
 	}

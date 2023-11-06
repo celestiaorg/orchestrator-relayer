@@ -14,7 +14,7 @@ func (s *QuerierTestSuite) TestQueryAttestationByNonce() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	att, err := appQuerier.QueryAttestationByNonce(context.Background(), 1)
@@ -28,7 +28,7 @@ func (s *QuerierTestSuite) TestQueryLatestAttestationNonce() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	nonce, err := appQuerier.QueryLatestAttestationNonce(context.Background())
@@ -42,7 +42,7 @@ func (s *QuerierTestSuite) TestQueryDataCommitmentByNonce() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	dc, err := appQuerier.QueryDataCommitmentByNonce(context.Background(), 2)
@@ -56,7 +56,7 @@ func (s *QuerierTestSuite) TestQueryDataCommitmentForHeight() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	dc, err := appQuerier.QueryDataCommitmentForHeight(context.Background(), 10)
@@ -70,7 +70,7 @@ func (s *QuerierTestSuite) TestQueryValsetByNonce() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	vs, err := appQuerier.QueryValsetByNonce(context.Background(), 1)
@@ -84,7 +84,7 @@ func (s *QuerierTestSuite) TestQueryLatestValset() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	vs, err := appQuerier.QueryLatestValset(context.Background())
@@ -98,7 +98,7 @@ func (s *QuerierTestSuite) TestQueryLastValsetBeforeNonce() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	vs, err := appQuerier.QueryLastValsetBeforeNonce(context.Background(), 2)
@@ -112,7 +112,7 @@ func (s *QuerierTestSuite) TestQueryLastUnbondingHeight() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	unbondingHeight, err := appQuerier.QueryLastUnbondingHeight(context.Background())
@@ -126,7 +126,7 @@ func (s *QuerierTestSuite) TestQueryEarliestAttestationNonce() {
 		s.Network.GRPCAddr,
 		s.EncConf,
 	)
-	require.NoError(s.T(), appQuerier.Start())
+	require.NoError(s.T(), appQuerier.Start(true))
 	defer appQuerier.Stop() //nolint:errcheck
 
 	earliestNonce, err := appQuerier.QueryEarliestAttestationNonce(context.Background())

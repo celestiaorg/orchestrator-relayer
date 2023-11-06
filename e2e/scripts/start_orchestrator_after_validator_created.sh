@@ -53,6 +53,7 @@ then
     --core.rpc.port="${CORE_RPC_PORT}" \
     --core.grpc.host="${CORE_GRPC_HOST}" \
     --core.grpc.port="${CORE_GRPC_PORT}" \
+    --grpc.insecure \
     --p2p.nickname=key \
     --p2p.listen-addr="${P2P_LISTEN}" \
     --evm.passphrase=123
@@ -66,6 +67,7 @@ else
     --core.rpc.port="${CORE_RPC_PORT}" \
     --core.grpc.host="${CORE_GRPC_HOST}" \
     --core.grpc.port="${CORE_GRPC_PORT}" \
+    --grpc.insecure \
     --p2p.listen-addr="${P2P_LISTEN}" \
     --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
     --evm.passphrase=123
