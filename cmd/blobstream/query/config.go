@@ -3,6 +3,8 @@ package query
 import (
 	"fmt"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
+
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/relayer"
 	"github.com/spf13/cobra"
 )
@@ -19,6 +21,7 @@ func addFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().Uint(relayer.FlagCoreRPCPort, 26657, "Specify the rest rpc address")
 	cmd.Flags().String(FlagP2PNode, "", "P2P target node multiaddress (eg. /ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn)")
 	cmd.Flags().String(FlagOutputFile, "", "Path to an output file path if the results need to be written to a json file. Leaving it as empty will result in printing the result to stdout")
+	base.AddGRPCInsecureFlag(cmd)
 
 	return cmd
 }
@@ -27,6 +30,7 @@ type Config struct {
 	coreGRPC, coreRPC string
 	targetNode        string
 	outputFile        string
+	grpcInsecure      bool
 }
 
 func parseFlags(cmd *cobra.Command) (Config, error) {
@@ -54,11 +58,15 @@ func parseFlags(cmd *cobra.Command) (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-
+	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
+	if err != nil {
+		return Config{}, err
+	}
 	return Config{
-		coreGRPC:   fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
-		coreRPC:    fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
-		targetNode: targetNode,
-		outputFile: outputFile,
+		coreGRPC:     fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
+		coreRPC:      fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
+		targetNode:   targetNode,
+		outputFile:   outputFile,
+		grpcInsecure: grpcInsecure,
 	}, nil
 }

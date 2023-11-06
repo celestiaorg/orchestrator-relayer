@@ -46,6 +46,7 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
+	base.AddGRPCInsecureFlag(cmd)
 
 	return cmd
 }
@@ -59,6 +60,7 @@ type StartConfig struct {
 	evmGasLimit                  uint64
 	bootstrappers, p2pListenAddr string
 	p2pNickname                  string
+	grpcInsecure                 bool
 }
 
 func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
@@ -135,6 +137,10 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 	if err != nil {
 		return StartConfig{}, err
 	}
+	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
+	if err != nil {
+		return StartConfig{}, err
+	}
 
 	return StartConfig{
 		evmAccAddress: evmAccAddr,
@@ -151,6 +157,7 @@ func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
 			Home:          homeDir,
 			EVMPassphrase: passphrase,
 		},
+		grpcInsecure: grpcInsecure,
 	}, nil
 }
 

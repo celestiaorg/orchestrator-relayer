@@ -59,6 +59,7 @@ sleep 5s
   --core.rpc.port="${CORE_RPC_PORT}" \
   --core.grpc.host="${CORE_GRPC_HOST}" \
   --core.grpc.port="${CORE_GRPC_PORT}" \
+  --grpc.insecure \
   --evm.chain-id="${EVM_CHAIN_ID}" \
   --evm.rpc="${EVM_ENDPOINT}" \
   --evm.contract-address="${BLOBSTREAM_CONTRACT}" \
