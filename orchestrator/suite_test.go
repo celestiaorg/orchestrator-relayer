@@ -3,6 +3,7 @@ package orchestrator_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
@@ -31,7 +32,9 @@ func (s *OrchestratorTestSuite) SetupSuite() {
 				testnode.ImmediateProposals(codec),
 				blobstreamtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
 			},
-			TimeIotaMs: 1,
+			TimeIotaMs:    1,
+			Pruning:       "default",
+			TimeoutCommit: 5 * time.Millisecond,
 		},
 	)
 	s.Orchestrator = blobstreamtesting.NewOrchestrator(t, s.Node)

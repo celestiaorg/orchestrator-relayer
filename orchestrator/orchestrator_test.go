@@ -206,7 +206,9 @@ func TestProcessWithoutValsetInStore(t *testing.T) {
 				testnode.ImmediateProposals(codec),
 				qgbtesting.SetDataCommitmentWindowParams(codec, celestiatypes.Params{DataCommitmentWindow: 101}),
 			},
-			TimeIotaMs: 6048000, // to have enough time to sign attestations after they're pruned
+			TimeIotaMs:    6048000, // to have enough time to sign attestations after they're pruned
+			Pruning:       "default",
+			TimeoutCommit: 5 * time.Millisecond,
 		},
 	)
 	_, err := node.CelestiaNetwork.WaitForHeight(400)

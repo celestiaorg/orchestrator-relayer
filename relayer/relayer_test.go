@@ -68,7 +68,9 @@ func TestUseValsetFromP2P(t *testing.T) {
 				testnode.ImmediateProposals(codec),
 				qgbtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
 			},
-			TimeIotaMs: 2000000, // so attestations are pruned after they're queried
+			TimeIotaMs:    2000000, // so attestations are pruned after they're queried
+			Pruning:       "default",
+			TimeoutCommit: 5 * time.Millisecond,
 		},
 	)
 
