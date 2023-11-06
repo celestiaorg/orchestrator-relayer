@@ -58,7 +58,7 @@ type deployConfig struct {
 	evmAccAddress     string
 	startingNonce     string
 	evmGasLimit       uint64
-  grpcInsecure      bool
+	grpcInsecure      bool
 }
 
 func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {

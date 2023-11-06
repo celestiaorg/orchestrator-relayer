@@ -2,13 +2,13 @@ package rpc
 
 import (
 	"context"
+	"crypto/tls"
 	"strconv"
 	"time"
 
 	"github.com/celestiaorg/celestia-app/pkg/appconsts"
 	cosmosgrpc "github.com/cosmos/cosmos-sdk/types/grpc"
 	"google.golang.org/grpc/metadata"
-	"crypto/tls"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
