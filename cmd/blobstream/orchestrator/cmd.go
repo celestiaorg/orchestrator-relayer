@@ -44,7 +44,7 @@ func Start() *cobra.Command {
 		Use:   "start <flags>",
 		Short: "Starts the Blobstream orchestrator to sign attestations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseOrchestratorFlags(cmd)
+			config, err := parseOrchestratorFlags(cmd, &StartConfig{})
 			if err != nil {
 				return err
 			}

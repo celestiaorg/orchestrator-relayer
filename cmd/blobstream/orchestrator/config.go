@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -10,30 +11,19 @@ import (
 )
 
 const (
-	FlagCoreGRPCHost        = "core.grpc.host"
-	FlagCoreGRPCPort        = "core.grpc.port"
-	FlagEVMAccAddress       = "evm.account"
-	FlagCoreRPCHost         = "core.rpc.host"
-	FlagCoreRPCPort         = "core.rpc.port"
 	ServiceNameOrchestrator = "orchestrator"
 )
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rest rpc address host")
-	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rest rpc address port")
-	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
-	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
-	cmd.Flags().String(
-		FlagEVMAccAddress,
-		"",
-		"Specify the EVM account address to use for signing (Note: the private key should be in the keystore)",
-	)
+	base.AddCoreRPCFlag(cmd)
+	base.AddCoreGRPCFlag(cmd)
+	base.AddEVMAccAddressFlag(cmd)
+	base.AddEVMPassphraseFlag(cmd)
 	homeDir, err := base.DefaultServicePath(ServiceNameOrchestrator)
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream orchestrator home directory")
-	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
+	base.AddHomeFlag(cmd, ServiceNameOrchestrator, homeDir)
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
@@ -42,7 +32,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 }
 
 type StartConfig struct {
-	*base.Config
+	base.Config
 	coreGRPC, coreRPC            string
 	evmAccAddress                string
 	bootstrappers, p2pListenAddr string
@@ -50,75 +40,86 @@ type StartConfig struct {
 	grpcInsecure                 bool
 }
 
-func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
-	evmAccAddr, err := cmd.Flags().GetString(FlagEVMAccAddress)
+func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartConfig, error) {
+	evmAccAddr, changed, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if evmAccAddr == "" {
-		return StartConfig{}, errors.New("the evm account address should be specified")
-	}
-	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	bootstrappers, err := cmd.Flags().GetString(base.FlagBootstrappers)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	p2pListenAddress, err := cmd.Flags().GetString(base.FlagP2PListenAddress)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	p2pNickname, err := cmd.Flags().GetString(base.FlagP2PNickname)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	homeDir, err := cmd.Flags().GetString(base.FlagHome)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	if homeDir == "" {
-		var err error
-		homeDir, err = base.DefaultServicePath(ServiceNameOrchestrator)
-		if err != nil {
-			return StartConfig{}, err
+	if changed {
+		if evmAccAddr == "" && fileConfig.evmAccAddress == "" {
+			return StartConfig{}, errors.New("the evm account address should be specified")
 		}
-	}
-	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
-	if err != nil {
-		return StartConfig{}, err
+		fileConfig.evmAccAddress = evmAccAddr
 	}
 
-	return StartConfig{
-		evmAccAddress: evmAccAddr,
-		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
-		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
-		bootstrappers: bootstrappers,
-		p2pNickname:   p2pNickname,
-		p2pListenAddr: p2pListenAddress,
-		Config: &base.Config{
-			Home:          homeDir,
-			EVMPassphrase: passphrase,
-		},
-		grpcInsecure: grpcInsecure,
-	}, nil
+	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		if !strings.HasPrefix(coreRPC, "tcp://") {
+			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
+		}
+		fileConfig.coreRPC = coreRPC
+	}
+
+	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.coreGRPC = coreGRPC
+	}
+
+	bootstrappers, changed, err := base.GetBootstrappersFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.bootstrappers = bootstrappers
+	}
+
+	p2pListenAddress, changed, err := base.GetP2PListenAddressFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.p2pListenAddr = p2pListenAddress
+	}
+
+	p2pNickname, changed, err := base.GetP2PNicknameFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.p2pNickname = p2pNickname
+	}
+
+	homeDir, changed, err := base.GetHomeFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.Home = homeDir
+	}
+
+	passphrase, changed, err := base.GetEVMPassphraseFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.EVMPassphrase = passphrase
+	}
+
+	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.grpcInsecure = grpcInsecure
+	}
+
+	return *fileConfig, nil
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
@@ -126,7 +127,7 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream orchestrator home directory")
+	base.AddHomeFlag(cmd, ServiceNameOrchestrator, homeDir)
 	return cmd
 }
 

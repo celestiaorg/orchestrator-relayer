@@ -27,7 +27,7 @@ func Command() *cobra.Command {
 		Use:   "deploy <flags>",
 		Short: "Deploys the Blobstream contract and initializes it using the provided Celestia chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseDeployFlags(cmd)
+			config, err := parseDeployFlags(cmd, &deployConfig{})
 			if err != nil {
 				return err
 			}

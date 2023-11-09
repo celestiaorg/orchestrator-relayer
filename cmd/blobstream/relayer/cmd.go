@@ -83,7 +83,7 @@ func Start() *cobra.Command {
 		Use:   "start <flags>",
 		Short: "Runs the Blobstream relayer to submit attestations to the target EVM chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseRelayerStartFlags(cmd)
+			config, err := parseRelayerStartFlags(cmd, &StartConfig{})
 			if err != nil {
 				return err
 			}

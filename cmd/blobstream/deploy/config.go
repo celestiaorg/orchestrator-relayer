@@ -3,55 +3,37 @@ package deploy
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
-	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/spf13/cobra"
 )
 
 const (
-	FlagEVMAccAddress   = "evm.account"
-	FlagEVMChainID      = "evm.chain-id"
-	FlagEVMRPC          = "evm.rpc"
-	FlagEVMGasLimit     = "evm.gas-limit"
-	FlagCoreGRPCHost    = "core.grpc.host"
-	FlagCoreGRPCPort    = "core.grpc.port"
-	FlagCoreRPCHost     = "core.rpc.host"
-	FlagCoreRPCPort     = "core.rpc.port"
-	FlagStartingNonce   = "starting-nonce"
 	ServiceNameDeployer = "deployer"
 )
 
 func addDeployFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().String(FlagEVMAccAddress, "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
-	cmd.Flags().Uint64(FlagEVMChainID, 5, "Specify the evm chain id")
-	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
-	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
-	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rpc address host")
-	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rpc address port")
-	cmd.Flags().String(FlagEVMRPC, "http://localhost:8545", "Specify the ethereum rpc address")
-	cmd.Flags().String(
-		FlagStartingNonce,
-		"latest",
-		"Specify the nonce to start the Blobstream contract from. "+
-			"\"earliest\": for genesis, "+
-			"\"latest\": for latest valset nonce, "+
-			"\"nonce\": for the latest valset before the provided nonce, provided nonce included.",
-	)
-	cmd.Flags().Uint64(FlagEVMGasLimit, evm.DefaultEVMGasLimit, "Specify the evm gas limit")
+	base.AddEVMAccAddressFlag(cmd)
+	base.AddEVMChainIDFlag(cmd)
+	base.AddCoreGRPCFlag(cmd)
+	base.AddCoreRPCFlag(cmd)
+	base.AddEVMRPCFlag(cmd)
+	base.AddStartingNonceFlag(cmd)
+	base.AddEVMGasLimitFlag(cmd)
+	base.AddEVMPassphraseFlag(cmd)
 	homeDir, err := base.DefaultServicePath(ServiceNameDeployer)
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream deployer home directory")
-	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
+	base.AddHomeFlag(cmd, ServiceNameDeployer, homeDir)
 	base.AddGRPCInsecureFlag(cmd)
 	return cmd
 }
 
 type deployConfig struct {
-	*base.Config
+	base.Config
 	evmRPC            string
 	coreRPC, coreGRPC string
 	evmChainID        uint64
@@ -61,78 +43,92 @@ type deployConfig struct {
 	grpcInsecure      bool
 }
 
-func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
-	evmAccAddr, err := cmd.Flags().GetString(FlagEVMAccAddress)
+func parseDeployFlags(cmd *cobra.Command, fileConfig *deployConfig) (deployConfig, error) {
+	evmAccAddr, changed, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if evmAccAddr == "" {
-		return deployConfig{}, errors.New("the evm account address should be specified")
-	}
-	evmChainID, err := cmd.Flags().GetUint64(FlagEVMChainID)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	evmRPC, err := cmd.Flags().GetString(FlagEVMRPC)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	startingNonce, err := cmd.Flags().GetString(FlagStartingNonce)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	evmGasLimit, err := cmd.Flags().GetUint64(FlagEVMGasLimit)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	homeDir, err := cmd.Flags().GetString(base.FlagHome)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	if homeDir == "" {
-		var err error
-		homeDir, err = base.DefaultServicePath(ServiceNameDeployer)
-		if err != nil {
-			return deployConfig{}, err
+	if changed {
+		if evmAccAddr == "" && fileConfig.evmAccAddress == "" {
+			return deployConfig{}, errors.New("the evm account address should be specified")
 		}
-	}
-	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
-	if err != nil {
-		return deployConfig{}, err
-	}
-	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
-	if err != nil {
-		return deployConfig{}, err
+		fileConfig.evmAccAddress = evmAccAddr
 	}
 
-	return deployConfig{
-		evmAccAddress: evmAccAddr,
-		evmChainID:    evmChainID,
-		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
-		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
-		evmRPC:        evmRPC,
-		startingNonce: startingNonce,
-		evmGasLimit:   evmGasLimit,
-		Config: &base.Config{
-			Home:          homeDir,
-			EVMPassphrase: passphrase,
-		},
-		grpcInsecure: grpcInsecure,
-	}, nil
+	evmChainID, changed, err := base.GetEVMChainIDFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.evmChainID = evmChainID
+	}
+
+	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		if !strings.HasPrefix(coreRPC, "tcp://") {
+			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
+		}
+		fileConfig.coreRPC = coreRPC
+	}
+
+	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.coreGRPC = coreGRPC
+	}
+
+	evmRPC, changed, err := base.GetEVMRPCFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.evmRPC = evmRPC
+	}
+
+	startingNonce, changed, err := base.GetStartingNonceFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.startingNonce = startingNonce
+	}
+
+	evmGasLimit, changed, err := base.GetEVMGasLimitFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.evmGasLimit = evmGasLimit
+	}
+
+	homeDir, changed, err := base.GetHomeFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.Home = homeDir
+	}
+
+	passphrase, changed, err := base.GetEVMPassphraseFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.EVMPassphrase = passphrase
+	}
+
+	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+	if changed {
+		fileConfig.grpcInsecure = grpcInsecure
+	}
+
+	return *fileConfig, nil
 }
