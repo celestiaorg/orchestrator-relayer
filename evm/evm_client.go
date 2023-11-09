@@ -13,8 +13,8 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	tmlog "github.com/tendermint/tendermint/libs/log"
 
-	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
-	proxywrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/ERC1967Proxy.sol"
+	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v4/wrappers/Blobstream.sol"
+	proxywrapper "github.com/celestiaorg/blobstream-contracts/v4/wrappers/ERC1967Proxy.sol"
 	"github.com/celestiaorg/celestia-app/x/qgb/types"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 )
@@ -85,7 +85,7 @@ func (ec *Client) DeployBlobstreamContract(
 	ec.logger.Info("deploying QGB implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
 
 	// encode the Blobstream contract initialization data using the chain parameters
-	ethVsHash, err := contractInitValset.Hash()
+	ethVsCheckpoint, err := contractInitValset.SignBytes()
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
@@ -93,7 +93,7 @@ func (ec *Client) DeployBlobstreamContract(
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}
-	initData, err := blobStreamABI.Pack("initialize", big.NewInt(int64(contractInitNonce)), big.NewInt(int64(contractInitValset.TwoThirdsThreshold())), ethVsHash)
+	initData, err := blobStreamABI.Pack("initialize", big.NewInt(int64(contractInitNonce)), big.NewInt(int64(contractInitValset.TwoThirdsThreshold())), ethVsCheckpoint)
 	if err != nil {
 		return gethcommon.Address{}, nil, nil, err
 	}

@@ -397,8 +397,8 @@ github.com/bugsnag/panicwrap v1.2.0/go.mod h1:D/8v3kj0zr8ZAKg1AQ6crr+5VwKN5eIywR
 github.com/bwesterb/go-ristretto v1.2.0/go.mod h1:fUIoIZaG73pV5biE2Blr2xEzDoMj7NFEuV9ekS419A0=
 github.com/c-bata/go-prompt v0.2.2/go.mod h1:VzqtzE2ksDBcdln8G7mk2RX9QyGjH+OVqOCSiVIqS34=
 github.com/casbin/casbin/v2 v2.1.2/go.mod h1:YcPU1XXisHhLzuxH9coDNf2FbKpjGlbCg3n9yuLkIJQ=
-github.com/celestiaorg/blobstream-contracts/v3 v3.1.0 h1:h1Y4V3EMQ2mFmNtWt2sIhZIuyASInj1a9ExI8xOsTOw=
-github.com/celestiaorg/blobstream-contracts/v3 v3.1.0/go.mod h1:x4DKyfKOSv1ZJM9NwV+Pw01kH2CD7N5zTFclXIVJ6GQ=
+github.com/celestiaorg/blobstream-contracts/v4 v4.0.0 h1:A1Sh1wyY8MYXdQZfuOqS4+3ainYPV+QpjSOxMj4cJaA=
+github.com/celestiaorg/blobstream-contracts/v4 v4.0.0/go.mod h1:udhfU6Ocxnh4fEIFJ6GMVp2zAPM7uBSlneaqzgVD2Gw=
 github.com/celestiaorg/celestia-app v1.3.0 h1:vW1zMc1tQ216utzDOYSC3wGO023sKVt8+zujVXnXlOc=
 github.com/celestiaorg/celestia-app v1.3.0/go.mod h1:zhdQIFGFZRRxrDVtFE4OFIT7/12RE8DRyfvNZdW8ceM=
 github.com/celestiaorg/celestia-core v1.29.0-tm-v0.34.29 h1:Fd7ymPUzExPGNl2gZw4i5S74arMw+iDHLE78M/cCxl4=

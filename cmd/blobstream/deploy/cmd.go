@@ -76,6 +76,11 @@ func Command() *cobra.Command {
 				)
 			}
 
+			startingNonce, err := parseStartingNonce(cmd.Context(), appQuerier, config.startingNonce)
+			if err != nil {
+				return err
+			}
+
 			// creating the data store
 			openOptions := store.OpenOptions{HasEVMKeyStore: true}
 			s, err := store.OpenStore(logger, config.Home, openOptions)
@@ -123,7 +128,7 @@ func Command() *cobra.Command {
 			}
 			defer backend.Close()
 
-			address, tx, _, err := evmClient.DeployBlobstreamContract(txOpts, backend, *vs, vs.Nonce, false)
+			address, tx, _, err := evmClient.DeployBlobstreamContract(txOpts, backend, *vs, startingNonce, false)
 			if err != nil {
 				logger.Error("failed to deploy Blobstream contract")
 				return err
@@ -195,4 +200,26 @@ func getStartingValset(ctx context.Context, tmQuerier rpc.TmQuerier, appQuerier 
 		}
 	}
 	return nil, ErrNotFound
+}
+
+// parseStartingNonce parse the provided starting nonce.
+func parseStartingNonce(ctx context.Context, appQuerier *rpc.AppQuerier, startingNonce string) (uint64, error) {
+	switch startingNonce {
+	case "latest":
+		nonce, err := appQuerier.QueryLatestAttestationNonce(ctx)
+		if err != nil {
+			if err != nil {
+				return 0, err
+			}
+		}
+		return nonce, nil
+	case "earliest":
+		return 1, nil
+	default:
+		nonce, err := strconv.ParseUint(startingNonce, 10, 0)
+		if err != nil {
+			return 0, err
+		}
+		return nonce, nil
+	}
 }
