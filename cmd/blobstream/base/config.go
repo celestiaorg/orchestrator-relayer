@@ -238,6 +238,17 @@ func GetHomeFlag(cmd *cobra.Command) (string, bool, error) {
 	return val, changed, err
 }
 
+func GetHomeDirectory(cmd *cobra.Command, service string) (string, error) {
+	homeDir, changed, err := GetHomeFlag(cmd)
+	if err != nil {
+		return "", err
+	}
+	if changed && homeDir != "" {
+		return homeDir, nil
+	}
+	return DefaultServicePath(service)
+}
+
 func AddEVMAccAddressFlag(cmd *cobra.Command) {
 	cmd.Flags().String(FlagEVMAccAddress, "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
 }

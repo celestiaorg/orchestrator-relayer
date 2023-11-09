@@ -14,6 +14,34 @@ const (
 	ServiceNameOrchestrator = "orchestrator"
 )
 
+const DefaultConfigTemplate = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                           RPC Configuration                             ###
+###############################################################################
+
+# Specify the celestia app rest rpc address.
+core.rpc = "{{ .CoreRPC }}"
+
+# Specify the celestia app grpc address.
+core.grpc = "{{ .CoreGRPC }}"
+
+# allow gRPC over insecure channels, if not TLS the server must use TLS.
+grpc.insecure = {{ .GRPCInsecure }}
+
+###############################################################################
+###                         P2P Configuration                               ###
+###############################################################################
+
+# Comma-separated multiaddresses of p2p peers to connect to.
+# Example: "/ip4/127.0.0.1/tcp/30001/p2p/12D3K...,/ip4/127.0.0.1/tcp/30000/p2p/12D3K..."
+p2p.bootstrappers = "{{ .Bootstrappers }}"
+
+# MultiAddr for the p2p peer to listen on.
+p2p.listen-addr = "{{ .P2PListenAddr }}"
+`
+
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddCoreRPCFlag(cmd)
 	base.AddCoreGRPCFlag(cmd)
@@ -33,24 +61,34 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 
 type StartConfig struct {
 	base.Config
-	coreGRPC, coreRPC            string
-	evmAccAddress                string
-	bootstrappers, p2pListenAddr string
-	p2pNickname                  string
-	grpcInsecure                 bool
+	CoreGRPC      string `mapstructure:"core.grpc" json:"core.grpc"`
+	CoreRPC       string `mapstructure:"core.rpc" json:"core.rpc"`
+	EvmAccAddress string `mapstructure:"evm.acccount-address" json:"evm.acccount-address"`
+	Bootstrappers string `mapstructure:"p2p.bootstrappers" json:"p2p.bootstrappers"`
+	P2PListenAddr string `mapstructure:"p2p.listen-addr" json:"p2p.listen-addr"`
+	P2pNickname   string `mapstructure:"p2p.nickname" json:"p2p.nickname"`
+	GRPCInsecure  bool   `mapstructure:"grpc.insecure" json:"grpc.insecure"`
 }
 
-func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartConfig, error) {
-	evmAccAddr, changed, err := base.GetEVMAccAddressFlag(cmd)
+func DefaultStartConfig() *StartConfig {
+	return &StartConfig{
+		CoreRPC:       "tcp://localhost:26657",
+		CoreGRPC:      "localhost:9090",
+		Bootstrappers: "",
+		P2PListenAddr: "/ip4/0.0.0.0/tcp/30000",
+		GRPCInsecure:  true,
+	}
+}
+
+func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartConfig, error) {
+	evmAccAddr, _, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if changed {
-		if evmAccAddr == "" && fileConfig.evmAccAddress == "" {
-			return StartConfig{}, errors.New("the evm account address should be specified")
-		}
-		fileConfig.evmAccAddress = evmAccAddr
+	if evmAccAddr == "" {
+		return StartConfig{}, errors.New("the evm account address should be specified")
 	}
+	startConf.EvmAccAddress = evmAccAddr
 
 	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
 	if err != nil {
@@ -60,7 +98,7 @@ func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		if !strings.HasPrefix(coreRPC, "tcp://") {
 			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
 		}
-		fileConfig.coreRPC = coreRPC
+		startConf.CoreRPC = coreRPC
 	}
 
 	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
@@ -68,7 +106,7 @@ func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	if changed {
-		fileConfig.coreGRPC = coreGRPC
+		startConf.CoreGRPC = coreGRPC
 	}
 
 	bootstrappers, changed, err := base.GetBootstrappersFlag(cmd)
@@ -76,7 +114,7 @@ func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	if changed {
-		fileConfig.bootstrappers = bootstrappers
+		startConf.Bootstrappers = bootstrappers
 	}
 
 	p2pListenAddress, changed, err := base.GetP2PListenAddressFlag(cmd)
@@ -84,7 +122,7 @@ func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	if changed {
-		fileConfig.p2pListenAddr = p2pListenAddress
+		startConf.P2PListenAddr = p2pListenAddress
 	}
 
 	p2pNickname, changed, err := base.GetP2PNicknameFlag(cmd)
@@ -92,34 +130,30 @@ func parseOrchestratorFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	if changed {
-		fileConfig.p2pNickname = p2pNickname
+		startConf.P2pNickname = p2pNickname
 	}
 
 	homeDir, changed, err := base.GetHomeFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if changed {
-		fileConfig.Home = homeDir
-	}
+	startConf.Home = homeDir
 
-	passphrase, changed, err := base.GetEVMPassphraseFlag(cmd)
+	passphrase, _, err := base.GetEVMPassphraseFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if changed {
-		fileConfig.EVMPassphrase = passphrase
-	}
+	startConf.EVMPassphrase = passphrase
 
 	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
 	if changed {
-		fileConfig.grpcInsecure = grpcInsecure
+		startConf.GRPCInsecure = grpcInsecure
 	}
 
-	return *fileConfig, nil
+	return *startConf, nil
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
