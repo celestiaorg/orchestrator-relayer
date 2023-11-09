@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	github.com/celestiaorg/blobstream-contracts/v3 v3.1.0
+	github.com/celestiaorg/blobstream-contracts/v4 v4.0.0
 	github.com/celestiaorg/orchestrator-relayer v0.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/libp2p/go-libp2p v0.32.0
