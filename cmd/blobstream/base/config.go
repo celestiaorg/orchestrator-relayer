@@ -38,7 +38,7 @@ func GetEVMPassphraseFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 // DefaultServicePath constructs the default Blobstream store path for
@@ -94,7 +94,7 @@ func GetStartingNonceFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddP2PNicknameFlag(cmd *cobra.Command) {
@@ -107,7 +107,7 @@ func GetP2PNicknameFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddP2PListenAddressFlag(cmd *cobra.Command) {
@@ -120,7 +120,7 @@ func GetP2PListenAddressFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddBootstrappersFlag(cmd *cobra.Command) {
@@ -133,7 +133,7 @@ func GetBootstrappersFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddGRPCInsecureFlag(cmd *cobra.Command) {
@@ -146,7 +146,7 @@ func GetGRPCInsecureFlag(cmd *cobra.Command) (bool, bool, error) {
 	if err != nil {
 		return false, changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddCoreGRPCFlag(cmd *cobra.Command) {
@@ -159,7 +159,7 @@ func GetCoreGRPCFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddEVMChainIDFlag(cmd *cobra.Command) {
@@ -172,7 +172,7 @@ func GetEVMChainIDFlag(cmd *cobra.Command) (uint64, bool, error) {
 	if err != nil {
 		return 0, changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddCoreRPCFlag(cmd *cobra.Command) {
@@ -185,7 +185,7 @@ func GetCoreRPCFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddEVMRPCFlag(cmd *cobra.Command) {
@@ -198,7 +198,7 @@ func GetEVMRPCFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddEVMContractAddressFlag(cmd *cobra.Command) {
@@ -211,7 +211,7 @@ func GetEVMContractAddressFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddEVMGasLimitFlag(cmd *cobra.Command) {
@@ -224,7 +224,7 @@ func GetEVMGasLimitFlag(cmd *cobra.Command) (uint64, bool, error) {
 	if err != nil {
 		return 0, changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func AddHomeFlag(cmd *cobra.Command, serviceName string, defaultHomeDir string) {
@@ -237,7 +237,7 @@ func GetHomeFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func GetHomeDirectory(cmd *cobra.Command, service string) (string, error) {
@@ -261,7 +261,7 @@ func GetEVMAccAddressFlag(cmd *cobra.Command) (string, bool, error) {
 	if err != nil {
 		return "", changed, err
 	}
-	return val, changed, err
+	return val, changed, nil
 }
 
 func ValidateEVMAddress(addr string) error {
