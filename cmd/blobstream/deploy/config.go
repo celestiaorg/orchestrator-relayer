@@ -43,92 +43,75 @@ type deployConfig struct {
 	grpcInsecure      bool
 }
 
-func parseDeployFlags(cmd *cobra.Command, fileConfig *deployConfig) (deployConfig, error) {
-	evmAccAddr, changed, err := base.GetEVMAccAddressFlag(cmd)
+func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
+	evmAccAddr, _, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		if evmAccAddr == "" && fileConfig.evmAccAddress == "" {
-			return deployConfig{}, errors.New("the evm account address should be specified")
-		}
-		fileConfig.evmAccAddress = evmAccAddr
+	if evmAccAddr == "" {
+		return deployConfig{}, errors.New("the evm account address should be specified")
 	}
 
-	evmChainID, changed, err := base.GetEVMChainIDFlag(cmd)
+	evmChainID, _, err := base.GetEVMChainIDFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.evmChainID = evmChainID
-	}
 
-	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
+	coreRPC, _, err := base.GetCoreRPCFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		if !strings.HasPrefix(coreRPC, "tcp://") {
-			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
-		}
-		fileConfig.coreRPC = coreRPC
+	if !strings.HasPrefix(coreRPC, "tcp://") {
+		coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
 	}
 
-	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
+	coreGRPC, _, err := base.GetCoreGRPCFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.coreGRPC = coreGRPC
-	}
 
-	evmRPC, changed, err := base.GetEVMRPCFlag(cmd)
+	evmRPC, _, err := base.GetEVMRPCFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.evmRPC = evmRPC
-	}
 
-	startingNonce, changed, err := base.GetStartingNonceFlag(cmd)
+	startingNonce, _, err := base.GetStartingNonceFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.startingNonce = startingNonce
-	}
 
-	evmGasLimit, changed, err := base.GetEVMGasLimitFlag(cmd)
+	evmGasLimit, _, err := base.GetEVMGasLimitFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.evmGasLimit = evmGasLimit
-	}
 
-	homeDir, changed, err := base.GetHomeFlag(cmd)
+	homeDir, _, err := base.GetHomeFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.Home = homeDir
-	}
 
-	passphrase, changed, err := base.GetEVMPassphraseFlag(cmd)
+	passphrase, _, err := base.GetEVMPassphraseFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.EVMPassphrase = passphrase
-	}
 
-	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
+	grpcInsecure, _, err := base.GetGRPCInsecureFlag(cmd)
 	if err != nil {
 		return deployConfig{}, err
 	}
-	if changed {
-		fileConfig.grpcInsecure = grpcInsecure
-	}
 
-	return *fileConfig, nil
+	return deployConfig{
+		Config: base.Config{
+			Home:          homeDir,
+			EVMPassphrase: passphrase,
+		},
+		evmRPC:        evmRPC,
+		coreRPC:       coreRPC,
+		coreGRPC:      coreGRPC,
+		evmChainID:    evmChainID,
+		evmAccAddress: evmAccAddr,
+		startingNonce: startingNonce,
+		evmGasLimit:   evmGasLimit,
+		grpcInsecure:  grpcInsecure,
+	}, nil
 }
