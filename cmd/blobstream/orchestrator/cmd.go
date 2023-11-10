@@ -1,15 +1,12 @@
 package orchestrator
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
-	"text/template"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/common"
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
@@ -64,6 +61,9 @@ func Start() *cobra.Command {
 			}
 			config, err := parseOrchestratorFlags(cmd, fileConfig)
 			if err != nil {
+				return err
+			}
+			if err := config.ValidateBasics(); err != nil {
 				return err
 			}
 
@@ -196,78 +196,4 @@ func Init() *cobra.Command {
 		},
 	}
 	return addInitFlags(&cmd)
-}
-
-func LoadFileConfiguration(homeDir string) (*StartConfig, error) {
-	v := viper.New()
-	v.SetEnvPrefix("")
-	v.AutomaticEnv()
-	configPath := filepath.Join(homeDir, "config")
-	configFilePath := filepath.Join(configPath, "config.toml")
-	conf := DefaultStartConfig()
-
-	// if config.toml file does not exist, we create it and write default ClientConfig values into it.
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
-		if err := initializeConfigFile(configFilePath, configPath, conf); err != nil {
-			return nil, err
-		}
-	}
-
-	conf, err := getStartConfig(v, configPath)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't get client config: %v", err)
-	}
-	return conf, nil
-}
-
-func initializeConfigFile(configFilePath string, configPath string, conf *StartConfig) error {
-	if err := ensureConfigPath(configPath); err != nil {
-		return fmt.Errorf("couldn't make orchestrator config: %v", err)
-	}
-
-	if err := writeConfigToFile(configFilePath, conf); err != nil {
-		return fmt.Errorf("could not write client config to the file: %v", err)
-	}
-	return nil
-}
-
-// ensureConfigPath creates a directory configPath if it does not exist
-func ensureConfigPath(configPath string) error {
-	return os.MkdirAll(configPath, os.ModePerm)
-}
-
-// writeConfigToFile parses DefaultConfigTemplate, renders config using the template and writes it to
-// configFilePath.
-func writeConfigToFile(configFilePath string, config *StartConfig) error {
-	var buffer bytes.Buffer
-
-	tmpl := template.New("orchestratorConfigFileTemplate")
-	configTemplate, err := tmpl.Parse(DefaultConfigTemplate)
-	if err != nil {
-		return err
-	}
-
-	if err := configTemplate.Execute(&buffer, config); err != nil {
-		return err
-	}
-
-	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
-}
-
-// getStartConfig reads values from config.toml file and unmarshalls them into StartConfig
-func getStartConfig(v *viper.Viper, configPath string) (*StartConfig, error) {
-	v.AddConfigPath(configPath)
-	v.SetConfigName("config")
-	v.SetConfigType("toml")
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, err
-	}
-
-	conf := new(StartConfig)
-	if err := v.Unmarshal(conf); err != nil {
-		return nil, err
-	}
-
-	return conf, nil
 }

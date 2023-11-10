@@ -630,6 +630,7 @@ func GetPassphrase() (string, error) {
 	if err != nil {
 		return "", err
 	}
+	fmt.Println()
 	return string(bzPassphrase), nil
 }
 

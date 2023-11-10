@@ -1,9 +1,14 @@
 package orchestrator
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"text/template"
+
+	"github.com/spf13/viper"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -22,13 +27,13 @@ const DefaultConfigTemplate = `# This is a TOML config file.
 ###############################################################################
 
 # Specify the celestia app rest rpc address.
-core.rpc = "{{ .CoreRPC }}"
+core-rpc = "{{ .CoreRPC }}"
 
 # Specify the celestia app grpc address.
-core.grpc = "{{ .CoreGRPC }}"
+core-grpc = "{{ .CoreGRPC }}"
 
 # allow gRPC over insecure channels, if not TLS the server must use TLS.
-grpc.insecure = {{ .GRPCInsecure }}
+grpc-insecure = {{ .GRPCInsecure }}
 
 ###############################################################################
 ###                         P2P Configuration                               ###
@@ -36,10 +41,10 @@ grpc.insecure = {{ .GRPCInsecure }}
 
 # Comma-separated multiaddresses of p2p peers to connect to.
 # Example: "/ip4/127.0.0.1/tcp/30001/p2p/12D3K...,/ip4/127.0.0.1/tcp/30000/p2p/12D3K..."
-p2p.bootstrappers = "{{ .Bootstrappers }}"
+bootstrappers = "{{ .Bootstrappers }}"
 
 # MultiAddr for the p2p peer to listen on.
-p2p.listen-addr = "{{ .P2PListenAddr }}"
+listen-addr = "{{ .P2PListenAddr }}"
 `
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -61,13 +66,13 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 
 type StartConfig struct {
 	base.Config
-	CoreGRPC      string `mapstructure:"core.grpc" json:"core.grpc"`
-	CoreRPC       string `mapstructure:"core.rpc" json:"core.rpc"`
-	EvmAccAddress string `mapstructure:"evm.acccount-address" json:"evm.acccount-address"`
-	Bootstrappers string `mapstructure:"p2p.bootstrappers" json:"p2p.bootstrappers"`
-	P2PListenAddr string `mapstructure:"p2p.listen-addr" json:"p2p.listen-addr"`
-	P2pNickname   string `mapstructure:"p2p.nickname" json:"p2p.nickname"`
-	GRPCInsecure  bool   `mapstructure:"grpc.insecure" json:"grpc.insecure"`
+	CoreGRPC      string `mapstructure:"core-grpc" json:"core-grpc"`
+	CoreRPC       string `mapstructure:"core-rpc" json:"core-rpc"`
+	EvmAccAddress string
+	Bootstrappers string `mapstructure:"bootstrappers" json:"bootstrappers"`
+	P2PListenAddr string `mapstructure:"listen-addr" json:"listen-addr"`
+	P2pNickname   string
+	GRPCInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -80,13 +85,17 @@ func DefaultStartConfig() *StartConfig {
 	}
 }
 
+func (cfg StartConfig) ValidateBasics() error {
+	if err := base.ValidateEVMAddress(cfg.EvmAccAddress); err != nil {
+		return fmt.Errorf("%s: flag --%s", err.Error(), base.FlagEVMAccAddress)
+	}
+	return nil
+}
+
 func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartConfig, error) {
 	evmAccAddr, _, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
-	}
-	if evmAccAddr == "" {
-		return StartConfig{}, errors.New("the evm account address should be specified")
 	}
 	startConf.EvmAccAddress = evmAccAddr
 
@@ -133,7 +142,7 @@ func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartCo
 		startConf.P2pNickname = p2pNickname
 	}
 
-	homeDir, changed, err := base.GetHomeFlag(cmd)
+	homeDir, _, err := base.GetHomeFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
@@ -185,4 +194,73 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	return InitConfig{
 		home: homeDir,
 	}, nil
+}
+
+func LoadFileConfiguration(homeDir string) (*StartConfig, error) {
+	v := viper.New()
+	v.SetEnvPrefix("")
+	v.AutomaticEnv()
+	configPath := filepath.Join(homeDir, "config")
+	configFilePath := filepath.Join(configPath, "config.toml")
+	conf := DefaultStartConfig()
+
+	// if config.toml file does not exist, we create it and write default ClientConfig values into it.
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		if err := initializeConfigFile(configFilePath, configPath, conf); err != nil {
+			return nil, err
+		}
+	}
+
+	conf, err := getStartConfig(v, configPath)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get client config: %v", err)
+	}
+	return conf, nil
+}
+
+func initializeConfigFile(configFilePath string, configPath string, conf *StartConfig) error {
+	if err := base.EnsureConfigPath(configPath); err != nil {
+		return fmt.Errorf("couldn't make orchestrator config: %v", err)
+	}
+
+	if err := writeConfigToFile(configFilePath, conf); err != nil {
+		return fmt.Errorf("could not write orchestrator config to the file: %v", err)
+	}
+	return nil
+}
+
+// writeConfigToFile parses DefaultConfigTemplate, renders config using the template and writes it to
+// configFilePath.
+func writeConfigToFile(configFilePath string, config *StartConfig) error {
+	var buffer bytes.Buffer
+
+	tmpl := template.New("orchestratorConfigFileTemplate")
+	configTemplate, err := tmpl.Parse(DefaultConfigTemplate)
+	if err != nil {
+		return err
+	}
+
+	if err := configTemplate.Execute(&buffer, config); err != nil {
+		return err
+	}
+
+	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
+}
+
+// getStartConfig reads values from config.toml file and unmarshalls them into StartConfig
+func getStartConfig(v *viper.Viper, configPath string) (*StartConfig, error) {
+	v.AddConfigPath(configPath)
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
+
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
+	}
+
+	conf := new(StartConfig)
+	if err := v.Unmarshal(conf); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }

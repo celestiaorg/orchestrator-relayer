@@ -3,7 +3,12 @@ package relayer
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
+
+	ethcmn "github.com/ethereum/go-ethereum/common"
 
 	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
 
@@ -72,6 +77,14 @@ func Init() *cobra.Command {
 				return err
 			}
 
+			configPath := filepath.Join(config.home, "config")
+			configFilePath := filepath.Join(configPath, "config.toml")
+			conf := DefaultStartConfig()
+			err = initializeConfigFile(configFilePath, configPath, conf)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}
@@ -83,21 +96,32 @@ func Start() *cobra.Command {
 		Use:   "start <flags>",
 		Short: "Runs the Blobstream relayer to submit attestations to the target EVM chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseRelayerStartFlags(cmd, &StartConfig{})
+			logger := tmlog.NewTMLogger(os.Stdout)
+
+			homeDir, err := base.GetHomeDirectory(cmd, ServiceNameRelayer)
 			if err != nil {
 				return err
 			}
+			logger.Debug("initializing relayer", "home", homeDir)
 
-			// creating the logger
-			logger := tmlog.NewTMLogger(os.Stdout)
-			logger.Debug("initializing relayer")
+			fileConfig, err := LoadFileConfiguration(homeDir)
+			if err != nil {
+				return err
+			}
+			config, err := parseRelayerStartFlags(cmd, fileConfig)
+			if err != nil {
+				return err
+			}
+			if err := config.ValidateBasics(); err != nil {
+				return err
+			}
 
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
 			stopFuncs := make([]func() error, 0)
 
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.CoreRPC, config.CoreGRPC, config.GrpcInsecure)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
@@ -126,7 +150,7 @@ func Start() *cobra.Command {
 			// creating the data store
 			dataStore := dssync.MutexWrap(s.DataStore)
 
-			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.p2pListenAddr, config.bootstrappers, dataStore)
+			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore)
 			if err != nil {
 				return err
 			}
@@ -146,23 +170,23 @@ func Start() *cobra.Command {
 			}()
 
 			// connecting to a Blobstream contract
-			ethClient, err := ethclient.Dial(config.evmRPC)
+			ethClient, err := ethclient.Dial(config.EvmRPC)
 			if err != nil {
 				return err
 			}
 			defer ethClient.Close()
-			blobStreamWrapper, err := blobstreamwrapper.NewWrappers(config.contractAddr, ethClient)
+			blobstreamWrapper, err := blobstreamwrapper.NewWrappers(ethcmn.HexToAddress(config.ContractAddr), ethClient)
 			if err != nil {
 				return err
 			}
 
 			evmClient := evm.NewClient(
 				logger,
-				blobStreamWrapper,
+				blobstreamWrapper,
 				s.EVMKeyStore,
 				&acc,
-				config.evmRPC,
-				config.evmGasLimit,
+				config.EvmRPC,
+				config.EvmGasLimit,
 			)
 
 			relay := relayer.NewRelayer(

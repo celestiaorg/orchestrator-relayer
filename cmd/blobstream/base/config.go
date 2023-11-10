@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	ethcmn "github.com/ethereum/go-ethereum/common"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 
 	"github.com/spf13/cobra"
@@ -260,4 +262,19 @@ func GetEVMAccAddressFlag(cmd *cobra.Command) (string, bool, error) {
 		return "", changed, err
 	}
 	return val, changed, err
+}
+
+func ValidateEVMAddress(addr string) error {
+	if addr == "" {
+		return fmt.Errorf("the EVM address cannot be empty")
+	}
+	if !ethcmn.IsHexAddress(addr) {
+		return errors.New("valid EVM address is required")
+	}
+	return nil
+}
+
+// EnsureConfigPath creates a directory configPath if it does not exist
+func EnsureConfigPath(configPath string) error {
+	return os.MkdirAll(configPath, os.ModePerm)
 }
