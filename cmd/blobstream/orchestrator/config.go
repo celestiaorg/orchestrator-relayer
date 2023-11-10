@@ -1,8 +1,14 @@
 package orchestrator
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
+	"github.com/spf13/viper"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -10,30 +16,47 @@ import (
 )
 
 const (
-	FlagCoreGRPCHost        = "core.grpc.host"
-	FlagCoreGRPCPort        = "core.grpc.port"
-	FlagEVMAccAddress       = "evm.account"
-	FlagCoreRPCHost         = "core.rpc.host"
-	FlagCoreRPCPort         = "core.rpc.port"
 	ServiceNameOrchestrator = "orchestrator"
 )
 
+const DefaultConfigTemplate = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                           RPC Configuration                             ###
+###############################################################################
+
+# Specify the celestia app rest rpc address.
+core-rpc = "{{ .CoreRPC }}"
+
+# Specify the celestia app grpc address.
+core-grpc = "{{ .CoreGRPC }}"
+
+# allow gRPC over insecure channels, if not TLS the server must use TLS.
+grpc-insecure = {{ .GRPCInsecure }}
+
+###############################################################################
+###                         P2P Configuration                               ###
+###############################################################################
+
+# Comma-separated multiaddresses of p2p peers to connect to.
+# Example: "/ip4/127.0.0.1/tcp/30001/p2p/12D3K...,/ip4/127.0.0.1/tcp/30000/p2p/12D3K..."
+bootstrappers = "{{ .Bootstrappers }}"
+
+# MultiAddr for the p2p peer to listen on.
+listen-addr = "{{ .P2PListenAddr }}"
+`
+
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rest rpc address host")
-	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rest rpc address port")
-	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
-	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
-	cmd.Flags().String(
-		FlagEVMAccAddress,
-		"",
-		"Specify the EVM account address to use for signing (Note: the private key should be in the keystore)",
-	)
+	base.AddCoreRPCFlag(cmd)
+	base.AddCoreGRPCFlag(cmd)
+	base.AddEVMAccAddressFlag(cmd)
+	base.AddEVMPassphraseFlag(cmd)
 	homeDir, err := base.DefaultServicePath(ServiceNameOrchestrator)
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream orchestrator home directory")
-	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
+	base.AddHomeFlag(cmd, ServiceNameOrchestrator, homeDir)
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
@@ -42,83 +65,104 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 }
 
 type StartConfig struct {
-	*base.Config
-	coreGRPC, coreRPC            string
-	evmAccAddress                string
-	bootstrappers, p2pListenAddr string
-	p2pNickname                  string
-	grpcInsecure                 bool
+	base.Config
+	CoreGRPC      string `mapstructure:"core-grpc" json:"core-grpc"`
+	CoreRPC       string `mapstructure:"core-rpc" json:"core-rpc"`
+	EvmAccAddress string
+	Bootstrappers string `mapstructure:"bootstrappers" json:"bootstrappers"`
+	P2PListenAddr string `mapstructure:"listen-addr" json:"listen-addr"`
+	P2pNickname   string
+	GRPCInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
 }
 
-func parseOrchestratorFlags(cmd *cobra.Command) (StartConfig, error) {
-	evmAccAddr, err := cmd.Flags().GetString(FlagEVMAccAddress)
+func DefaultStartConfig() *StartConfig {
+	return &StartConfig{
+		CoreRPC:       "tcp://localhost:26657",
+		CoreGRPC:      "localhost:9090",
+		Bootstrappers: "",
+		P2PListenAddr: "/ip4/0.0.0.0/tcp/30000",
+		GRPCInsecure:  true,
+	}
+}
+
+func (cfg StartConfig) ValidateBasics() error {
+	if err := base.ValidateEVMAddress(cfg.EvmAccAddress); err != nil {
+		return fmt.Errorf("%s: flag --%s", err.Error(), base.FlagEVMAccAddress)
+	}
+	return nil
+}
+
+func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartConfig, error) {
+	evmAccAddr, _, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if evmAccAddr == "" {
-		return StartConfig{}, errors.New("the evm account address should be specified")
-	}
-	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
+	startConf.EvmAccAddress = evmAccAddr
+
+	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	bootstrappers, err := cmd.Flags().GetString(base.FlagBootstrappers)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	p2pListenAddress, err := cmd.Flags().GetString(base.FlagP2PListenAddress)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	p2pNickname, err := cmd.Flags().GetString(base.FlagP2PNickname)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	homeDir, err := cmd.Flags().GetString(base.FlagHome)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	if homeDir == "" {
-		var err error
-		homeDir, err = base.DefaultServicePath(ServiceNameOrchestrator)
-		if err != nil {
-			return StartConfig{}, err
+	if changed {
+		if !strings.HasPrefix(coreRPC, "tcp://") {
+			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
 		}
-	}
-	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
-	if err != nil {
-		return StartConfig{}, err
+		startConf.CoreRPC = coreRPC
 	}
 
-	return StartConfig{
-		evmAccAddress: evmAccAddr,
-		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
-		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
-		bootstrappers: bootstrappers,
-		p2pNickname:   p2pNickname,
-		p2pListenAddr: p2pListenAddress,
-		Config: &base.Config{
-			Home:          homeDir,
-			EVMPassphrase: passphrase,
-		},
-		grpcInsecure: grpcInsecure,
-	}, nil
+	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.CoreGRPC = coreGRPC
+	}
+
+	bootstrappers, changed, err := base.GetBootstrappersFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.Bootstrappers = bootstrappers
+	}
+
+	p2pListenAddress, changed, err := base.GetP2PListenAddressFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.P2PListenAddr = p2pListenAddress
+	}
+
+	p2pNickname, changed, err := base.GetP2PNicknameFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.P2pNickname = p2pNickname
+	}
+
+	homeDir, _, err := base.GetHomeFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	startConf.Home = homeDir
+
+	passphrase, _, err := base.GetEVMPassphraseFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	startConf.EVMPassphrase = passphrase
+
+	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.GRPCInsecure = grpcInsecure
+	}
+
+	return *startConf, nil
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
@@ -126,7 +170,7 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream orchestrator home directory")
+	base.AddHomeFlag(cmd, ServiceNameOrchestrator, homeDir)
 	return cmd
 }
 
@@ -150,4 +194,73 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	return InitConfig{
 		home: homeDir,
 	}, nil
+}
+
+func LoadFileConfiguration(homeDir string) (*StartConfig, error) {
+	v := viper.New()
+	v.SetEnvPrefix("")
+	v.AutomaticEnv()
+	configPath := filepath.Join(homeDir, "config")
+	configFilePath := filepath.Join(configPath, "config.toml")
+	conf := DefaultStartConfig()
+
+	// if config.toml file does not exist, we create it and write default ClientConfig values into it.
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		if err := initializeConfigFile(configFilePath, configPath, conf); err != nil {
+			return nil, err
+		}
+	}
+
+	conf, err := getStartConfig(v, configPath)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get client config: %v", err)
+	}
+	return conf, nil
+}
+
+func initializeConfigFile(configFilePath string, configPath string, conf *StartConfig) error {
+	if err := base.EnsureConfigPath(configPath); err != nil {
+		return fmt.Errorf("couldn't make orchestrator config: %v", err)
+	}
+
+	if err := writeConfigToFile(configFilePath, conf); err != nil {
+		return fmt.Errorf("could not write orchestrator config to the file: %v", err)
+	}
+	return nil
+}
+
+// writeConfigToFile parses DefaultConfigTemplate, renders config using the template and writes it to
+// configFilePath.
+func writeConfigToFile(configFilePath string, config *StartConfig) error {
+	var buffer bytes.Buffer
+
+	tmpl := template.New("orchestratorConfigFileTemplate")
+	configTemplate, err := tmpl.Parse(DefaultConfigTemplate)
+	if err != nil {
+		return err
+	}
+
+	if err := configTemplate.Execute(&buffer, config); err != nil {
+		return err
+	}
+
+	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
+}
+
+// getStartConfig reads values from config.toml file and unmarshalls them into StartConfig
+func getStartConfig(v *viper.Viper, configPath string) (*StartConfig, error) {
+	v.AddConfigPath(configPath)
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
+
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
+	}
+
+	conf := new(StartConfig)
+	if err := v.Unmarshal(conf); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }

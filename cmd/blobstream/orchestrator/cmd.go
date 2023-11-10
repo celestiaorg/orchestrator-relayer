@@ -3,7 +3,10 @@ package orchestrator
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/common"
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
@@ -44,20 +47,32 @@ func Start() *cobra.Command {
 		Use:   "start <flags>",
 		Short: "Starts the Blobstream orchestrator to sign attestations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseOrchestratorFlags(cmd)
+			logger := tmlog.NewTMLogger(os.Stdout)
+
+			homeDir, err := base.GetHomeDirectory(cmd, ServiceNameOrchestrator)
 			if err != nil {
 				return err
 			}
+			logger.Debug("initializing orchestrator", "home", homeDir)
 
-			logger := tmlog.NewTMLogger(os.Stdout)
-			logger.Debug("initializing orchestrator")
+			fileConfig, err := LoadFileConfiguration(homeDir)
+			if err != nil {
+				return err
+			}
+			config, err := parseOrchestratorFlags(cmd, fileConfig)
+			if err != nil {
+				return err
+			}
+			if err := config.ValidateBasics(); err != nil {
+				return err
+			}
 
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
 			stopFuncs := make([]func() error, 0)
 
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.CoreRPC, config.CoreGRPC, config.GRPCInsecure)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
@@ -75,9 +90,9 @@ func Start() *cobra.Command {
 				return err
 			}
 
-			logger.Info("loading EVM account", "address", config.evmAccAddress)
+			logger.Info("loading EVM account", "address", config.EvmAccAddress)
 
-			acc, err := evm2.GetAccountFromStoreAndUnlockIt(s.EVMKeyStore, config.evmAccAddress, config.EVMPassphrase)
+			acc, err := evm2.GetAccountFromStoreAndUnlockIt(s.EVMKeyStore, config.EvmAccAddress, config.EVMPassphrase)
 			stopFuncs = append(stopFuncs, func() error { return s.EVMKeyStore.Lock(acc.Address) })
 			if err != nil {
 				return err
@@ -86,7 +101,7 @@ func Start() *cobra.Command {
 			// creating the data store
 			dataStore := dssync.MutexWrap(s.DataStore)
 
-			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.p2pListenAddr, config.bootstrappers, dataStore)
+			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.P2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore)
 			if err != nil {
 				return err
 			}
@@ -165,6 +180,14 @@ func Init() *cobra.Command {
 			}
 
 			err = store.Init(logger, config.home, initOptions)
+			if err != nil {
+				return err
+			}
+
+			configPath := filepath.Join(config.home, "config")
+			configFilePath := filepath.Join(configPath, "config.toml")
+			conf := DefaultStartConfig()
+			err = initializeConfigFile(configFilePath, configPath, conf)
 			if err != nil {
 				return err
 			}

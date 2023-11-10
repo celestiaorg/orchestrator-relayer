@@ -1,48 +1,84 @@
 package relayer
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"text/template"
+
+	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
-	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/spf13/cobra"
-
-	ethcmn "github.com/ethereum/go-ethereum/common"
 )
 
 const (
-	FlagEVMAccAddress   = "evm.account"
-	FlagEVMChainID      = "evm.chain-id"
-	FlagCoreGRPCHost    = "core.grpc.host"
-	FlagCoreGRPCPort    = "core.grpc.port"
-	FlagCoreRPCHost     = "core.rpc.host"
-	FlagCoreRPCPort     = "core.rpc.port"
-	FlagEVMRPC          = "evm.rpc"
-	FlagContractAddress = "evm.contract-address"
-	FlagEVMGasLimit     = "evm.gas-limit"
-	ServiceNameRelayer  = "relayer"
+	ServiceNameRelayer = "relayer"
 )
 
+const DefaultConfigTemplate = `# This is a TOML config file.
+# For more information, see https://github.com/toml-lang/toml
+
+###############################################################################
+###                           RPC Configuration                             ###
+###############################################################################
+
+# Celestia app rest rpc address.
+core-rpc = "{{ .CoreRPC }}"
+
+# Celestia app grpc address.
+core-grpc = "{{ .CoreGRPC }}"
+
+# Allow gRPC over insecure channels, if not TLS the server must use TLS.
+grpc-insecure = {{ .GrpcInsecure }}
+
+###############################################################################
+###                         P2P Configuration                               ###
+###############################################################################
+
+# Comma-separated multiaddresses of p2p peers to connect to.
+# Example: "/ip4/127.0.0.1/tcp/30001/p2p/12D3K...,/ip4/127.0.0.1/tcp/30000/p2p/12D3K..."
+bootstrappers = "{{ .Bootstrappers }}"
+
+# MultiAddr for the p2p peer to listen on.
+listen-addr = "{{ .P2PListenAddr }}"
+
+###############################################################################
+###                         EVM Configuration                               ###
+###############################################################################
+
+# Ethereum rpc address.
+evm-rpc = "{{ .EvmRPC }}"
+
+# Evm chain id.
+evm-chain-id = "{{ .EvmChainID }}"
+
+# Contract address at which Blobstream is deployed.
+contract-address = "{{ .ContractAddr }}"
+
+# Evm gas limit.
+gas-limit = "{{ .EvmGasLimit }}"
+`
+
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
-	cmd.Flags().String(FlagEVMAccAddress, "", "Specify the EVM account address to use for signing (Note: the private key should be in the keystore)")
-	cmd.Flags().Uint64(FlagEVMChainID, 5, "Specify the evm chain id")
-	cmd.Flags().String(FlagCoreGRPCHost, "localhost", "Specify the grpc address host")
-	cmd.Flags().Uint(FlagCoreGRPCPort, 9090, "Specify the grpc address port")
-	cmd.Flags().String(FlagCoreRPCHost, "localhost", "Specify the rest rpc address host")
-	cmd.Flags().Uint(FlagCoreRPCPort, 26657, "Specify the rest rpc address port")
-	cmd.Flags().String(FlagEVMRPC, "http://localhost:8545", "Specify the ethereum rpc address")
-	cmd.Flags().String(FlagContractAddress, "", "Specify the contract at which the Blobstream is deployed")
-	cmd.Flags().Uint64(FlagEVMGasLimit, evm.DefaultEVMGasLimit, "Specify the evm gas limit")
 	homeDir, err := base.DefaultServicePath(ServiceNameRelayer)
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream relayer home directory")
-	cmd.Flags().String(base.FlagEVMPassphrase, "", "the evm account passphrase (if not specified as a flag, it will be asked interactively)")
+	base.AddHomeFlag(cmd, ServiceNameRelayer, homeDir)
+	base.AddEVMAccAddressFlag(cmd)
+	base.AddEVMChainIDFlag(cmd)
+	base.AddCoreGRPCFlag(cmd)
+	base.AddCoreRPCFlag(cmd)
+	base.AddEVMRPCFlag(cmd)
+	base.AddEVMContractAddressFlag(cmd)
+	base.AddEVMGasLimitFlag(cmd)
+	base.AddEVMPassphraseFlag(cmd)
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
@@ -52,113 +88,144 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 }
 
 type StartConfig struct {
-	*base.Config
-	evmChainID                   uint64
-	evmRPC, coreGRPC, coreRPC    string
-	evmAccAddress                string
-	contractAddr                 ethcmn.Address
-	evmGasLimit                  uint64
-	bootstrappers, p2pListenAddr string
-	p2pNickname                  string
-	grpcInsecure                 bool
+	base.Config
+	EvmChainID    uint64 `mapstructure:"evm-chain-id" json:"evm-chain-id"`
+	EvmRPC        string `mapstructure:"evm-rpc" json:"evm-rpc"`
+	CoreGRPC      string `mapstructure:"core-grpc" json:"core-grpc"`
+	CoreRPC       string `mapstructure:"core-rpc" json:"core-rpc"`
+	evmAccAddress string
+	ContractAddr  string `mapstructure:"contract-address" json:"contract-address"`
+	EvmGasLimit   uint64 `mapstructure:"gas-limit" json:"gas-limit"`
+	Bootstrappers string `mapstructure:"bootstrappers" json:"bootstrappers"`
+	P2PListenAddr string `mapstructure:"listen-addr" json:"listen-addr"`
+	p2pNickname   string
+	GrpcInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
 }
 
-func parseRelayerStartFlags(cmd *cobra.Command) (StartConfig, error) {
-	evmAccAddr, err := cmd.Flags().GetString(FlagEVMAccAddress)
+func DefaultStartConfig() *StartConfig {
+	return &StartConfig{
+		CoreRPC:       "tcp://localhost:26657",
+		CoreGRPC:      "localhost:9090",
+		Bootstrappers: "",
+		P2PListenAddr: "/ip4/0.0.0.0/tcp/30000",
+		GrpcInsecure:  true,
+		EvmChainID:    5,
+		EvmRPC:        "http://localhost:8545",
+		EvmGasLimit:   2500000,
+	}
+}
+
+func (cfg StartConfig) ValidateBasics() error {
+	if err := base.ValidateEVMAddress(cfg.evmAccAddress); err != nil {
+		return fmt.Errorf("%s: flag --%s", err.Error(), base.FlagEVMAccAddress)
+	}
+	if err := base.ValidateEVMAddress(cfg.ContractAddr); err != nil {
+		return fmt.Errorf("%s: flag --%s", err.Error(), base.FlagEVMContractAddress)
+	}
+	return nil
+}
+
+func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartConfig, error) {
+	evmAccAddr, _, err := base.GetEVMAccAddressFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	if evmAccAddr == "" {
-		return StartConfig{}, errors.New("the evm account address should be specified")
-	}
-	evmChainID, err := cmd.Flags().GetUint64(FlagEVMChainID)
+	fileConfig.evmAccAddress = evmAccAddr
+
+	evmChainID, changed, err := base.GetEVMChainIDFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
-	coreRPCHost, err := cmd.Flags().GetString(FlagCoreRPCHost)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreRPCPort, err := cmd.Flags().GetUint(FlagCoreRPCPort)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreGRPCHost, err := cmd.Flags().GetString(FlagCoreGRPCHost)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	coreGRPCPort, err := cmd.Flags().GetUint(FlagCoreGRPCPort)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	contractAddr, err := cmd.Flags().GetString(FlagContractAddress)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	if contractAddr == "" {
-		return StartConfig{}, fmt.Errorf("contract address flag is required: %s", FlagContractAddress)
-	}
-	if !ethcmn.IsHexAddress(contractAddr) {
-		return StartConfig{}, fmt.Errorf("valid contract address flag is required: %s", FlagContractAddress)
-	}
-	address := ethcmn.HexToAddress(contractAddr)
-	evmRPC, err := cmd.Flags().GetString(FlagEVMRPC)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	evmGasLimit, err := cmd.Flags().GetUint64(FlagEVMGasLimit)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	bootstrappers, err := cmd.Flags().GetString(base.FlagBootstrappers)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	p2pListenAddress, err := cmd.Flags().GetString(base.FlagP2PListenAddress)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	p2pNickname, err := cmd.Flags().GetString(base.FlagP2PNickname)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	homeDir, err := cmd.Flags().GetString(base.FlagHome)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	if homeDir == "" {
-		var err error
-		homeDir, err = base.DefaultServicePath(ServiceNameRelayer)
-		if err != nil {
-			return StartConfig{}, err
-		}
-	}
-	passphrase, err := cmd.Flags().GetString(base.FlagEVMPassphrase)
-	if err != nil {
-		return StartConfig{}, err
-	}
-	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
-	if err != nil {
-		return StartConfig{}, err
+	if changed {
+		fileConfig.EvmChainID = evmChainID
 	}
 
-	return StartConfig{
-		evmAccAddress: evmAccAddr,
-		evmChainID:    evmChainID,
-		coreGRPC:      fmt.Sprintf("%s:%d", coreGRPCHost, coreGRPCPort),
-		coreRPC:       fmt.Sprintf("tcp://%s:%d", coreRPCHost, coreRPCPort),
-		contractAddr:  address,
-		evmRPC:        evmRPC,
-		evmGasLimit:   evmGasLimit,
-		bootstrappers: bootstrappers,
-		p2pListenAddr: p2pListenAddress,
-		p2pNickname:   p2pNickname,
-		Config: &base.Config{
-			Home:          homeDir,
-			EVMPassphrase: passphrase,
-		},
-		grpcInsecure: grpcInsecure,
-	}, nil
+	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		if !strings.HasPrefix(coreRPC, "tcp://") {
+			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
+		}
+		fileConfig.CoreRPC = coreRPC
+	}
+
+	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.CoreGRPC = coreGRPC
+	}
+
+	contractAddr, changed, err := base.GetEVMContractAddressFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.ContractAddr = contractAddr
+	}
+
+	evmRPC, changed, err := base.GetEVMRPCFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.EvmRPC = evmRPC
+	}
+
+	evmGasLimit, changed, err := base.GetEVMGasLimitFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.EvmGasLimit = evmGasLimit
+	}
+
+	bootstrappers, changed, err := base.GetBootstrappersFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.Bootstrappers = bootstrappers
+	}
+
+	p2pListenAddress, changed, err := base.GetP2PListenAddressFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.P2PListenAddr = p2pListenAddress
+	}
+
+	p2pNickname, _, err := base.GetP2PNicknameFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.p2pNickname = p2pNickname
+
+	homeDir, _, err := base.GetHomeFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.Home = homeDir
+
+	passphrase, _, err := base.GetEVMPassphraseFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.EVMPassphrase = passphrase
+
+	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.GrpcInsecure = grpcInsecure
+	}
+
+	return *fileConfig, nil
 }
 
 func addInitFlags(cmd *cobra.Command) *cobra.Command {
@@ -166,7 +233,7 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 	if err != nil {
 		panic(err)
 	}
-	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream relayer home directory")
+	base.AddHomeFlag(cmd, ServiceNameRelayer, homeDir)
 	return cmd
 }
 
@@ -190,4 +257,73 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 	return InitConfig{
 		home: homeDir,
 	}, nil
+}
+
+func LoadFileConfiguration(homeDir string) (*StartConfig, error) {
+	v := viper.New()
+	v.SetEnvPrefix("")
+	v.AutomaticEnv()
+	configPath := filepath.Join(homeDir, "config")
+	configFilePath := filepath.Join(configPath, "config.toml")
+	conf := DefaultStartConfig()
+
+	// if config.toml file does not exist, we create it and write default ClientConfig values into it.
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		if err := initializeConfigFile(configFilePath, configPath, conf); err != nil {
+			return nil, err
+		}
+	}
+
+	conf, err := getStartConfig(v, configPath)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't get client config: %v", err)
+	}
+	return conf, nil
+}
+
+func initializeConfigFile(configFilePath string, configPath string, conf *StartConfig) error {
+	if err := base.EnsureConfigPath(configPath); err != nil {
+		return fmt.Errorf("couldn't make relayer config: %v", err)
+	}
+
+	if err := writeConfigToFile(configFilePath, conf); err != nil {
+		return fmt.Errorf("could not write relayer config to the file: %v", err)
+	}
+	return nil
+}
+
+// writeConfigToFile parses DefaultConfigTemplate, renders config using the template and writes it to
+// configFilePath.
+func writeConfigToFile(configFilePath string, config *StartConfig) error {
+	var buffer bytes.Buffer
+
+	tmpl := template.New("relayerConfigFileTemplate")
+	configTemplate, err := tmpl.Parse(DefaultConfigTemplate)
+	if err != nil {
+		return err
+	}
+
+	if err := configTemplate.Execute(&buffer, config); err != nil {
+		return err
+	}
+
+	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
+}
+
+// getStartConfig reads values from config.toml file and unmarshalls them into StartConfig
+func getStartConfig(v *viper.Viper, configPath string) (*StartConfig, error) {
+	v.AddConfigPath(configPath)
+	v.SetConfigName("config")
+	v.SetConfigType("toml")
+
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
+	}
+
+	conf := new(StartConfig)
+	if err := v.Unmarshal(conf); err != nil {
+		return nil, err
+	}
+
+	return conf, nil
 }
