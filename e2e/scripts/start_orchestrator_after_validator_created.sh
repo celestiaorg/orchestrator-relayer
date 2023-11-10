@@ -49,10 +49,8 @@ then
 
   /bin/blobstream orchestrator start \
     --evm.account="${EVM_ACCOUNT}" \
-    --core.rpc.host="${CORE_RPC_HOST}" \
-    --core.rpc.port="${CORE_RPC_PORT}" \
-    --core.grpc.host="${CORE_GRPC_HOST}" \
-    --core.grpc.port="${CORE_GRPC_PORT}" \
+    --core.rpc="${CORE_RPC_HOST}:${CORE_RPC_PORT}" \
+    --core.grpc="${CORE_GRPC_HOST}:${CORE_GRPC_PORT}" \
     --grpc.insecure \
     --p2p.nickname=key \
     --p2p.listen-addr="${P2P_LISTEN}" \
@@ -63,10 +61,8 @@ else
 
   /bin/blobstream orchestrator start \
     --evm.account="${EVM_ACCOUNT}" \
-    --core.rpc.host="${CORE_RPC_HOST}" \
-    --core.rpc.port="${CORE_RPC_PORT}" \
-    --core.grpc.host="${CORE_GRPC_HOST}" \
-    --core.grpc.port="${CORE_GRPC_PORT}" \
+    --core.rpc="${CORE_RPC_HOST}:${CORE_RPC_PORT}" \
+    --core.grpc="${CORE_GRPC_HOST}:${CORE_GRPC_PORT}" \
     --grpc.insecure \
     --p2p.listen-addr="${P2P_LISTEN}" \
     --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
