@@ -10,7 +10,7 @@ import (
 
 	ethcmn "github.com/ethereum/go-ethereum/common"
 
-	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
+	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v4/wrappers/Blobstream.sol"
 
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
 	"github.com/celestiaorg/orchestrator-relayer/p2p"

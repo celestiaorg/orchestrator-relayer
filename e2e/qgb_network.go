@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v3/wrappers/Blobstream.sol"
+	blobstreamwrapper "github.com/celestiaorg/blobstream-contracts/v4/wrappers/Blobstream.sol"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
