@@ -83,6 +83,8 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
 	base.AddGRPCInsecureFlag(cmd)
+	base.AddLogLevelFlag(cmd)
+	base.AddLogFormatFlag(cmd)
 
 	return cmd
 }
@@ -100,6 +102,8 @@ type StartConfig struct {
 	P2PListenAddr string `mapstructure:"listen-addr" json:"listen-addr"`
 	p2pNickname   string
 	GrpcInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
+	LogLevel      string
+	LogFormat     string
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -225,6 +229,18 @@ func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		fileConfig.GrpcInsecure = grpcInsecure
 	}
 
+	logLevel, _, err := base.GetLogLevelFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.LogLevel = logLevel
+
+	logFormat, _, err := base.GetLogFormatFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.LogFormat = logFormat
+
 	return *fileConfig, nil
 }
 
@@ -234,11 +250,15 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 		panic(err)
 	}
 	base.AddHomeFlag(cmd, ServiceNameRelayer, homeDir)
+	base.AddLogLevelFlag(cmd)
+	base.AddLogFormatFlag(cmd)
 	return cmd
 }
 
 type InitConfig struct {
-	home string
+	home      string
+	logLevel  string
+	logFormat string
 }
 
 func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
@@ -254,8 +274,20 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 		}
 	}
 
+	logLevel, _, err := base.GetLogLevelFlag(cmd)
+	if err != nil {
+		return InitConfig{}, err
+	}
+
+	logFormat, _, err := base.GetLogFormatFlag(cmd)
+	if err != nil {
+		return InitConfig{}, err
+	}
+
 	return InitConfig{
-		home: homeDir,
+		home:      homeDir,
+		logFormat: logFormat,
+		logLevel:  logLevel,
 	}, nil
 }
 

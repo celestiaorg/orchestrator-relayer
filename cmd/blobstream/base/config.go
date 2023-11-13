@@ -2,8 +2,14 @@ package base
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/rs/zerolog"
+	tmconfig "github.com/tendermint/tendermint/config"
+	tmlog "github.com/tendermint/tendermint/libs/log"
 
 	ethcmn "github.com/ethereum/go-ethereum/common"
 
@@ -75,7 +81,44 @@ const (
 	FlagCoreRPC  = "core.rpc"
 
 	FlagStartingNonce = "starting-nonce"
+
+	FlagLogLevel  = "log.level"
+	FlagLogFormat = "log.format"
 )
+
+func AddLogLevelFlag(cmd *cobra.Command) {
+	cmd.Flags().String(
+		FlagLogLevel,
+		"info",
+		"The logging level (trace|debug|info|warn|error|fatal|panic)",
+	)
+}
+
+func GetLogFormatFlag(cmd *cobra.Command) (string, bool, error) {
+	changed := cmd.Flags().Changed(FlagLogFormat)
+	val, err := cmd.Flags().GetString(FlagLogFormat)
+	if err != nil {
+		return "", changed, err
+	}
+	return val, changed, nil
+}
+
+func AddLogFormatFlag(cmd *cobra.Command) {
+	cmd.Flags().String(
+		FlagLogFormat,
+		"plain",
+		"The logging format (json|plain)",
+	)
+}
+
+func GetLogLevelFlag(cmd *cobra.Command) (string, bool, error) {
+	changed := cmd.Flags().Changed(FlagLogLevel)
+	val, err := cmd.Flags().GetString(FlagLogLevel)
+	if err != nil {
+		return "", changed, err
+	}
+	return val, changed, nil
+}
 
 func AddStartingNonceFlag(cmd *cobra.Command) {
 	cmd.Flags().String(
@@ -277,4 +320,20 @@ func ValidateEVMAddress(addr string) error {
 // EnsureConfigPath creates a directory configPath if it does not exist
 func EnsureConfigPath(configPath string) error {
 	return os.MkdirAll(configPath, os.ModePerm)
+}
+
+// GetLogger creates a new logger and returns
+func GetLogger(level string, format string) (tmlog.Logger, error) {
+	logLvl, err := zerolog.ParseLevel(level)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse log level (%s): %w", level, err)
+	}
+	var logWriter io.Writer
+	if strings.ToLower(format) == tmconfig.LogFormatPlain {
+		logWriter = zerolog.ConsoleWriter{Out: os.Stderr}
+	} else {
+		logWriter = os.Stderr
+	}
+
+	return server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}, nil
 }

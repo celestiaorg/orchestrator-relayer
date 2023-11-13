@@ -2,7 +2,6 @@ package orchestrator
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -19,7 +18,6 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
 	"github.com/celestiaorg/orchestrator-relayer/orchestrator"
 	"github.com/spf13/cobra"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 func Command() *cobra.Command {
@@ -47,14 +45,10 @@ func Start() *cobra.Command {
 		Use:   "start <flags>",
 		Short: "Starts the Blobstream orchestrator to sign attestations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logger := tmlog.NewTMLogger(os.Stdout)
-
 			homeDir, err := base.GetHomeDirectory(cmd, ServiceNameOrchestrator)
 			if err != nil {
 				return err
 			}
-			logger.Debug("initializing orchestrator", "home", homeDir)
-
 			fileConfig, err := LoadFileConfiguration(homeDir)
 			if err != nil {
 				return err
@@ -66,6 +60,13 @@ func Start() *cobra.Command {
 			if err := config.ValidateBasics(); err != nil {
 				return err
 			}
+
+			logger, err := base.GetLogger(config.LogLevel, config.LogFormat)
+			if err != nil {
+				return err
+			}
+
+			logger.Info("initializing orchestrator", "home", homeDir)
 
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
@@ -141,7 +142,7 @@ func Start() *cobra.Command {
 				return err
 			}
 
-			logger.Debug("starting orchestrator")
+			logger.Info("starting orchestrator")
 
 			// Listen for and trap any OS signal to graceful shutdown and exit
 			go helpers.TrapSignal(logger, cancel)
@@ -166,7 +167,10 @@ func Init() *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{
 				NeedDataStore:   true,

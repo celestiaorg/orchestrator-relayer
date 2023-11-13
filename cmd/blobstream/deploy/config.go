@@ -29,6 +29,8 @@ func addDeployFlags(cmd *cobra.Command) *cobra.Command {
 	}
 	base.AddHomeFlag(cmd, ServiceNameDeployer, homeDir)
 	base.AddGRPCInsecureFlag(cmd)
+	base.AddLogLevelFlag(cmd)
+	base.AddLogFormatFlag(cmd)
 	return cmd
 }
 
@@ -41,6 +43,8 @@ type deployConfig struct {
 	startingNonce     string
 	evmGasLimit       uint64
 	grpcInsecure      bool
+	logLevel          string
+	logFormat         string
 }
 
 func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
@@ -100,6 +104,16 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 		return deployConfig{}, err
 	}
 
+	logLevel, _, err := base.GetLogLevelFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+
+	logFormat, _, err := base.GetLogFormatFlag(cmd)
+	if err != nil {
+		return deployConfig{}, err
+	}
+
 	return deployConfig{
 		Config: base.Config{
 			Home:          homeDir,
@@ -113,5 +127,7 @@ func parseDeployFlags(cmd *cobra.Command) (deployConfig, error) {
 		startingNonce: startingNonce,
 		evmGasLimit:   evmGasLimit,
 		grpcInsecure:  grpcInsecure,
+		logFormat:     logFormat,
+		logLevel:      logLevel,
 	}, nil
 }

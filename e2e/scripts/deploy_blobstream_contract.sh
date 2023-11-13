@@ -71,8 +71,8 @@ echo "deploying Blobstream contract..."
   --grpc.insecure \
   --starting-nonce "${STARTING_NONCE}" \
   --evm.rpc "${EVM_ENDPOINT}" \
-  --evm.passphrase=123 > /opt/output
+  --evm.passphrase=123 2> /opt/output
 
 echo $(cat /opt/output)
 
-cat /opt/output | grep "deployed" | awk '{ print $5 }' | cut -f 2 -d = > /opt/blobstream_address.txt
+cat /opt/output | grep "deployed" | awk '{ print $6 }' | cut -f 2 -d = > /opt/blobstream_address.txt

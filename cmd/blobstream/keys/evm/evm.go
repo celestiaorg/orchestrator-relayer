@@ -9,6 +9,8 @@ import (
 	"io"
 	"os"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
+
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/go-bip39"
@@ -57,7 +59,10 @@ func Add(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedEVMKeyStore: true}
 			isInit := store.IsInit(logger, config.Home, initOptions)
@@ -150,7 +155,10 @@ func List(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
 
@@ -195,7 +203,10 @@ func Delete(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
 
@@ -286,7 +297,10 @@ func ImportFile(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedEVMKeyStore: true}
 			isInit := store.IsInit(logger, config.Home, initOptions)
@@ -372,7 +386,10 @@ func ImportECDSA(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedEVMKeyStore: true}
 			isInit := store.IsInit(logger, config.Home, initOptions)
@@ -437,7 +454,10 @@ func ImportMnemonic(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedEVMKeyStore: true}
 			isInit := store.IsInit(logger, config.Home, initOptions)
@@ -518,7 +538,10 @@ func Update(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedEVMKeyStore: true}
 			isInit := store.IsInit(logger, config.Home, initOptions)

@@ -3,8 +3,8 @@ package p2p
 import (
 	"encoding/hex"
 	"fmt"
-	"os"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 	"github.com/ipfs/boxo/keystore"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/common"
@@ -44,7 +44,10 @@ func Add(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedP2PKeyStore: true}
 			isInit := store.IsInit(logger, config.home, initOptions)
@@ -120,7 +123,10 @@ func List(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedP2PKeyStore: true}
 			isInit := store.IsInit(logger, config.home, initOptions)
@@ -172,7 +178,10 @@ func Import(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedP2PKeyStore: true}
 			isInit := store.IsInit(logger, config.home, initOptions)
@@ -231,7 +240,10 @@ func Delete(serviceName string) *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{NeedP2PKeyStore: true}
 			isInit := store.IsInit(logger, config.home, initOptions)

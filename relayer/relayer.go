@@ -215,7 +215,7 @@ func (r *Relayer) QueryValsetFromP2PNetworkAndValidateIt(ctx context.Context) (*
 	if err != nil {
 		return nil, err
 	}
-	r.logger.Info("found the latest valset in P2P network. Authenticating it against the contract to verify it's valid", "nonce", vs.Nonce, "hash", vsHash.Hex())
+	r.logger.Debug("found the latest valset in P2P network. Authenticating it against the contract to verify it's valid", "nonce", vs.Nonce, "hash", vsHash.Hex())
 
 	contractHash, err := r.EVMClient.StateLastValidatorSetCheckpoint(&bind.CallOpts{Context: ctx})
 	if err != nil {
@@ -228,7 +228,7 @@ func (r *Relayer) QueryValsetFromP2PNetworkAndValidateIt(ctx context.Context) (*
 	}
 
 	if !bytes.Equal(bzVSHash, contractHash[:]) {
-		r.logger.Error("valset hash from contract mismatches that of P2P one, halting. try running the relayer with an archive node to continue relaying", "contract_vs_hash", ethcmn.Bytes2Hex(contractHash[:]), "p2p_vs_hash", vsHash.Hex())
+		r.logger.Error("valset hash from contract mismatches that of P2P one, halting. try running the relayer with an archive node (if that's not the case) to continue relaying", "contract_vs_hash", ethcmn.Bytes2Hex(contractHash[:]), "p2p_vs_hash", vsHash.Hex())
 		return nil, ErrValidatorSetMismatch
 	}
 
