@@ -75,4 +75,4 @@ echo "deploying Blobstream contract..."
 
 echo $(cat /opt/output)
 
-cat /opt/output | grep "deployed" | awk '{ print $6 }' | cut -f 2 -d = > /opt/blobstream_address.txt
+cat /opt/output | grep "deployed" | awk '{ print $6 }' | grep -o '0x.*' > /opt/blobstream_address.txt
