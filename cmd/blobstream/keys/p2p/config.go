@@ -12,11 +12,15 @@ func keysConfigFlags(cmd *cobra.Command, service string) *cobra.Command {
 		panic(err)
 	}
 	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream p2p keys home directory")
+	base.AddLogLevelFlag(cmd)
+	base.AddLogFormatFlag(cmd)
 	return cmd
 }
 
 type KeysConfig struct {
-	home string
+	home      string
+	logLevel  string
+	logFormat string
 }
 
 func parseKeysConfigFlags(cmd *cobra.Command, serviceName string) (KeysConfig, error) {
@@ -31,7 +35,18 @@ func parseKeysConfigFlags(cmd *cobra.Command, serviceName string) (KeysConfig, e
 			return KeysConfig{}, err
 		}
 	}
+	logLevel, _, err := base.GetLogLevelFlag(cmd)
+	if err != nil {
+		return KeysConfig{}, err
+	}
+
+	logFormat, _, err := base.GetLogFormatFlag(cmd)
+	if err != nil {
+		return KeysConfig{}, err
+	}
 	return KeysConfig{
-		home: homeDir,
+		home:      homeDir,
+		logFormat: logFormat,
+		logLevel:  logLevel,
 	}, nil
 }

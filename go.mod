@@ -35,6 +35,7 @@ require (
 	github.com/libp2p/go-libp2p-kad-dht v0.25.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/multiformats/go-multiaddr v0.12.0
+	github.com/rs/zerolog v1.31.0
 	github.com/spf13/viper v1.17.0
 	github.com/tendermint/tendermint v0.34.28
 )
@@ -244,7 +245,6 @@ require (
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/cors v1.8.2 // indirect
-	github.com/rs/zerolog v1.31.0 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect

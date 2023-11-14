@@ -106,7 +106,6 @@ func (orch Orchestrator) Start(ctx context.Context) {
 			orch.Logger.Error("error enqueuing missing attestations", "err", err)
 			cancel()
 		}
-		orch.Logger.Error("stopping enqueuing missing attestations")
 	}()
 
 	wg.Wait()
@@ -175,7 +174,7 @@ func (orch Orchestrator) StartNewEventsListener(
 				if err != nil {
 					return err
 				}
-				orch.Logger.Info("enqueueing new attestation nonce", "nonce", nonce)
+				orch.Logger.Debug("enqueueing new attestation nonce", "nonce", nonce)
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
@@ -303,7 +302,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Debug("already signed valset", "nonce", nonce, "signature", resp.Signature)
+			orch.Logger.Info("already signed valset", "nonce", nonce, "signature", resp.Signature)
 			return nil
 		}
 		err = orch.ProcessValsetEvent(ctx, *castedAtt)
@@ -332,7 +331,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", castedAtt.BeginBlock, "end_block", castedAtt.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
+			orch.Logger.Info("already signed data commitment", "nonce", nonce, "begin_block", castedAtt.BeginBlock, "end_block", castedAtt.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
 			return nil
 		}
 		err = orch.ProcessDataCommitmentEvent(ctx, *castedAtt, dataRootHash)

@@ -2,8 +2,9 @@ package deploy
 
 import (
 	"context"
-	"os"
 	"strconv"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
 	evm2 "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/evm"
 
@@ -32,7 +33,10 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			// checking if the provided home is already initiated
 			isInit := store.IsInit(logger, config.Home, store.InitOptions{NeedEVMKeyStore: true})
@@ -109,7 +113,7 @@ func Command() *cobra.Command {
 			}(s.EVMKeyStore, acc.Address)
 
 			evmClient := evm.NewClient(
-				tmlog.NewTMLogger(os.Stdout),
+				logger,
 				nil,
 				s.EVMKeyStore,
 				&acc,

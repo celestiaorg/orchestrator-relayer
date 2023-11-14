@@ -18,6 +18,8 @@ func addStartFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddP2PNicknameFlag(cmd)
 	base.AddP2PListenAddressFlag(cmd)
 	base.AddBootstrappersFlag(cmd)
+	base.AddLogLevelFlag(cmd)
+	base.AddLogFormatFlag(cmd)
 	return cmd
 }
 
@@ -25,6 +27,8 @@ type StartConfig struct {
 	home                       string
 	p2pListenAddr, p2pNickname string
 	bootstrappers              string
+	logLevel                   string
+	logFormat                  string
 }
 
 func parseStartFlags(cmd *cobra.Command) (StartConfig, error) {
@@ -52,11 +56,23 @@ func parseStartFlags(cmd *cobra.Command) (StartConfig, error) {
 		return StartConfig{}, err
 	}
 
+	logLevel, _, err := base.GetLogLevelFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+
+	logFormat, _, err := base.GetLogFormatFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+
 	return StartConfig{
 		p2pNickname:   p2pNickname,
 		p2pListenAddr: p2pListenAddress,
 		home:          homeDir,
 		bootstrappers: bootstrappers,
+		logFormat:     logFormat,
+		logLevel:      logLevel,
 	}, nil
 }
 
@@ -66,11 +82,15 @@ func addInitFlags(cmd *cobra.Command) *cobra.Command {
 		panic(err)
 	}
 	cmd.Flags().String(base.FlagHome, homeDir, "The Blobstream bootstrappers home directory")
+	base.AddLogLevelFlag(cmd)
+	base.AddLogFormatFlag(cmd)
 	return cmd
 }
 
 type InitConfig struct {
-	home string
+	home      string
+	logLevel  string
+	logFormat string
 }
 
 func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
@@ -85,8 +105,18 @@ func parseInitFlags(cmd *cobra.Command) (InitConfig, error) {
 			return InitConfig{}, err
 		}
 	}
+	logLevel, _, err := base.GetLogLevelFlag(cmd)
+	if err != nil {
+		return InitConfig{}, err
+	}
 
+	logFormat, _, err := base.GetLogFormatFlag(cmd)
+	if err != nil {
+		return InitConfig{}, err
+	}
 	return InitConfig{
-		home: homeDir,
+		home:      homeDir,
+		logFormat: logFormat,
+		logLevel:  logLevel,
 	}, nil
 }

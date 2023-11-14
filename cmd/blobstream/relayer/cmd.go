@@ -2,7 +2,6 @@ package relayer
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -25,7 +24,6 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/relayer"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/spf13/cobra"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 func Command() *cobra.Command {
@@ -58,7 +56,10 @@ func Init() *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{
 				NeedDataStore:      true,
@@ -96,13 +97,10 @@ func Start() *cobra.Command {
 		Use:   "start <flags>",
 		Short: "Runs the Blobstream relayer to submit attestations to the target EVM chain",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			logger := tmlog.NewTMLogger(os.Stdout)
-
 			homeDir, err := base.GetHomeDirectory(cmd, ServiceNameRelayer)
 			if err != nil {
 				return err
 			}
-			logger.Debug("initializing relayer", "home", homeDir)
 
 			fileConfig, err := LoadFileConfiguration(homeDir)
 			if err != nil {
@@ -116,6 +114,12 @@ func Start() *cobra.Command {
 				return err
 			}
 
+			logger, err := base.GetLogger(config.LogLevel, config.LogFormat)
+			if err != nil {
+				return err
+			}
+
+			logger.Info("initializing relayer", "home", homeDir)
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
 
@@ -202,7 +206,7 @@ func Start() *cobra.Command {
 			// Listen for and trap any OS signal to graceful shutdown and exit
 			go helpers.TrapSignal(logger, cancel)
 
-			logger.Debug("starting relayer")
+			logger.Info("starting relayer")
 			err = relay.Start(ctx)
 			if err != nil {
 				return err

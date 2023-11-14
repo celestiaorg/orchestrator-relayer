@@ -2,9 +2,10 @@ package bootstrapper
 
 import (
 	"context"
-	"os"
 	"strings"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
 	p2pcmd "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/keys/p2p"
 	"github.com/celestiaorg/orchestrator-relayer/helpers"
@@ -14,7 +15,6 @@ import (
 	dssync "github.com/ipfs/go-datastore/sync"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/spf13/cobra"
-	tmlog "github.com/tendermint/tendermint/libs/log"
 )
 
 func Command() *cobra.Command {
@@ -48,8 +48,11 @@ func Start() *cobra.Command {
 			}
 
 			// creating the logger
-			logger := tmlog.NewTMLogger(os.Stdout)
-			logger.Debug("starting bootstrapper node")
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
+			logger.Info("starting bootstrapper node")
 
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
@@ -144,7 +147,10 @@ func Init() *cobra.Command {
 				return err
 			}
 
-			logger := tmlog.NewTMLogger(os.Stdout)
+			logger, err := base.GetLogger(config.logLevel, config.logFormat)
+			if err != nil {
+				return err
+			}
 
 			initOptions := store.InitOptions{
 				NeedDataStore:   false,

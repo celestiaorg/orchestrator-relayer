@@ -73,7 +73,7 @@ func (q Querier) QueryTwoThirdsDataCommitmentConfirms(
 		}
 
 		if currThreshold >= majThreshHold {
-			q.logger.Debug("found enough data commitment confirms to be relayed",
+			q.logger.Info("found enough data commitment confirms to be relayed",
 				"majThreshHold",
 				majThreshHold,
 				"currThreshold",
@@ -178,7 +178,7 @@ func (q Querier) QueryTwoThirdsValsetConfirms(
 		}
 
 		if currThreshold >= majThreshHold {
-			q.logger.Debug("found enough valset confirms to be relayed",
+			q.logger.Info("found enough valset confirms to be relayed",
 				"majThreshHold",
 				majThreshHold,
 				"currThreshold",
