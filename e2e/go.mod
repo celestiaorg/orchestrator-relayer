@@ -7,7 +7,7 @@ replace github.com/celestiaorg/orchestrator-relayer => ../
 require (
 	github.com/celestiaorg/celestia-app v1.3.0
 	github.com/celestiaorg/nmt v0.20.0 // indirect
-	github.com/ethereum/go-ethereum v1.13.4
+	github.com/ethereum/go-ethereum v1.13.5
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.1
@@ -109,7 +109,7 @@ require (
 	github.com/cosmos/ibc-go/v6 v6.2.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.2 // indirect
 	github.com/cpuguy83/dockercfg v0.3.1 // indirect
-	github.com/crate-crypto/go-kzg-4844 v0.3.0 // indirect
+	github.com/crate-crypto/go-kzg-4844 v0.7.0 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -135,7 +135,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
 	github.com/elastic/gosigar v0.14.2 // indirect
-	github.com/ethereum/c-kzg-4844 v0.3.1 // indirect
+	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
 	github.com/felixge/httpsnoop v1.0.2 // indirect
 	github.com/flynn/noise v1.0.0 // indirect
 	github.com/francoispqt/gojay v1.2.13 // indirect
