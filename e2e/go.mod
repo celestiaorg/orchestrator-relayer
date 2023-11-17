@@ -10,7 +10,7 @@ require (
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
