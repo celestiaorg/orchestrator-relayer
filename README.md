@@ -8,7 +8,7 @@ For a high-level overview of how Blobstream works, check [here](https://github.c
 
 ## Install
 
-1. [Install Go](https://go.dev/doc/install) 1.21.1
+1. [Install Go](https://go.dev/doc/install) 1.21 
 2. Clone this repo
 3. Install the Blobstream CLI
 
