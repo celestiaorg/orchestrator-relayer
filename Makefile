@@ -6,26 +6,32 @@ versioningPath := "github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/ve
 LDFLAGS=-ldflags="-X '$(versioningPath).buildTime=$(shell date)' -X '$(versioningPath).lastCommit=$(shell git rev-parse HEAD)' -X '$(versioningPath).semanticVersion=$(shell git describe --tags --dirty=-dev 2>/dev/null || git rev-parse --abbrev-ref HEAD)'"
 
 all: install
+.PHONY: all
 
-install: go.sum
+install: mod-verify
 	@echo "--> Installing blobstream"
 	@go install -mod=readonly ${LDFLAGS} ./cmd/blobstream
+.PHONY: install
 
-go.sum: mod
+mod-verify: mod
 	@echo "--> Verifying dependencies have expected content"
 	GO111MODULE=on go mod verify
+.PHONY: mod-verify
 
 mod:
 	@echo "--> Updating go.mod"
 	@go mod tidy
+.PHONY: mod
 
 pre-build:
 	@echo "--> Fetching latest git tags"
 	@git fetch --tags
+.PHONY: pre-build
 
 build: mod
 	@mkdir -p build/
 	@go build -o build ${LDFLAGS} ./cmd/blobstream
+.PHONY: build
 
 build-docker:
 	@echo "--> Building Docker image"
@@ -52,6 +58,7 @@ test:
 .PHONY: test
 
 test-all: test-race test-cover
+.PHONY: test-all
 
 test-race:
 	@echo "--> Running tests with -race"
