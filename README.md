@@ -8,7 +8,7 @@ For a high-level overview of how Blobstream works, check [here](https://github.c
 
 ## Install
 
-1. [Install Go](https://go.dev/doc/install) 1.21.1
+1. [Install Go](https://go.dev/doc/install) 1.21 
 2. Clone this repo
 3. Install the Blobstream CLI
 
@@ -29,7 +29,7 @@ If you are a Celestia-app validator, all you need to do is run the orchestrator.
 
 If you want to post commitments on an EVM chain, you will need to deploy a new Blobstream contract and run a relayer. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) for relayer docs and [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for how to deploy a new Blobstream contract.
 
-Note: the Blobstream P2P network is a separate network than the consensus or the data availability one. Thus, you will need its specific bootstrappers to be able to connect to it.
+Note: the Blobstream P2P network is a separate network from the consensus or the data availability one. Thus, you will need its specific bootstrappers to be able to connect to it.
 
 ## Contributing
 
