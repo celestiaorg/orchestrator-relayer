@@ -24,7 +24,7 @@ updates:
       - dependencies
     reviewers: 
       - "sweexordious"
-  - package-ecosystem: gomod e2e
+  - package-ecosystem: gomod
     directory: "e2e"
     schedule:
       interval: daily
