@@ -58,4 +58,5 @@ blobstream bootstrapper start
 #### Systemd service
 
 An example of a systemd service that can be used for bootstrappers can be
-found in the orchestrator documentation.
+found in the
+[orchestrator documentation](https://docs.celestia.org/nodes/blobstream-orchestrator).
