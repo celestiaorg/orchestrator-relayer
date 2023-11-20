@@ -47,20 +47,7 @@ blobstream bootstrapper p2p  --help
 Now that we have the store initialized, we can start the bootstrapper:
 
 ```shell
-blobstream bootstrapper
-
-Blobstream P2P network bootstrapper command
-
-Usage:
-  blobstream bootstrapper [command]
-
-Aliases:
-  bootstrapper, bs
-
-Flags:
-  -h, --help   help for bootstrapper
-
-Use "blobstream bootstrapper [command] --help" for more information about a command.
+blobstream bootstrapper start
 ```
 
 ### Open the P2P port
