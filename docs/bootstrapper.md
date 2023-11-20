@@ -42,33 +42,21 @@ one:
 blobstream bootstrapper p2p  --help
 ```
 
-### Start the bootstrapper
-
-Now that we have the store initialized, we can start the bootstrapper:
-
-```shell
-blobstream bootstrapper
-
-Blobstream P2P network bootstrapper command
-
-Usage:
-  blobstream bootstrapper [command]
-
-Aliases:
-  bootstrapper, bs
-
-Flags:
-  -h, --help   help for bootstrapper
-
-Use "blobstream bootstrapper [command] --help" for more information about a command.
-```
-
 ### Open the P2P port
 
 In order for the bootstrapper node to work, you will need to expose the P2P
 port, which is by default `30000`.
 
+### Start the bootstrapper
+
+Now that we have the store initialized, we can start the bootstrapper:
+
+```shell
+blobstream bootstrapper start
+```
+
 #### Systemd service
 
 An example of a systemd service that can be used for bootstrappers can be
-found in the orchestrator documentation.
+found in the
+[orchestrator documentation](https://docs.celestia.org/nodes/blobstream-orchestrator).
