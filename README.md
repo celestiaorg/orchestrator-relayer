@@ -27,7 +27,7 @@ blobstream --help
 
 If you are a Celestia-app validator, all you need to do is run the orchestrator. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/orchestrator.md) for more details.
 
-If you want to post commitments on an EVM chain, you will need to deploy a new Blobstream contract and run a relayer. Check [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) for relayer docs and [here](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for how to deploy a new Blobstream contract.
+If you want to post commitments on an EVM chain, you will need to deploy a new Blobstream contract and run a relayer, or run a relayer to an already deployed Blobstream contract. Check [relayer docs](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/relayer.md) and [deployment docs](https://github.com/celestiaorg/orchestrator-relayer/blob/main/docs/deploy.md) for more information.
 
 Note: the Blobstream P2P network is a separate network from the consensus or the data availability one. Thus, you will need its specific bootstrappers to be able to connect to it.
 
