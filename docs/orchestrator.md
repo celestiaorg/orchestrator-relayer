@@ -26,7 +26,7 @@ Bootstrapper for the Blockspace Race is:
 
 - `/dns/bootstr-incent-1.celestia.tools/tcp/30000/p2p/12D3KooWSGZ2LXW2soQFHgU82uLfN7pNW5gMMkTnu1fhMXG43TvP`
 
-Make sure to specify it using the `-b` flag when running the orchestrator.
+Make sure to specify it using the `--p2p.bootstrappers` flag when running the orchestrator or set it in the `<orchestrator_home>/config/config.toml` config file.
 
 This means that even if the consensus node is already connected to the consensus network, if the orchestrator doesn't start with a list of bootstrapper to its specific network, then, it will not work and will output the following logs:
 
@@ -87,8 +87,6 @@ To add an EVM private key, check the next section.
 
 Because EVM keys are important, we provide a keystore that will help manage them. The keystore uses a file system keystore protected by a passphrase to store and open private keys.
 
-To register an EVM address for your validator, check the section [Register EVM Address](#register-evm-address).
-
 To import your EVM private key, there is the `import` subcommand to assist you with that:
 
 ```sh
@@ -104,6 +102,8 @@ blobstream orchestrator keys evm list
 ```
 
 For more information about the `keys` command, check [the `keys` documentation](https://docs.celestia.org/nodes/blobstream-keys).
+
+Then, you will need to register the EVM address for your validator as specified in the [Register EVM Address](#register-evm-address) section.
 
 ### Start the orchestrator
 
@@ -162,7 +162,9 @@ So, seeing that warning is not a problem.
 
 When creating a validator, a random EVM address corresponding to its operator is set in the Blobstream state. This latter will be used by the orchestrator to sign attestations. And since validators will generally not have access to its corresponding private key, that address needs to be edited with one whose private key is known to the validator operator.
 
-To edit an EVM address for a certain validator, its corresponding account needs to send a `RegisterEVMAddress` transaction with the new address.
+> **_NOTE:_** When a validator wants to start an orchestrator for a Celestia network for the first time, they will need to generate an EVM address offchain, either using the [EVM keystore](#evm-key) methods or a third party software that allows generating Ethereum addresses and provide you with a private key or a BIP39 mnemonic.
+
+So, to edit an EVM address for a certain validator, its corresponding account needs to send a `RegisterEVMAddress` transaction with the new address.
 
 First, you should get your validator `valoper` address. To do so, run the following:
 
