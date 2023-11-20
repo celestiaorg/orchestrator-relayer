@@ -108,7 +108,7 @@ Usage:
   blobstream relayer start <flags> [flags]
 ```
 
-Also, you can set the necessary configuration in the relayers's TOML config file. You can find these variables in the relayer's home directory under `config/config.toml`.
+Also, you can set the necessary configuration in the relayers's TOML config file. You can find the orchestrator's TOML config file in the relayer's home directory under `config/config.toml`.
 
 > **_NOTE:_** The CLI flags take precedence over the config files for the same parameters.
 

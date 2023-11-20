@@ -136,7 +136,7 @@ Flags:
       --p2p.nickname string        Nickname of the p2p private key to use (if not provided, an existing one from the p2p store or a newly generated one will be used)
 ```
 
-Also, you can set the necessary configuration in the orchestrator's TOML config file. You can find these variables in the orchestrator's home directory under `config/config.toml`.
+Also, you can set the necessary configuration in the orchestrator's TOML config file. You can find the orchestrator's TOML config file in the orchestrator's home directory under `config/config.toml`.
 
 > **_NOTE:_** The CLI flags take precedence over the config files for the same parameters.
 
