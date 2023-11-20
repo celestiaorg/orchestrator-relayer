@@ -42,6 +42,11 @@ one:
 blobstream bootstrapper p2p  --help
 ```
 
+### Open the P2P port
+
+In order for the bootstrapper node to work, you will need to expose the P2P
+port, which is by default `30000`.
+
 ### Start the bootstrapper
 
 Now that we have the store initialized, we can start the bootstrapper:
@@ -49,11 +54,6 @@ Now that we have the store initialized, we can start the bootstrapper:
 ```shell
 blobstream bootstrapper start
 ```
-
-### Open the P2P port
-
-In order for the bootstrapper node to work, you will need to expose the P2P
-port, which is by default `30000`.
 
 #### Systemd service
 
