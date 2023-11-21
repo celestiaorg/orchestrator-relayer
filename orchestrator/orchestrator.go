@@ -302,7 +302,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Info("already signed valset", "nonce", nonce, "signature", resp.Signature)
+			orch.Logger.Debug("already signed valset", "nonce", nonce, "signature", resp.Signature)
 			return nil
 		}
 		err = orch.ProcessValsetEvent(ctx, *castedAtt)
@@ -331,7 +331,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 			return errors.Wrap(err, fmt.Sprintf("data commitment %d", nonce))
 		}
 		if resp != nil {
-			orch.Logger.Info("already signed data commitment", "nonce", nonce, "begin_block", castedAtt.BeginBlock, "end_block", castedAtt.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
+			orch.Logger.Debug("already signed data commitment", "nonce", nonce, "begin_block", castedAtt.BeginBlock, "end_block", castedAtt.EndBlock, "data_root_tuple_root", dataRootHash.Hex(), "signature", resp.Signature)
 			return nil
 		}
 		err = orch.ProcessDataCommitmentEvent(ctx, *castedAtt, dataRootHash)
