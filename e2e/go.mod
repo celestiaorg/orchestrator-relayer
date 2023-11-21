@@ -5,7 +5,7 @@ go 1.21.1
 replace github.com/celestiaorg/orchestrator-relayer => ../
 
 require (
-	github.com/celestiaorg/celestia-app v1.3.0
+	github.com/celestiaorg/celestia-app v1.4.0
 	github.com/celestiaorg/nmt v0.20.0 // indirect
 	github.com/ethereum/go-ethereum v1.13.5
 	github.com/gogo/protobuf v1.3.3 // indirect
