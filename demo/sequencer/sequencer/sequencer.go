@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"time"
+
+	"demo/blockchain"
+	"demo/network"
 )
 
-func Start() {
+func Start(ctx context.Context, network *network.Network, headersChan chan<- blockchain.Header, blocksChan chan<- blockchain.Block) {
 	fmt.Println("starting sequencer")
-
-	ctx := context.Background()
 
 	for {
 		select {
@@ -36,10 +37,22 @@ func Start() {
 				-----END TENDERMINT PRIVATE KEY-----
 			*/
 			// Passphrase: blobstream-demo
-			// Also, the keystore can be directly used from the demo/validator/keystore-test.
+			// Also, the keystore can be directly added as a volume to the sequencer container
+			// and used from the keystore-test directly.
 			// Ganache RPC: ganache:8545
 			// Ganache funded account private key: 0x0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
 			// Happy sequencing!
+
+			// TODO: Create transactions
+			// TODO: Create Block
+			// TODO: Submit block to Celestia
+			// TODO: Submit header to settlement contract:
+			// The settlement contract needs to be implemented and deployed to Ganache. It will
+			// inherit from the DAVerifier: https://github.com/celestiaorg/blobstream-contracts/blob/master/src/lib/verifier/DAVerifier.sol
+			// to be able to process inclusion proofs.
+			// TODO: Share the header with the verifier
+			headersChan <- blockchain.Header{}
+			blocksChan <- blockchain.Block{}
 		}
 	}
 }

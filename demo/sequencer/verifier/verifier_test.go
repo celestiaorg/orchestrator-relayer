@@ -1,4 +1,4 @@
-package sequencer
+package verifier
 
 import "testing"
 
