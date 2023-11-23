@@ -71,35 +71,6 @@ services:
     ports:
       - "8545:8545"
 
-  deployer:
-    container_name: deployer
-    build:
-      dockerfile: Dockerfile
-    depends_on:
-      - ganache
-      - validator
-    environment:
-#      By default, we don't want to run the deploy on each run.
-      - DEPLOY_NEW_CONTRACT=false
-      - EVM_CHAIN_ID=blobstream-e2e
-      - EVM_ACCOUNT=0x95359c3348e189ef7781546e6E13c80230fC9fB5
-      - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
-      - CORE_RPC_HOST=validator
-      - CORE_RPC_PORT=26657
-      - CORE_GRPC_HOST=validator
-      - CORE_GRPC_PORT=9090
-      - EVM_CHAIN_ID=1234
-      - EVM_ENDPOINT=http://ganache:8545
-      - STARTING_NONCE=earliest
-    entrypoint: [
-      "/bin/bash"
-    ]
-    command: [
-      "/opt/deploy_blobstream_contract.sh"
-    ]
-    volumes:
-      - ${PWD}/scripts/deploy_blobstream_contract.sh:/opt/deploy_blobstream_contract.sh:ro
-
   relayer:
     container_name: relayer
     build:
