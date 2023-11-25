@@ -250,7 +250,7 @@ If, for some reason, the private key, corresponding to the EVM account that was 
 
 If the validator still has access to the previous running orchestrator, it would be safer to keep it running in a separate process, and initializing a new orchestrator in a new home directory, and running it using the new EVM address. Then, once the new orchestrator starts signing, the old one can be stopped.
 
-Running a second orchestrator in the same machine would require using different P2P listening ports, i.e. changing the `listen-addr` value in the `<orchestrator_home>/config/config.toml` file and using different ports between the two instances. 
+Running a second orchestrator in the same machine would require using different P2P listening ports, i.e. changing the `listen-addr` value in the `<orchestrator_home>/config/config.toml` file and using different ports between the two instances.
 
 #### Systemd service
 
