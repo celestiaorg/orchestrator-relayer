@@ -86,6 +86,12 @@ func DeployContractAndSubmitDataCommitment() error {
 		EVMRPC,
 		2500000,
 	)
+	defer func(evmClient *evm.Client) {
+		err := evmClient.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(evmClient)
 
 	txOpts, err := evmClient.NewTransactionOpts(ctx)
 	if err != nil {

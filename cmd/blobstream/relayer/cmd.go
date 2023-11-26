@@ -2,6 +2,7 @@ package relayer
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -192,6 +193,12 @@ func Start() *cobra.Command {
 				config.EvmRPC,
 				config.EvmGasLimit,
 			)
+			defer func(evmClient *evm.Client) {
+				err := evmClient.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+			}(evmClient)
 
 			relay := relayer.NewRelayer(
 				tmQuerier,

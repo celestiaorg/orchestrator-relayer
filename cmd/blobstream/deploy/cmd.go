@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
@@ -120,6 +121,12 @@ func Command() *cobra.Command {
 				config.evmRPC,
 				config.evmGasLimit,
 			)
+			defer func(evmClient *evm.Client) {
+				err := evmClient.Close()
+				if err != nil {
+					fmt.Println(err)
+				}
+			}(evmClient)
 
 			txOpts, err := evmClient.NewTransactionOpts(cmd.Context())
 			if err != nil {

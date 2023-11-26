@@ -66,6 +66,15 @@ func (ec *Client) GetEthClient() (*ethclient.Client, error) {
 	return ethClient, nil
 }
 
+// Close closes the Eth client connection.
+func (ec *Client) Close() error {
+	if ec.EthClient != nil {
+		ec.EthClient.Close()
+		return nil
+	}
+	return nil
+}
+
 // DeployBlobstreamContract Deploys the Blobstream contract and initializes it with the provided valset.
 // The waitToBeMined, when set to true, will wait for the transaction to be included in a block,
 // and log relevant information.
