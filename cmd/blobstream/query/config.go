@@ -20,7 +20,7 @@ func addFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagP2PNode, "", "P2P target node multiaddress (eg. /ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn)")
 	cmd.Flags().String(FlagOutputFile, "", "Path to an output file path if the results need to be written to a json file. Leaving it as empty will result in printing the result to stdout")
 	base.AddGRPCInsecureFlag(cmd)
-	cmd.Flags().String(base.FlagHome, "", fmt.Sprintf("The Blobstream orchestrator|relayer home directory. If this flag is not set, it will try the orchestrator's default home directory, then the relayer's default home directory to get the necessary configuration"))
+	cmd.Flags().String(base.FlagHome, "", "The Blobstream orchestrator|relayer home directory. If this flag is not set, it will try the orchestrator's default home directory, then the relayer's default home directory to get the necessary configuration")
 	return cmd
 }
 
