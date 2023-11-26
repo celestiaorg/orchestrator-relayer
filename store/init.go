@@ -44,7 +44,7 @@ func Init(log tmlog.Logger, path string, options InitOptions) error {
 	if err != nil {
 		return err
 	}
-	log.Info("initializing qgb store", "path", path)
+	log.Info("initializing Blobstream store", "path", path)
 
 	err = initRoot(path)
 	if err != nil {
@@ -100,7 +100,7 @@ func Init(log tmlog.Logger, path string, options InitOptions) error {
 		return err
 	}
 
-	log.Info("qgb store initialized", "path", path)
+	log.Info("Blobstream store initialized", "path", path)
 
 	return nil
 }
