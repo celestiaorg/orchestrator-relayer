@@ -23,12 +23,13 @@ import (
 const DefaultEVMGasLimit = uint64(2500000)
 
 type Client struct {
-	logger   tmlog.Logger
-	Wrapper  *blobstreamwrapper.Wrappers
-	Ks       *keystore.KeyStore
-	Acc      *accounts.Account
-	EvmRPC   string
-	GasLimit uint64
+	logger    tmlog.Logger
+	Wrapper   *blobstreamwrapper.Wrappers
+	Ks        *keystore.KeyStore
+	Acc       *accounts.Account
+	EvmRPC    string
+	GasLimit  uint64
+	EthClient *ethclient.Client
 }
 
 // NewClient Creates a new EVM Client that can be used to deploy the Blobstream contract and
@@ -52,13 +53,16 @@ func NewClient(
 	}
 }
 
-// NewEthClient creates a new Eth client using the existing EVM RPC address.
-// Should be closed after usage.
-func (ec *Client) NewEthClient() (*ethclient.Client, error) {
+// GetEthClient creates a new Eth client using the existing EVM RPC address or returns the existing one.
+func (ec *Client) GetEthClient() (*ethclient.Client, error) {
+	if ec.EthClient != nil {
+		return ec.EthClient, nil
+	}
 	ethClient, err := ethclient.Dial(ec.EvmRPC)
 	if err != nil {
 		return nil, err
 	}
+	ec.EthClient = ethClient
 	return ethClient, nil
 }
 

@@ -61,7 +61,7 @@ func NewRelayer(
 }
 
 func (r *Relayer) Start(ctx context.Context) error {
-	ethClient, err := r.EVMClient.NewEthClient()
+	ethClient, err := r.EVMClient.GetEthClient()
 	if err != nil {
 		r.logger.Error(err.Error())
 		return err
@@ -160,6 +160,12 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		}
 		r.logger.Debug("found the needed valset")
 	}
+	// set new gas price in case it changed
+	bigGasPrice, err := r.EVMClient.EthClient.SuggestGasPrice(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get Ethereum gas estimate: %w", err)
+	}
+	opts.GasPrice = bigGasPrice
 	switch att := attI.(type) {
 	case *celestiatypes.Valset:
 		signBytes, err := att.SignBytes()

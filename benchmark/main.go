@@ -92,7 +92,7 @@ func DeployContractAndSubmitDataCommitment() error {
 		return err
 	}
 
-	backend, err := evmClient.NewEthClient()
+	backend, err := evmClient.GetEthClient()
 	if err != nil {
 		return err
 	}
