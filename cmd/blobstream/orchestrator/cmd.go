@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -102,6 +103,9 @@ func Start() *cobra.Command {
 			// creating the data store
 			dataStore := dssync.MutexWrap(s.DataStore)
 
+			if config.Bootstrappers == "" {
+				return fmt.Errorf("")
+			}
 			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.P2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore)
 			if err != nil {
 				return err

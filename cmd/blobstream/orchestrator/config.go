@@ -243,7 +243,7 @@ func LoadFileConfiguration(homeDir string) (*StartConfig, error) {
 		}
 	}
 
-	conf, err := getStartConfig(v, configPath)
+	conf, err := GetStartConfig(v, configPath)
 	if err != nil {
 		return nil, fmt.Errorf("couldn't get client config: %v", err)
 	}
@@ -279,8 +279,8 @@ func writeConfigToFile(configFilePath string, config *StartConfig) error {
 	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
-// getStartConfig reads values from config.toml file and unmarshalls them into StartConfig
-func getStartConfig(v *viper.Viper, configPath string) (*StartConfig, error) {
+// GetStartConfig reads values from config.toml file and unmarshalls them into StartConfig
+func GetStartConfig(v *viper.Viper, configPath string) (*StartConfig, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("config")
 	v.SetConfigType("toml")
