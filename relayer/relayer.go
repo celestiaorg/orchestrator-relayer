@@ -161,9 +161,13 @@ func (r *Relayer) ProcessAttestation(ctx context.Context, opts *bind.TransactOpt
 		r.logger.Debug("found the needed valset")
 	}
 	// set new gas price in case it changed
-	bigGasPrice, err := r.EVMClient.EthClient.SuggestGasPrice(ctx)
+	ethClient, err := r.EVMClient.GetEthClient()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get Ethereum gas estimate: %w", err)
+	}
+	bigGasPrice, err := ethClient.SuggestGasPrice(ctx)
+	if err != nil {
+		return nil, err
 	}
 	opts.GasPrice = bigGasPrice
 	switch att := attI.(type) {
