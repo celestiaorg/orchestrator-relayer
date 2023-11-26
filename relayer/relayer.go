@@ -66,7 +66,6 @@ func (r *Relayer) Start(ctx context.Context) error {
 		r.logger.Error(err.Error())
 		return err
 	}
-	defer ethClient.Close()
 
 	processFunc := func() error {
 		// this function will relay attestations as long as there are confirms. And, after the contract is
