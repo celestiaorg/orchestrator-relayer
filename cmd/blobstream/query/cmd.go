@@ -498,6 +498,10 @@ func getSignatureAndPrintIt(
 	return nil
 }
 
+// tryToGetExistingConfig tries to get the query config from existing
+// orchestrator/relayer homes. It first checks whether the `--home` flag was
+// changed. If so, it gets the config from there. If not, then it tries the
+// orchestrator default home directory, then the relayer default home directory.
 func tryToGetExistingConfig(cmd *cobra.Command, logger tmlog.Logger) (Config, error) {
 	v := viper.New()
 	v.SetEnvPrefix("")
