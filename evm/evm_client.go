@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -228,8 +229,12 @@ func (ec *Client) WaitForTransaction(
 	ctx context.Context,
 	backend bind.DeployBackend,
 	tx *coregethtypes.Transaction,
+	timeout time.Duration,
 ) (*coregethtypes.Receipt, error) {
 	ec.logger.Debug("waiting for transaction to be confirmed", "hash", tx.Hash().String())
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	receipt, err := bind.WaitMined(ctx, backend, tx)
 	if err == nil && receipt != nil && receipt.Status == 1 {

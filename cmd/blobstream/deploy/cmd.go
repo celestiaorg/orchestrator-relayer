@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
@@ -138,7 +139,7 @@ func Command() *cobra.Command {
 				return err
 			}
 
-			receipt, err := evmClient.WaitForTransaction(cmd.Context(), backend, tx)
+			receipt, err := evmClient.WaitForTransaction(cmd.Context(), backend, tx, 5*time.Minute)
 			if err == nil && receipt != nil && receipt.Status == 1 {
 				logger.Info("deployed Blobstream contract", "proxy_address", address.Hex(), "tx_hash", tx.Hash().String())
 			}

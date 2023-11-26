@@ -111,7 +111,7 @@ func DeployContractAndSubmitDataCommitment() error {
 		return err
 	}
 
-	receipt, err := evmClient.WaitForTransaction(ctx, backend, tx)
+	receipt, err := evmClient.WaitForTransaction(ctx, backend, tx, time.Minute)
 	if err == nil && receipt != nil && receipt.Status == 1 {
 		logger.Info("deployed QGB contract", "proxy_address", address.Hex(), "tx_hash", tx.Hash().String())
 	}

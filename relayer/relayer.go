@@ -111,7 +111,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 				}
 
 				// wait for transaction to be mined
-				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx)
+				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx, 15*time.Minute)
 				if err != nil {
 					return err
 				}
