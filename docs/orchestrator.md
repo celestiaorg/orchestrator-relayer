@@ -248,7 +248,7 @@ Note: A validator set change is triggered if more than 5% of the total staking p
 
 If, for some reason, the private key, corresponding to the EVM account that was registered above, was lost, or some validator wants to change it for some reason, then they can re-register another EVM address for their validator using the same above command using the new EVM address.
 
-If the validator still has access to the previous running orchestrator, it would be safer to keep it running in a separate process, and initializing a new orchestrator in a new home directory, and running it using the new EVM address. Then, once the new orchestrator starts signing, the old one can be stopped.
+If the validator still has access to the previously running orchestrator, it would be safer to keep it running in a separate process, initialize a new orchestrator in a new home directory, and run it using the new EVM address. Then, once the new orchestrator starts signing, the old one can be stopped.
 
 Running a second orchestrator in the same machine would require using different P2P listening ports, i.e. changing the `listen-addr` value in the `<orchestrator_home>/config/config.toml` file and using different ports between the two instances.
 
