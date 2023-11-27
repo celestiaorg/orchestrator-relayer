@@ -63,6 +63,10 @@ contract-address = "{{ .ContractAddr }}"
 
 # Evm gas limit.
 gas-limit = "{{ .EvmGasLimit }}"
+
+# The time, in minutes, to wait for transactions to be mined
+# on the target EVM chain before recreating them with a different gas price.
+retry-timeout = "{{ .EVMRetryTimeout }}"
 `
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
@@ -85,37 +89,40 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddGRPCInsecureFlag(cmd)
 	base.AddLogLevelFlag(cmd)
 	base.AddLogFormatFlag(cmd)
+	base.AddEVMRetryTimeoutFlag(cmd)
 
 	return cmd
 }
 
 type StartConfig struct {
 	base.Config
-	EvmChainID    uint64 `mapstructure:"evm-chain-id" json:"evm-chain-id"`
-	EvmRPC        string `mapstructure:"evm-rpc" json:"evm-rpc"`
-	CoreGRPC      string `mapstructure:"core-grpc" json:"core-grpc"`
-	CoreRPC       string `mapstructure:"core-rpc" json:"core-rpc"`
-	evmAccAddress string
-	ContractAddr  string `mapstructure:"contract-address" json:"contract-address"`
-	EvmGasLimit   uint64 `mapstructure:"gas-limit" json:"gas-limit"`
-	Bootstrappers string `mapstructure:"bootstrappers" json:"bootstrappers"`
-	P2PListenAddr string `mapstructure:"listen-addr" json:"listen-addr"`
-	p2pNickname   string
-	GrpcInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
-	LogLevel      string
-	LogFormat     string
+	EvmChainID      uint64 `mapstructure:"evm-chain-id" json:"evm-chain-id"`
+	EvmRPC          string `mapstructure:"evm-rpc" json:"evm-rpc"`
+	CoreGRPC        string `mapstructure:"core-grpc" json:"core-grpc"`
+	CoreRPC         string `mapstructure:"core-rpc" json:"core-rpc"`
+	evmAccAddress   string
+	ContractAddr    string `mapstructure:"contract-address" json:"contract-address"`
+	EvmGasLimit     uint64 `mapstructure:"gas-limit" json:"gas-limit"`
+	Bootstrappers   string `mapstructure:"bootstrappers" json:"bootstrappers"`
+	P2PListenAddr   string `mapstructure:"listen-addr" json:"listen-addr"`
+	p2pNickname     string
+	GrpcInsecure    bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
+	LogLevel        string
+	LogFormat       string
+	EVMRetryTimeout uint64 `mapstructure:"retry-timeout" json:"retry-timeout"`
 }
 
 func DefaultStartConfig() *StartConfig {
 	return &StartConfig{
-		CoreRPC:       "tcp://localhost:26657",
-		CoreGRPC:      "localhost:9090",
-		Bootstrappers: "",
-		P2PListenAddr: "/ip4/0.0.0.0/tcp/30000",
-		GrpcInsecure:  true,
-		EvmChainID:    5,
-		EvmRPC:        "http://localhost:8545",
-		EvmGasLimit:   2500000,
+		CoreRPC:         "tcp://localhost:26657",
+		CoreGRPC:        "localhost:9090",
+		Bootstrappers:   "",
+		P2PListenAddr:   "/ip4/0.0.0.0/tcp/30000",
+		GrpcInsecure:    true,
+		EvmChainID:      5,
+		EvmRPC:          "http://localhost:8545",
+		EvmGasLimit:     2500000,
+		EVMRetryTimeout: 15,
 	}
 }
 
@@ -240,6 +247,14 @@ func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	fileConfig.LogFormat = logFormat
+
+	retryTimeout, changed, err := base.GetEVMRetryTimeoutFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.EVMRetryTimeout = retryTimeout
+	}
 
 	return *fileConfig, nil
 }
