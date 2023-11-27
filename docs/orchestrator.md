@@ -246,7 +246,7 @@ Note: A validator set change is triggered if more than 5% of the total staking p
 
 ### Updating the EVM address if its corresponding private key is lost
 
-If, for some reason, the private key, corresponding to the EVM account that was registered above, was lost, or some validator wanted to change it for some reason, then they can re-register another EVM address for their validator using the same above command using the new EVM address and it should work.
+If, for some reason, the private key, corresponding to the EVM account that was registered above, was lost, or some validator wants to change it for some reason, then they can re-register another EVM address for their validator using the same above command using the new EVM address.
 
 If the validator still has access to the previous running orchestrator, it would be safer to keep it running in a separate process, and initializing a new orchestrator in a new home directory, and running it using the new EVM address. Then, once the new orchestrator starts signing, the old one can be stopped.
 
