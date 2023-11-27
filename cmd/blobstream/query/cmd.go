@@ -519,24 +519,24 @@ func tryToGetExistingConfig(cmd *cobra.Command, logger tmlog.Logger) (Config, er
 		orchConf, err := orchestrator.GetStartConfig(v, configPath)
 		if err == nil {
 			// it is an orchestrator, so we get the config from it
-			return Config{
-				coreGRPC:     orchConf.CoreGRPC,
-				coreRPC:      orchConf.CoreRPC,
-				targetNode:   orchConf.Bootstrappers,
-				grpcInsecure: orchConf.GRPCInsecure,
-			}, nil
+			return *NewPartialConfig(
+				orchConf.CoreGRPC,
+				orchConf.CoreRPC,
+				orchConf.Bootstrappers,
+				orchConf.GRPCInsecure,
+			), nil
 		}
 
 		// assume this home is a relayer home directory
 		relConf, err := relayer.GetStartConfig(v, configPath)
 		if err == nil {
 			// it is a relayer, so we get the config from it
-			return Config{
-				coreGRPC:     relConf.CoreGRPC,
-				coreRPC:      relConf.CoreRPC,
-				targetNode:   relConf.Bootstrappers,
-				grpcInsecure: relConf.GrpcInsecure,
-			}, nil
+			return *NewPartialConfig(
+				relConf.CoreGRPC,
+				relConf.CoreRPC,
+				relConf.Bootstrappers,
+				relConf.GrpcInsecure,
+			), nil
 		}
 		return Config{}, fmt.Errorf("the provided home directory is neither an orchestrator nor a relayer home directory")
 	}
@@ -549,12 +549,12 @@ func tryToGetExistingConfig(cmd *cobra.Command, logger tmlog.Logger) (Config, er
 	if err == nil {
 		// found orchestrator home, get the config from it
 		logger.Debug("using home", "home", orchHome)
-		return Config{
-			coreGRPC:     orchConf.CoreGRPC,
-			coreRPC:      orchConf.CoreRPC,
-			targetNode:   orchConf.Bootstrappers,
-			grpcInsecure: orchConf.GRPCInsecure,
-		}, nil
+		return *NewPartialConfig(
+			orchConf.CoreGRPC,
+			orchConf.CoreRPC,
+			orchConf.Bootstrappers,
+			orchConf.GRPCInsecure,
+		), nil
 	}
 
 	// try to get the config from the relayer home directory
@@ -566,12 +566,12 @@ func tryToGetExistingConfig(cmd *cobra.Command, logger tmlog.Logger) (Config, er
 	if err == nil {
 		// found relayer home, so we get the config from it
 		logger.Debug("using home", "home", relHome)
-		return Config{
-			coreGRPC:     relConf.CoreGRPC,
-			coreRPC:      relConf.CoreRPC,
-			targetNode:   relConf.Bootstrappers,
-			grpcInsecure: relConf.GrpcInsecure,
-		}, nil
+		return *NewPartialConfig(
+			relConf.CoreGRPC,
+			relConf.CoreRPC,
+			relConf.Bootstrappers,
+			relConf.GrpcInsecure,
+		), nil
 	}
 
 	return *DefaultConfig(), nil

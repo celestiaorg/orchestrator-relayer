@@ -31,6 +31,15 @@ type Config struct {
 	grpcInsecure      bool
 }
 
+func NewPartialConfig(coreGRPC, coreRPC, targetNode string, grpcInsecure bool) *Config {
+	return &Config{
+		coreGRPC:     coreGRPC,
+		coreRPC:      coreRPC,
+		targetNode:   targetNode,
+		grpcInsecure: grpcInsecure,
+	}
+}
+
 func DefaultConfig() *Config {
 	return &Config{
 		coreGRPC:     "localhost:9090",
