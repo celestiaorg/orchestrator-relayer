@@ -47,7 +47,7 @@ func main() {
 func DeployContractAndSubmitDataCommitment() error {
 	logger := tmlog.NewTMLogger(os.Stdout)
 
-	path, err := os.MkdirTemp(os.TempDir(), "qgb_bench")
+	path, err := os.MkdirTemp(os.TempDir(), "blobstream_bench")
 	if err != nil {
 		return nil
 	}
@@ -107,13 +107,13 @@ func DeployContractAndSubmitDataCommitment() error {
 
 	address, tx, bridge, err := evmClient.DeployBlobstreamContract(txOpts, backend, vs, vs.Nonce, true)
 	if err != nil {
-		logger.Error("failed to deploy QGB contract")
+		logger.Error("failed to deploy Blobstream contract")
 		return err
 	}
 
 	receipt, err := evmClient.WaitForTransaction(ctx, backend, tx, time.Minute)
 	if err == nil && receipt != nil && receipt.Status == 1 {
-		logger.Info("deployed QGB contract", "proxy_address", address.Hex(), "tx_hash", tx.Hash().String())
+		logger.Info("deployed Blobstream contract", "proxy_address", address.Hex(), "tx_hash", tx.Hash().String())
 	}
 
 	txOpts.Nonce.Add(txOpts.Nonce, big.NewInt(1))

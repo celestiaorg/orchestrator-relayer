@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/celestiaorg/celestia-app/test/util/testnode"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
@@ -198,13 +198,13 @@ func TestProcessWithoutValsetInStore(t *testing.T) {
 	defer cancel()
 
 	codec := encoding.MakeConfig(app.ModuleEncodingRegisters...).Codec
-	node := qgbtesting.NewTestNode(
+	node := blobstreamtesting.NewTestNode(
 		ctx,
 		t,
-		qgbtesting.CelestiaNetworkParams{
+		blobstreamtesting.CelestiaNetworkParams{
 			GenesisOpts: []testnode.GenesisOption{
 				testnode.ImmediateProposals(codec),
-				qgbtesting.SetDataCommitmentWindowParams(codec, celestiatypes.Params{DataCommitmentWindow: 101}),
+				blobstreamtesting.SetDataCommitmentWindowParams(codec, celestiatypes.Params{DataCommitmentWindow: 101}),
 			},
 			TimeIotaMs:    6048000, // to have enough time to sign attestations after they're pruned
 			Pruning:       "default",
@@ -214,7 +214,7 @@ func TestProcessWithoutValsetInStore(t *testing.T) {
 	_, err := node.CelestiaNetwork.WaitForHeight(400)
 	require.NoError(t, err)
 
-	orch := qgbtesting.NewOrchestrator(t, node)
+	orch := blobstreamtesting.NewOrchestrator(t, node)
 
 	latestNonce, err := orch.AppQuerier.QueryLatestAttestationNonce(ctx)
 	require.NoError(t, err)
