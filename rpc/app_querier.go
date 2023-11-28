@@ -327,6 +327,7 @@ func (aq *AppQuerier) QueryStakingValidatorSet(ctx context.Context) ([]stakingty
 	queryClient := stakingtypes.NewQueryClient(aq.clientConn)
 	resp, err := queryClient.Validators(
 		ctx,
+		// Using 10000 as a conservative limit for number of validators instead of having to handle pagination
 		&stakingtypes.QueryValidatorsRequest{Pagination: &query.PageRequest{Limit: 10000}},
 	)
 	if err != nil {
