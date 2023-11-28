@@ -76,6 +76,7 @@ const (
 	FlagEVMRPC             = "evm.rpc"
 	FlagEVMGasLimit        = "evm.gas-limit"
 	FlagEVMContractAddress = "evm.contract-address"
+	FlagEVMRetryTimeout    = "evm.retry-timeout"
 
 	FlagCoreGRPC = "core.grpc"
 	FlagCoreRPC  = "core.rpc"
@@ -336,4 +337,21 @@ func GetLogger(level string, format string) (tmlog.Logger, error) {
 	}
 
 	return server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(logLvl).With().Timestamp().Logger()}, nil
+}
+
+func GetEVMRetryTimeoutFlag(cmd *cobra.Command) (uint64, bool, error) {
+	changed := cmd.Flags().Changed(FlagEVMRetryTimeout)
+	val, err := cmd.Flags().GetUint64(FlagEVMRetryTimeout)
+	if err != nil {
+		return 0, changed, err
+	}
+	return val, changed, nil
+}
+
+func AddEVMRetryTimeoutFlag(cmd *cobra.Command) {
+	cmd.Flags().Uint64(
+		FlagEVMRetryTimeout,
+		15,
+		"The time, in minutes, to wait for transactions to be mined on the target EVM chain before recreating them with a different gas price",
+	)
 }
