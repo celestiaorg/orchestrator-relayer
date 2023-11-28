@@ -40,7 +40,7 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 
 	tx, err := s.Relayer.ProcessAttestation(ctx, s.Node.EVMChain.Auth, att)
 	require.NoError(t, err)
-	receipt, err := s.Relayer.EVMClient.WaitForTransaction(ctx, s.Node.EVMChain.Backend, tx)
+	receipt, err := s.Relayer.EVMClient.WaitForTransaction(ctx, s.Node.EVMChain.Backend, tx, 20*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), receipt.Status)
 
@@ -113,7 +113,7 @@ func TestUseValsetFromP2P(t *testing.T) {
 	tx, err := relayer.ProcessAttestation(ctx, node.EVMChain.Auth, att)
 	require.NoError(t, err)
 
-	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend, tx)
+	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend, tx, 20*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), receipt.Status)
 

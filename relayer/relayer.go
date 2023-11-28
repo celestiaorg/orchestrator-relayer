@@ -38,6 +38,7 @@ type Relayer struct {
 	logger         tmlog.Logger
 	Retrier        *helpers.Retrier
 	SignatureStore *badger.Datastore
+	RetryTimeout   time.Duration
 }
 
 func NewRelayer(
@@ -48,6 +49,7 @@ func NewRelayer(
 	logger tmlog.Logger,
 	retrier *helpers.Retrier,
 	sigStore *badger.Datastore,
+	retryTimeout time.Duration,
 ) *Relayer {
 	return &Relayer{
 		TmQuerier:      tmQuerier,
@@ -57,6 +59,7 @@ func NewRelayer(
 		logger:         logger,
 		Retrier:        retrier,
 		SignatureStore: sigStore,
+		RetryTimeout:   retryTimeout,
 	}
 }
 
@@ -111,7 +114,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 				}
 
 				// wait for transaction to be mined
-				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx)
+				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
 				if err != nil {
 					return err
 				}
