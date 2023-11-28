@@ -348,7 +348,7 @@ func printConfirms(logger tmlog.Logger, qOutput queryOutput) {
 	logger.Info("orchestrators that signed the attestation")
 	for _, sig := range qOutput.Signatures {
 		if sig.Signed {
-			logger.Info(sig.Moniker, "signed", sig.Signed, "evm_address", "valop_address", sig.ValopAddress, sig.EvmAddress, "signature", sig.Signature)
+			logger.Info(sig.Moniker, "signed", sig.Signed, "evm_address", sig.EvmAddress, "valop_address", sig.ValopAddress, "signature", sig.Signature)
 		}
 	}
 	logger.Info("orchestrators that missed signing the attestation")
