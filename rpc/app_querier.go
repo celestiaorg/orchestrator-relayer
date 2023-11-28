@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/types/query"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/celestiaorg/celestia-app/pkg/appconsts"
 	cosmosgrpc "github.com/cosmos/cosmos-sdk/types/grpc"
 	"google.golang.org/grpc/metadata"
@@ -317,6 +320,34 @@ func (aq *AppQuerier) QueryLastValsetBeforeNonce(ctx context.Context, nonce uint
 	}
 
 	return resp.Valset, nil
+}
+
+// QueryStakingValidatorSet returns the list of all validators in the network.
+func (aq *AppQuerier) QueryStakingValidatorSet(ctx context.Context) ([]stakingtypes.Validator, error) {
+	queryClient := stakingtypes.NewQueryClient(aq.clientConn)
+	resp, err := queryClient.Validators(
+		ctx,
+		&stakingtypes.QueryValidatorsRequest{Pagination: &query.PageRequest{Limit: 10000}},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp.Validators, nil
+}
+
+// QueryEVMAddress returns the EVM address corresponding to a validator valop address.
+func (aq *AppQuerier) QueryEVMAddress(ctx context.Context, valopAddress string) (string, error) {
+	queryClient := celestiatypes.NewQueryClient(aq.clientConn)
+	resp, err := queryClient.EVMAddress(
+		ctx,
+		&celestiatypes.QueryEVMAddressRequest{ValidatorAddress: valopAddress},
+	)
+	if err != nil {
+		return "", err
+	}
+
+	return resp.EvmAddress, nil
 }
 
 // QueryHistoricalLastValsetBeforeNonce returns the last historical valset before nonce for a certain height.
