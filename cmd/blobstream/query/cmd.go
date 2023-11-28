@@ -420,7 +420,7 @@ func Signature() *cobra.Command {
 			}()
 
 			// create tm querier and app querier
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreRPC, config.grpcInsecure)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
