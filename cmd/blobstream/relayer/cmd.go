@@ -201,6 +201,7 @@ func Start() *cobra.Command {
 				logger,
 				retrier,
 				s.SignatureStore,
+				time.Duration(config.EVMRetryTimeout)*time.Minute,
 			)
 
 			// Listen for and trap any OS signal to graceful shutdown and exit
