@@ -20,7 +20,7 @@ func addFlags(cmd *cobra.Command) *cobra.Command {
 	cmd.Flags().String(FlagP2PNode, "", "P2P target node multiaddress (eg. /ip4/127.0.0.1/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn)")
 	cmd.Flags().String(FlagOutputFile, "", "Path to an output file path if the results need to be written to a json file. Leaving it as empty will result in printing the result to stdout")
 	base.AddGRPCInsecureFlag(cmd)
-
+	cmd.Flags().String(base.FlagHome, "", "The Blobstream orchestrator|relayer home directory. If this flag is not set, it will try the orchestrator's default home directory, then the relayer's default home directory to get the necessary configuration")
 	return cmd
 }
 
@@ -31,35 +31,75 @@ type Config struct {
 	grpcInsecure      bool
 }
 
-func parseFlags(cmd *cobra.Command) (Config, error) {
-	coreRPC, err := cmd.Flags().GetString(base.FlagCoreRPC)
+func NewPartialConfig(coreGRPC, coreRPC, targetNode string, grpcInsecure bool) *Config {
+	return &Config{
+		coreGRPC:     coreGRPC,
+		coreRPC:      coreRPC,
+		targetNode:   targetNode,
+		grpcInsecure: grpcInsecure,
+	}
+}
+
+func DefaultConfig() *Config {
+	return &Config{
+		coreGRPC:     "localhost:9090",
+		coreRPC:      "tcp://localhost:26657",
+		targetNode:   "",
+		outputFile:   "",
+		grpcInsecure: true,
+	}
+}
+
+func parseFlags(cmd *cobra.Command, startConf *Config) (Config, error) {
+	coreRPC, changed, err := base.GetCoreRPCFlag(cmd)
 	if err != nil {
 		return Config{}, err
 	}
-	if !strings.HasPrefix(coreRPC, "tcp://") {
-		coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
+	if changed {
+		if !strings.HasPrefix(coreRPC, "tcp://") {
+			coreRPC = fmt.Sprintf("tcp://%s", coreRPC)
+		}
+		startConf.coreRPC = coreRPC
 	}
-	coreGRPC, err := cmd.Flags().GetString(base.FlagCoreGRPC)
+
+	coreGRPC, changed, err := base.GetCoreGRPCFlag(cmd)
 	if err != nil {
 		return Config{}, err
 	}
-	targetNode, err := cmd.Flags().GetString(FlagP2PNode)
+	if changed {
+		startConf.coreGRPC = coreGRPC
+	}
+
+	targetNode, changed, err := getP2PNodeFlag(cmd)
 	if err != nil {
 		return Config{}, err
 	}
+	if changed {
+		startConf.targetNode = targetNode
+	}
+
 	outputFile, err := cmd.Flags().GetString(FlagOutputFile)
 	if err != nil {
 		return Config{}, err
 	}
-	grpcInsecure, err := cmd.Flags().GetBool(base.FlagGRPCInsecure)
+	startConf.outputFile = outputFile
+
+	grpcInsecure, changed, err := base.GetGRPCInsecureFlag(cmd)
 	if err != nil {
 		return Config{}, err
 	}
-	return Config{
-		coreGRPC:     coreGRPC,
-		coreRPC:      coreRPC,
-		targetNode:   targetNode,
-		outputFile:   outputFile,
-		grpcInsecure: grpcInsecure,
-	}, nil
+	if changed {
+		startConf.grpcInsecure = grpcInsecure
+	}
+
+	return *startConf, nil
+}
+
+func getP2PNodeFlag(cmd *cobra.Command) (string, bool, error) {
+	changed := cmd.Flags().Changed(FlagP2PNode)
+	val, err := cmd.Flags().GetString(FlagP2PNode)
+	if err != nil {
+		return "", changed, err
+	}
+	return val, changed, nil
 }
