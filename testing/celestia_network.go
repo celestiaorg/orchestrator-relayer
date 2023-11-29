@@ -91,7 +91,7 @@ func NewCelestiaNetwork(ctx context.Context, t *testing.T, params CelestiaNetwor
 			WithTendermintConfig(tmCfg).
 			WithAccounts(accounts).
 			WithGenesisOptions(params.GenesisOpts...).
-			WithChainID("qgb-test"),
+			WithChainID("blobstream-test"),
 	)
 
 	appRPC := clientContext.GRPCClient.Target()

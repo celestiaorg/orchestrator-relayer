@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -82,7 +83,7 @@ func (ec *Client) DeployBlobstreamContract(
 		return gethcommon.Address{}, nil, nil, err
 	}
 
-	ec.logger.Info("deploying QGB implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
+	ec.logger.Info("deploying Blobstream implementation contract...", "address", impAddr.Hex(), "tx_hash", impTx.Hash().Hex())
 
 	// encode the Blobstream contract initialization data using the chain parameters
 	ethVsCheckpoint, err := contractInitValset.SignBytes()
@@ -109,7 +110,7 @@ func (ec *Client) DeployBlobstreamContract(
 		return gethcommon.Address{}, nil, nil, err
 	}
 
-	ec.logger.Info("deploying QGB proxy contract...", "address", proxyAddr, "tx_hash", tx.Hash().Hex())
+	ec.logger.Info("deploying Blobstream proxy contract...", "address", proxyAddr, "tx_hash", tx.Hash().Hex())
 
 	bridge, err := blobstreamwrapper.NewWrappers(proxyAddr, contractBackend)
 	if err != nil {
@@ -228,8 +229,12 @@ func (ec *Client) WaitForTransaction(
 	ctx context.Context,
 	backend bind.DeployBackend,
 	tx *coregethtypes.Transaction,
+	timeout time.Duration,
 ) (*coregethtypes.Receipt, error) {
 	ec.logger.Debug("waiting for transaction to be confirmed", "hash", tx.Hash().String())
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	receipt, err := bind.WaitMined(ctx, backend, tx)
 	if err == nil && receipt != nil && receipt.Status == 1 {

@@ -6,8 +6,14 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/orchestrator"
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/relayer"
+	"github.com/spf13/viper"
 
 	common2 "github.com/ethereum/go-ethereum/common"
 
@@ -52,13 +58,17 @@ func Signers() *cobra.Command {
 			" will query signatures for. It should be either a specific nonce starting from 2 and on." +
 			" Or, use 'latest' as argument to check the latest attestation nonce",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseFlags(cmd)
+			// creating the logger
+			logger := tmlog.NewTMLogger(os.Stdout)
+			fileConfig, err := tryToGetExistingConfig(cmd, logger)
+			if err != nil {
+				return err
+			}
+			config, err := parseFlags(cmd, &fileConfig)
 			if err != nil {
 				return err
 			}
 
-			// creating the logger
-			logger := tmlog.NewTMLogger(os.Stdout)
 			logger.Debug("initializing queriers")
 
 			ctx, cancel := context.WithCancel(cmd.Context())
@@ -75,7 +85,12 @@ func Signers() *cobra.Command {
 			}()
 
 			// create tm querier and app querier
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(
+				logger,
+				config.coreRPC,
+				config.coreGRPC,
+				config.grpcInsecure,
+			)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
@@ -335,13 +350,17 @@ func Signature() *cobra.Command {
 			" nonce that the command will query signatures for. The EVM address is the address registered by the validator " +
 			"in the staking module.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			config, err := parseFlags(cmd)
+			// creating the logger
+			logger := tmlog.NewTMLogger(os.Stdout)
+			fileConfig, err := tryToGetExistingConfig(cmd, logger)
+			if err != nil {
+				return err
+			}
+			config, err := parseFlags(cmd, &fileConfig)
 			if err != nil {
 				return err
 			}
 
-			// creating the logger
-			logger := tmlog.NewTMLogger(os.Stdout)
 			logger.Debug("initializing queriers")
 
 			ctx, cancel := context.WithCancel(cmd.Context())
@@ -358,7 +377,7 @@ func Signature() *cobra.Command {
 			}()
 
 			// create tm querier and app querier
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreRPC, config.grpcInsecure)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
@@ -477,4 +496,83 @@ func getSignatureAndPrintIt(
 		return errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(nonce, 10))
 	}
 	return nil
+}
+
+// tryToGetExistingConfig tries to get the query config from existing
+// orchestrator/relayer homes. It first checks whether the `--home` flag was
+// changed. If so, it gets the config from there. If not, then it tries the
+// orchestrator default home directory, then the relayer default home directory.
+func tryToGetExistingConfig(cmd *cobra.Command, logger tmlog.Logger) (Config, error) {
+	v := viper.New()
+	v.SetEnvPrefix("")
+	v.AutomaticEnv()
+	homeDir, changed, err := base.GetHomeFlag(cmd)
+	if err != nil {
+		return Config{}, err
+	}
+	// the --home flag was set to some directory
+	if changed && homeDir != "" {
+		logger.Debug("using home", "home", homeDir)
+		configPath := filepath.Join(homeDir, "config")
+
+		// assume this home is an orchestrator home directory
+		orchConf, err := orchestrator.GetStartConfig(v, configPath)
+		if err == nil {
+			// it is an orchestrator, so we get the config from it
+			return *NewPartialConfig(
+				orchConf.CoreGRPC,
+				orchConf.CoreRPC,
+				orchConf.Bootstrappers,
+				orchConf.GRPCInsecure,
+			), nil
+		}
+
+		// assume this home is a relayer home directory
+		relConf, err := relayer.GetStartConfig(v, configPath)
+		if err == nil {
+			// it is a relayer, so we get the config from it
+			return *NewPartialConfig(
+				relConf.CoreGRPC,
+				relConf.CoreRPC,
+				relConf.Bootstrappers,
+				relConf.GrpcInsecure,
+			), nil
+		}
+		return Config{}, fmt.Errorf("the provided home directory is neither an orchestrator nor a relayer home directory")
+	}
+	// try to get the config from the orchestrator home directory
+	orchHome, err := base.GetHomeDirectory(cmd, orchestrator.ServiceNameOrchestrator)
+	if err != nil {
+		return Config{}, err
+	}
+	orchConf, err := orchestrator.GetStartConfig(v, filepath.Join(orchHome, "config"))
+	if err == nil {
+		// found orchestrator home, get the config from it
+		logger.Debug("using home", "home", orchHome)
+		return *NewPartialConfig(
+			orchConf.CoreGRPC,
+			orchConf.CoreRPC,
+			orchConf.Bootstrappers,
+			orchConf.GRPCInsecure,
+		), nil
+	}
+
+	// try to get the config from the relayer home directory
+	relHome, err := base.GetHomeDirectory(cmd, relayer.ServiceNameRelayer)
+	if err != nil {
+		return Config{}, err
+	}
+	relConf, err := relayer.GetStartConfig(v, filepath.Join(relHome, "config"))
+	if err == nil {
+		// found relayer home, so we get the config from it
+		logger.Debug("using home", "home", relHome)
+		return *NewPartialConfig(
+			relConf.CoreGRPC,
+			relConf.CoreRPC,
+			relConf.Bootstrappers,
+			relConf.GrpcInsecure,
+		), nil
+	}
+
+	return *DefaultConfig(), nil
 }

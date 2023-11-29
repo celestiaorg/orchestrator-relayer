@@ -10,7 +10,7 @@ import (
 	"github.com/celestiaorg/celestia-app/app"
 	"github.com/celestiaorg/celestia-app/app/encoding"
 	"github.com/celestiaorg/celestia-app/test/util/testnode"
-	qgbtesting "github.com/celestiaorg/orchestrator-relayer/testing"
+	blobstreamtesting "github.com/celestiaorg/orchestrator-relayer/testing"
 
 	"github.com/celestiaorg/orchestrator-relayer/p2p"
 	"github.com/ipfs/go-datastore"
@@ -40,7 +40,7 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 
 	tx, err := s.Relayer.ProcessAttestation(ctx, s.Node.EVMChain.Auth, att)
 	require.NoError(t, err)
-	receipt, err := s.Relayer.EVMClient.WaitForTransaction(ctx, s.Node.EVMChain.Backend, tx)
+	receipt, err := s.Relayer.EVMClient.WaitForTransaction(ctx, s.Node.EVMChain.Backend, tx, 20*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), receipt.Status)
 
@@ -60,13 +60,13 @@ func TestUseValsetFromP2P(t *testing.T) {
 	defer cancel()
 
 	codec := encoding.MakeConfig(app.ModuleEncodingRegisters...).Codec
-	node := qgbtesting.NewTestNode(
+	node := blobstreamtesting.NewTestNode(
 		ctx,
 		t,
-		qgbtesting.CelestiaNetworkParams{
+		blobstreamtesting.CelestiaNetworkParams{
 			GenesisOpts: []testnode.GenesisOption{
 				testnode.ImmediateProposals(codec),
-				qgbtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
+				blobstreamtesting.SetDataCommitmentWindowParams(codec, types.Params{DataCommitmentWindow: 101}),
 			},
 			TimeIotaMs:    2000000, // so attestations are pruned after they're queried
 			Pruning:       "default",
@@ -75,7 +75,7 @@ func TestUseValsetFromP2P(t *testing.T) {
 	)
 
 	// process valset nonce so that it is added to the DHT
-	orch := qgbtesting.NewOrchestrator(t, node)
+	orch := blobstreamtesting.NewOrchestrator(t, node)
 	vs, err := orch.AppQuerier.QueryLatestValset(ctx)
 	require.NoError(t, err)
 	err = orch.ProcessValsetEvent(ctx, *vs)
@@ -104,7 +104,7 @@ func TestUseValsetFromP2P(t *testing.T) {
 	err = orch.ProcessDataCommitmentEvent(ctx, *att, dataRootTupleRoot)
 	require.NoError(t, err)
 
-	relayer := qgbtesting.NewRelayer(t, node)
+	relayer := blobstreamtesting.NewRelayer(t, node)
 	go node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
 	_, _, _, err = relayer.EVMClient.DeployBlobstreamContract(node.EVMChain.Auth, node.EVMChain.Backend, *latestValset.ToValset(), latestValset.Nonce, true)
 	require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestUseValsetFromP2P(t *testing.T) {
 	tx, err := relayer.ProcessAttestation(ctx, node.EVMChain.Auth, att)
 	require.NoError(t, err)
 
-	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend, tx)
+	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend, tx, 20*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), receipt.Status)
 
