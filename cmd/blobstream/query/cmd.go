@@ -15,6 +15,8 @@ import (
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/relayer"
 	"github.com/spf13/viper"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	common2 "github.com/ethereum/go-ethereum/common"
 
 	celestiatypes "github.com/celestiaorg/celestia-app/x/qgb/types"
@@ -149,10 +151,19 @@ func Signers() *cobra.Command {
 }
 
 type signature struct {
-	EvmAddress string `json:"evmAddress"`
-	Signature  string `json:"signature"`
-	Signed     bool   `json:"signed"`
+	EvmAddress   string `json:"evmAddress"`
+	Moniker      string `json:"moniker"`
+	Signature    string `json:"signature"`
+	Signed       bool   `json:"signed"`
+	ValopAddress string `json:"valopAddress"`
 }
+
+type validatorInfo struct {
+	EvmAddress   string `json:"evmAddress"`
+	Moniker      string `json:"moniker"`
+	ValopAddress string `json:"valopAddress"`
+}
+
 type queryOutput struct {
 	Signatures        []signature `json:"signatures"`
 	Nonce             uint64      `json:"nonce"`
@@ -177,6 +188,16 @@ func getSignaturesAndPrintThem(
 		return err
 	}
 
+	validatorSet, err := appQuerier.QueryStakingValidatorSet(ctx)
+	if err != nil {
+		return err
+	}
+
+	validatorsInfo, err := toValidatorsInfo(ctx, appQuerier, validatorSet)
+	if err != nil {
+		return err
+	}
+
 	att, err := appQuerier.QueryAttestationByNonce(ctx, nonce)
 	if err != nil {
 		return err
@@ -195,7 +216,7 @@ func getSignaturesAndPrintThem(
 		if err != nil {
 			return err
 		}
-		qOutput := toQueryOutput(toValsetConfirmsMap(confirms), nonce, *lastValset)
+		qOutput := toQueryOutput(toValsetConfirmsMap(confirms), validatorsInfo, nonce, *lastValset)
 		if outputFile == "" {
 			printConfirms(logger, qOutput)
 		} else {
@@ -218,7 +239,7 @@ func getSignaturesAndPrintThem(
 		if err != nil {
 			return err
 		}
-		qOutput := toQueryOutput(toDataCommitmentConfirmsMap(confirms), nonce, *lastValset)
+		qOutput := toQueryOutput(toDataCommitmentConfirmsMap(confirms), validatorsInfo, nonce, *lastValset)
 		if outputFile == "" {
 			printConfirms(logger, qOutput)
 		} else {
@@ -231,6 +252,24 @@ func getSignaturesAndPrintThem(
 		return errors.Wrap(types.ErrUnknownAttestationType, strconv.FormatUint(nonce, 10))
 	}
 	return nil
+}
+
+func toValidatorsInfo(ctx context.Context, appQuerier *rpc.AppQuerier, validatorSet []stakingtypes.Validator) (map[string]validatorInfo, error) {
+	validatorsInfo := make(map[string]validatorInfo)
+	for _, val := range validatorSet {
+		evmAddr, err := appQuerier.QueryEVMAddress(ctx, val.OperatorAddress)
+		if err != nil {
+			return nil, err
+		}
+		if evmAddr != "" {
+			validatorsInfo[evmAddr] = validatorInfo{
+				EvmAddress:   evmAddr,
+				Moniker:      val.GetMoniker(),
+				ValopAddress: val.OperatorAddress,
+			}
+		}
+	}
+	return validatorsInfo, nil
 }
 
 func parseNonce(ctx context.Context, querier *rpc.AppQuerier, nonce string) (uint64, error) {
@@ -260,7 +299,7 @@ func toDataCommitmentConfirmsMap(confirms []types.DataCommitmentConfirm) map[str
 	return confirmsMap
 }
 
-func toQueryOutput(confirmsMap map[string]string, nonce uint64, lastValset celestiatypes.Valset) queryOutput {
+func toQueryOutput(confirmsMap map[string]string, validatorsInfo map[string]validatorInfo, nonce uint64, lastValset celestiatypes.Valset) queryOutput {
 	currThreshold := uint64(0)
 	signatures := make([]signature, len(lastValset.Members))
 	// create the signature slice to be used for outputting the data
@@ -268,16 +307,20 @@ func toQueryOutput(confirmsMap map[string]string, nonce uint64, lastValset celes
 		sig, found := confirmsMap[val.EvmAddress]
 		if found {
 			signatures[key] = signature{
-				EvmAddress: val.EvmAddress,
-				Signature:  sig,
-				Signed:     true,
+				EvmAddress:   val.EvmAddress,
+				Signature:    sig,
+				Signed:       true,
+				Moniker:      validatorsInfo[val.EvmAddress].Moniker,
+				ValopAddress: validatorsInfo[val.EvmAddress].ValopAddress,
 			}
 			currThreshold += val.Power
 		} else {
 			signatures[key] = signature{
-				EvmAddress: val.EvmAddress,
-				Signature:  "",
-				Signed:     false,
+				EvmAddress:   val.EvmAddress,
+				Signature:    "",
+				Signed:       false,
+				Moniker:      validatorsInfo[val.EvmAddress].Moniker,
+				ValopAddress: validatorsInfo[val.EvmAddress].ValopAddress,
 			}
 		}
 	}
@@ -305,13 +348,13 @@ func printConfirms(logger tmlog.Logger, qOutput queryOutput) {
 	logger.Info("orchestrators that signed the attestation")
 	for _, sig := range qOutput.Signatures {
 		if sig.Signed {
-			logger.Info(sig.EvmAddress, "signed", sig.Signed, "signature", sig.Signature)
+			logger.Info(sig.Moniker, "signed", sig.Signed, "evm_address", sig.EvmAddress, "valop_address", sig.ValopAddress, "signature", sig.Signature)
 		}
 	}
 	logger.Info("orchestrators that missed signing the attestation")
 	for _, sig := range qOutput.Signatures {
 		if !sig.Signed {
-			logger.Info(sig.EvmAddress, "signed", sig.Signed)
+			logger.Info(sig.Moniker, "signed", sig.Signed, "evm_address", sig.EvmAddress, "valop_address", sig.ValopAddress)
 		}
 	}
 	logger.Info("done")
@@ -377,7 +420,7 @@ func Signature() *cobra.Command {
 			}()
 
 			// create tm querier and app querier
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreRPC, config.grpcInsecure)
+			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.coreRPC, config.coreGRPC, config.grpcInsecure)
 			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
 				return err
