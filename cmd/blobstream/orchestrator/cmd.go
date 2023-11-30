@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/version"
+
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/base"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/common"
@@ -66,7 +68,8 @@ func Start() *cobra.Command {
 				return err
 			}
 
-			logger.Info("initializing orchestrator", "home", homeDir)
+			buildInfo := version.GetBuildInfo()
+			logger.Info("initializing orchestrator", "home", homeDir, "version", buildInfo.SemanticVersion, "build_date", buildInfo.BuildTime)
 
 			ctx, cancel := context.WithCancel(cmd.Context())
 			defer cancel()
