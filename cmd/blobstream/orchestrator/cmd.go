@@ -110,7 +110,7 @@ func Start() *cobra.Command {
 
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
-			retrier := helpers.NewRetrier(logger, 6, time.Minute)
+			retrier := helpers.NewRetrier(logger, 5, 30*time.Second)
 
 			defer func() {
 				for _, f := range stopFuncs {

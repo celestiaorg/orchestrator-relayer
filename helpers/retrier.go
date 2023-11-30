@@ -37,13 +37,13 @@ func (r Retrier) Retry(ctx context.Context, retryMethod func() error) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-nextTick.C:
-			r.logger.Info("retrying", "retry_number", i, "retries_left", r.retriesNumber-i)
+			r.logger.Debug("retrying", "retry_number", i, "retries_left", r.retriesNumber-i)
 			err = retryMethod()
 			if err == nil {
 				r.logger.Info("succeeded", "retries_number", i)
 				return nil
 			}
-			r.logger.Error("failed attempt", "retry", i, "err", err)
+			r.logger.Debug("failed attempt", "retry", i, "err", err)
 		}
 	}
 	return err
