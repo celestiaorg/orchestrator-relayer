@@ -154,6 +154,7 @@ func (orch Orchestrator) StartNewEventsListener(
 					if err != nil {
 						return err
 					}
+					orch.Logger.Debug("recovered connection")
 					return nil
 				})
 				if err != nil {
@@ -287,16 +288,19 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if err == nil && previousValset != nil {
 			// add the valset to the p2p network
 			// it's alright if this fails, we can expect other nodes to do it successfully
+			orch.Logger.Debug("providing previous valset to P2P network", "nonce", previousValset.Nonce)
 			_ = orch.Broadcaster.ProvideLatestValset(ctx, *types.ToLatestValset(*previousValset))
 		}
 	}
 
 	switch castedAtt := att.(type) {
 	case *celestiatypes.Valset:
+		orch.Logger.Debug("creating valset sign bytes", "nonce", castedAtt.Nonce)
 		signBytes, err := castedAtt.SignBytes()
 		if err != nil {
 			return err
 		}
+		orch.Logger.Debug("checking if a signature has already been provided to the P2P network", "nonce", castedAtt.Nonce)
 		resp, err := orch.P2PQuerier.QueryValsetConfirmByEVMAddress(ctx, nonce, orch.EvmAccount.Address.Hex(), signBytes.Hex())
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("valset %d", nonce))
@@ -312,6 +316,7 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		return nil
 
 	case *celestiatypes.DataCommitment:
+		orch.Logger.Debug("querying data commitment from core", "nonce", castedAtt.Nonce, "begin_block", castedAtt.BeginBlock, "end_block", castedAtt.EndBlock)
 		commitment, err := orch.TmQuerier.QueryCommitment(
 			ctx,
 			castedAtt.BeginBlock,
@@ -320,7 +325,9 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 		if err != nil {
 			return err
 		}
+		orch.Logger.Debug("creating data commitment sign bytes", "nonce", castedAtt.Nonce)
 		dataRootHash := types.DataCommitmentTupleRootSignBytes(big.NewInt(int64(castedAtt.Nonce)), commitment)
+		orch.Logger.Debug("checking if a signature has already been provided to the P2P network", "nonce", nonce)
 		resp, err := orch.P2PQuerier.QueryDataCommitmentConfirmByEVMAddress(
 			ctx,
 			castedAtt.Nonce,
@@ -348,12 +355,14 @@ func (orch Orchestrator) Process(ctx context.Context, nonce uint64) error {
 func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestiatypes.Valset) error {
 	// add the valset to the p2p network
 	// it's alright if this fails, we can expect other nodes to do it successfully
+	orch.Logger.Debug("providing the latest valset to P2P network", "nonce", valset.Nonce)
 	_ = orch.Broadcaster.ProvideLatestValset(ctx, *types.ToLatestValset(valset))
 
 	signBytes, err := valset.SignBytes()
 	if err != nil {
 		return err
 	}
+	orch.Logger.Debug("signing valset", "nonce", valset.Nonce)
 	signature, err := evm.NewEthereumSignature(signBytes.Bytes(), orch.EvmKeyStore, *orch.EvmAccount)
 	if err != nil {
 		return err
@@ -364,6 +373,7 @@ func (orch Orchestrator) ProcessValsetEvent(ctx context.Context, valset celestia
 		orch.EvmAccount.Address,
 		ethcmn.Bytes2Hex(signature),
 	)
+	orch.Logger.Debug("providing the valset confirm to P2P network", "nonce", valset.Nonce)
 	err = orch.Broadcaster.ProvideValsetConfirm(ctx, valset.Nonce, *msg, signBytes.Hex())
 	if err != nil {
 		return err
@@ -377,11 +387,13 @@ func (orch Orchestrator) ProcessDataCommitmentEvent(
 	dc celestiatypes.DataCommitment,
 	dataRootTupleRoot ethcmn.Hash,
 ) error {
+	orch.Logger.Debug("signing data commitment", "nonce", dc.Nonce)
 	dcSig, err := evm.NewEthereumSignature(dataRootTupleRoot.Bytes(), orch.EvmKeyStore, *orch.EvmAccount)
 	if err != nil {
 		return err
 	}
 	msg := types.NewDataCommitmentConfirm(ethcmn.Bytes2Hex(dcSig), orch.EvmAccount.Address)
+	orch.Logger.Debug("providing the data commitment confirm to P2P network", "nonce", dc.Nonce)
 	err = orch.Broadcaster.ProvideDataCommitmentConfirm(ctx, dc.Nonce, *msg, dataRootTupleRoot.Hex())
 	if err != nil {
 		return err
