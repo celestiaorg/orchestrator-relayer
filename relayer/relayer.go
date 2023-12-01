@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	stderrors "errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"strconv"
 	"time"
@@ -113,8 +115,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 					return err
 				}
 
-				// wait for transaction to be mined
-				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
+				err = r.waitForTransactionAndRetryIfNeeded(ctx, ethClient, tx)
 				if err != nil {
 					return err
 				}
@@ -371,6 +372,53 @@ func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att c
 		}
 	}
 	return batch.Commit(ctx)
+}
+
+// waitForTransactionAndRetryIfNeeded waits for transaction to be mined. If it's not mined in the provided timeout, it will
+// attempt to speed it up via updating the gas price.
+func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethClient *ethclient.Client, tx *coregethtypes.Transaction) error {
+	for i := 0; i < 10; i++ {
+		_, err := r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
+		if err != nil {
+			if stderrors.Is(err, context.DeadlineExceeded) {
+				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i, "err", err.Error())
+				newGasPrice, err := ethClient.SuggestGasPrice(ctx)
+				if err != nil {
+					return err
+				}
+				newTx := toLegacyTransaction(tx)
+				newTx.GasPrice = newGasPrice.Mul(newGasPrice, big.NewInt(2))
+				newTx2 := coregethtypes.NewTx(newTx)
+				err = ethClient.SendTransaction(ctx, newTx2)
+				if err != nil {
+					_, err := ethClient.TransactionReceipt(ctx, tx.Hash())
+					if err == nil {
+						return nil
+					}
+				}
+			} else {
+				return err
+			}
+		} else {
+			return nil
+		}
+	}
+	return ErrTransactionStillPending
+}
+
+func toLegacyTransaction(tx *coregethtypes.Transaction) *coregethtypes.LegacyTx {
+	v, r, s := tx.RawSignatureValues()
+	return &coregethtypes.LegacyTx{
+		Nonce:    tx.Nonce(),
+		GasPrice: tx.GasPrice(),
+		Gas:      tx.Gas(),
+		To:       tx.To(),
+		Value:    tx.Value(),
+		Data:     tx.Data(),
+		V:        v,
+		R:        r,
+		S:        s,
+	}
 }
 
 // matchAttestationConfirmSigs matches and sorts the confirm signatures with the valset

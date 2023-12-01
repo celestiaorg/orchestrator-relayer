@@ -3,11 +3,10 @@ package evm
 import (
 	"context"
 	"errors"
-	"math/big"
-	"time"
-
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"math/big"
+	"time"
 
 	gethcommon "github.com/ethereum/go-ethereum/common"
 	coregethtypes "github.com/ethereum/go-ethereum/core/types"
@@ -241,7 +240,6 @@ func (ec *Client) WaitForTransaction(
 		ec.logger.Info("transaction confirmed", "hash", tx.Hash().String(), "block", receipt.BlockNumber.Uint64())
 		return receipt, nil
 	}
-	ec.logger.Error("transaction failed", "hash", tx.Hash().String())
 
 	return receipt, err
 }
