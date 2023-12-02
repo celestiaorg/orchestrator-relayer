@@ -392,7 +392,7 @@ func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethCli
 				newTx.GasPrice = newGasPrice
 				newTx2 := coregethtypes.NewTx(newTx)
 				err = ethClient.SendTransaction(ctx, newTx2)
-				r.logger.Debug("submitted speed up transaction", "hash", newTx2.Hash().Hex(), "new_gas_price", newTx2.GasPrice().Uint64())
+				r.logger.Info("submitted speed up transaction", "hash", newTx2.Hash().Hex(), "new_gas_price", newTx2.GasPrice().Uint64())
 				if err != nil {
 					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
 				}
