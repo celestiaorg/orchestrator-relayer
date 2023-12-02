@@ -6,10 +6,11 @@ import (
 	"encoding/hex"
 	stderrors "errors"
 	"fmt"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"math/big"
 	"strconv"
 	"time"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/ipfs/go-datastore"
 	badger "github.com/ipfs/go-ds-badger2"
@@ -377,24 +378,23 @@ func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att c
 // waitForTransactionAndRetryIfNeeded waits for transaction to be mined. If it's not mined in the provided timeout, it will
 // attempt to speed it up via updating the gas price.
 func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethClient *ethclient.Client, tx *coregethtypes.Transaction) error {
+	r.logger.Debug("submitted transaction", "hash", tx.Hash().Hex(), "gas_price", tx.GasPrice().Uint64())
 	for i := 0; i < 10; i++ {
 		_, err := r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
 		if err != nil {
 			if stderrors.Is(err, context.DeadlineExceeded) {
-				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i, "err", err.Error())
+				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i)
 				newGasPrice, err := ethClient.SuggestGasPrice(ctx)
 				if err != nil {
 					return err
 				}
 				newTx := toLegacyTransaction(tx)
-				newTx.GasPrice = newGasPrice.Mul(newGasPrice, big.NewInt(2))
+				newTx.GasPrice = newGasPrice
 				newTx2 := coregethtypes.NewTx(newTx)
 				err = ethClient.SendTransaction(ctx, newTx2)
+				r.logger.Debug("submitted speed up transaction", "hash", newTx2.Hash().Hex(), "new_gas_price", newTx2.GasPrice().Uint64())
 				if err != nil {
-					_, err := ethClient.TransactionReceipt(ctx, tx.Hash())
-					if err == nil {
-						return nil
-					}
+					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
 				}
 			} else {
 				return err
