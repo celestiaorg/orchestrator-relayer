@@ -379,20 +379,25 @@ func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att c
 // attempt to speed it up via updating the gas price.
 func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethClient *ethclient.Client, tx *coregethtypes.Transaction) error {
 	r.logger.Debug("submitted transaction", "hash", tx.Hash().Hex(), "gas_price", tx.GasPrice().Uint64())
+	newTx := tx
 	for i := 0; i < 10; i++ {
-		_, err := r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
+		_, err := r.EVMClient.WaitForTransaction(ctx, ethClient, newTx, r.RetryTimeout)
 		if err != nil {
 			if stderrors.Is(err, context.DeadlineExceeded) {
-				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i)
 				newGasPrice, err := ethClient.SuggestGasPrice(ctx)
 				if err != nil {
 					return err
 				}
-				newTx := toLegacyTransaction(tx)
-				newTx.GasPrice = newGasPrice
-				newTx2 := coregethtypes.NewTx(newTx)
-				err = ethClient.SendTransaction(ctx, newTx2)
-				r.logger.Info("submitted speed up transaction", "hash", newTx2.Hash().Hex(), "new_gas_price", newTx2.GasPrice().Uint64())
+				if newGasPrice.Uint64() <= newTx.GasPrice().Uint64() {
+					// no need to resend the transaction if the suggested gas price is lower than the original one
+					continue
+				}
+				legacyTx := toLegacyTransaction(newTx)
+				legacyTx.GasPrice = newGasPrice
+				newTx = coregethtypes.NewTx(legacyTx)
+				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i)
+				err = ethClient.SendTransaction(ctx, newTx)
+				r.logger.Info("submitted speed up transaction", "hash", newTx.Hash().Hex(), "new_gas_price", newTx.GasPrice().Uint64())
 				if err != nil {
 					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
 				}
