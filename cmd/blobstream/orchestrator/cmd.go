@@ -126,9 +126,6 @@ func Start() *cobra.Command {
 
 			// creating the broadcaster
 			broadcaster := orchestrator.NewBroadcaster(p2pQuerier.BlobstreamDHT)
-			if err != nil {
-				return err
-			}
 
 			// creating the orchestrator
 			orch := orchestrator.New(
