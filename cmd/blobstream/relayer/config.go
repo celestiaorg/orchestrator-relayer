@@ -90,26 +90,30 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddLogLevelFlag(cmd)
 	base.AddLogFormatFlag(cmd)
 	base.AddEVMRetryTimeoutFlag(cmd)
+	base.AddBackupRelayerFlag(cmd)
+	base.AddBackupRelayerWaitTimeFlag(cmd)
 
 	return cmd
 }
 
 type StartConfig struct {
 	base.Config
-	EvmChainID      uint64 `mapstructure:"evm-chain-id" json:"evm-chain-id"`
-	EvmRPC          string `mapstructure:"evm-rpc" json:"evm-rpc"`
-	CoreGRPC        string `mapstructure:"core-grpc" json:"core-grpc"`
-	CoreRPC         string `mapstructure:"core-rpc" json:"core-rpc"`
-	evmAccAddress   string
-	ContractAddr    string `mapstructure:"contract-address" json:"contract-address"`
-	EvmGasLimit     uint64 `mapstructure:"gas-limit" json:"gas-limit"`
-	Bootstrappers   string `mapstructure:"bootstrappers" json:"bootstrappers"`
-	P2PListenAddr   string `mapstructure:"listen-addr" json:"listen-addr"`
-	p2pNickname     string
-	GrpcInsecure    bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
-	LogLevel        string
-	LogFormat       string
-	EVMRetryTimeout uint64 `mapstructure:"retry-timeout" json:"retry-timeout"`
+	EvmChainID            uint64 `mapstructure:"evm-chain-id" json:"evm-chain-id"`
+	EvmRPC                string `mapstructure:"evm-rpc" json:"evm-rpc"`
+	CoreGRPC              string `mapstructure:"core-grpc" json:"core-grpc"`
+	CoreRPC               string `mapstructure:"core-rpc" json:"core-rpc"`
+	evmAccAddress         string
+	ContractAddr          string `mapstructure:"contract-address" json:"contract-address"`
+	EvmGasLimit           uint64 `mapstructure:"gas-limit" json:"gas-limit"`
+	Bootstrappers         string `mapstructure:"bootstrappers" json:"bootstrappers"`
+	P2PListenAddr         string `mapstructure:"listen-addr" json:"listen-addr"`
+	p2pNickname           string
+	GrpcInsecure          bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
+	LogLevel              string
+	LogFormat             string
+	EVMRetryTimeout       uint64 `mapstructure:"retry-timeout" json:"retry-timeout"`
+	isBackupRelayer       bool
+	backupRelayerWaitTime uint64
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -132,6 +136,9 @@ func (cfg StartConfig) ValidateBasics() error {
 	}
 	if err := base.ValidateEVMAddress(cfg.ContractAddr); err != nil {
 		return fmt.Errorf("%s: flag --%s", err.Error(), base.FlagEVMContractAddress)
+	}
+	if cfg.isBackupRelayer && cfg.backupRelayerWaitTime == 0 {
+		return fmt.Errorf("backup relayer wait time cannot be 0 if backup relayer flag is set")
 	}
 	return nil
 }
@@ -255,6 +262,18 @@ func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 	if changed {
 		fileConfig.EVMRetryTimeout = retryTimeout
 	}
+
+	isBackupRelayer, changed, err := base.GetBackupRelayerFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.isBackupRelayer = isBackupRelayer
+
+	backupRelayerWaitTime, changed, err := base.GetBackupRelayerWaitTimeFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	fileConfig.backupRelayerWaitTime = backupRelayerWaitTime
 
 	return *fileConfig, nil
 }
