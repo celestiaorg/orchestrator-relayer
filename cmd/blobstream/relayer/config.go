@@ -263,13 +263,13 @@ func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		fileConfig.EVMRetryTimeout = retryTimeout
 	}
 
-	isBackupRelayer, changed, err := base.GetBackupRelayerFlag(cmd)
+	isBackupRelayer, _, err := base.GetBackupRelayerFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
 	fileConfig.isBackupRelayer = isBackupRelayer
 
-	backupRelayerWaitTime, changed, err := base.GetBackupRelayerWaitTimeFlag(cmd)
+	backupRelayerWaitTime, _, err := base.GetBackupRelayerWaitTimeFlag(cmd)
 	if err != nil {
 		return StartConfig{}, err
 	}
