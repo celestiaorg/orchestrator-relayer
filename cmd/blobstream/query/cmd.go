@@ -257,15 +257,16 @@ func SignersRange() *cobra.Command {
 						}]++
 					} else {
 						// keep the same number of signatures the same but still have the value in the map
-						signersMap[validatorInfo{
-							EvmAddress:   sig.EvmAddress,
-							Moniker:      sig.Moniker,
-							ValopAddress: sig.ValopAddress,
-						}] = signersMap[validatorInfo{
+						val := signersMap[validatorInfo{
 							EvmAddress:   sig.EvmAddress,
 							Moniker:      sig.Moniker,
 							ValopAddress: sig.ValopAddress,
 						}]
+						signersMap[validatorInfo{
+							EvmAddress:   sig.EvmAddress,
+							Moniker:      sig.Moniker,
+							ValopAddress: sig.ValopAddress,
+						}] = val
 					}
 				}
 			}
