@@ -135,12 +135,12 @@ func (r *Relayer) Start(ctx context.Context) error {
 				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
 				if err != nil {
 					return err
-				} else {
-					if r.IsBackupRelayer {
-						// if the transaction was mined correctly, the relayer gets back to the pending
-						// state waiting for the next nonce + the backup relayer wait time.
-						backupRelayerShouldRelay = false
-					}
+				}
+
+				if r.IsBackupRelayer {
+					// if the transaction was mined correctly, the relayer gets back to the pending
+					// state waiting for the next nonce + the backup relayer wait time.
+					backupRelayerShouldRelay = false
 				}
 			}
 		}
