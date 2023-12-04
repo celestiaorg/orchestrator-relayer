@@ -262,9 +262,12 @@ func (orch Orchestrator) ProcessNonces(
 			return ErrSignalChanNotif
 		case <-ticker.C:
 			if len(requeueQueue) > 0 && len(noncesQueue) < queueSize {
-				nonce := <-requeueQueue
-				noncesQueue <- nonce
-				orch.Logger.Debug("failed nonce added to the nonces queue to be processed", "nonce", nonce)
+				// The use of the go routine is to avoid blocking
+				go func() {
+					nonce := <-requeueQueue
+					noncesQueue <- nonce
+					orch.Logger.Debug("failed nonce added to the nonces queue to be processed", "nonce", nonce)
+				}()
 			}
 		case nonce := <-noncesQueue:
 			orch.Logger.Info("processing nonce", "nonce", nonce)
