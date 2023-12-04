@@ -261,7 +261,7 @@ func (orch Orchestrator) ProcessNonces(
 			close(signalChan)
 			return ErrSignalChanNotif
 		case <-ticker.C:
-			if len(requeueQueue) < 0 && len(noncesQueue) < queueSize {
+			if len(requeueQueue) > 0 && len(noncesQueue) < queueSize {
 				nonce := <-requeueQueue
 				noncesQueue <- nonce
 				orch.Logger.Debug("failed nonce added to the nonces queue to be processed", "nonce", nonce)
