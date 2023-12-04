@@ -241,7 +241,6 @@ func (ec *Client) WaitForTransaction(
 		ec.logger.Info("transaction confirmed", "hash", tx.Hash().String(), "block", receipt.BlockNumber.Uint64())
 		return receipt, nil
 	}
-	ec.logger.Error("transaction failed", "hash", tx.Hash().String())
 
 	return receipt, err
 }
