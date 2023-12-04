@@ -85,6 +85,9 @@ const (
 
 	FlagLogLevel  = "log.level"
 	FlagLogFormat = "log.format"
+
+	FlagBackupRelayer         = "relayer.backup"
+	FlagBackupRelayerWaitTime = "relayer.wait-time"
 )
 
 func AddLogLevelFlag(cmd *cobra.Command) {
@@ -265,6 +268,40 @@ func AddEVMGasLimitFlag(cmd *cobra.Command) {
 func GetEVMGasLimitFlag(cmd *cobra.Command) (uint64, bool, error) {
 	changed := cmd.Flags().Changed(FlagEVMGasLimit)
 	val, err := cmd.Flags().GetUint64(FlagEVMGasLimit)
+	if err != nil {
+		return 0, changed, err
+	}
+	return val, changed, nil
+}
+
+func AddBackupRelayerFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool(
+		FlagBackupRelayer,
+		false,
+		"Set the relayer to be a backup, i.e. not relay attestations until the `relayer.wait-time` is elapsed and no primary relayer has relayed any",
+	)
+}
+
+func GetBackupRelayerFlag(cmd *cobra.Command) (bool, bool, error) {
+	changed := cmd.Flags().Changed(FlagBackupRelayer)
+	val, err := cmd.Flags().GetBool(FlagBackupRelayer)
+	if err != nil {
+		return false, changed, err
+	}
+	return val, changed, nil
+}
+
+func AddBackupRelayerWaitTimeFlag(cmd *cobra.Command) {
+	cmd.Flags().Uint64(
+		FlagBackupRelayerWaitTime,
+		15,
+		"The wait time, in minutes, to wait for primary relayers to relay attestations before proceeding to relay them",
+	)
+}
+
+func GetBackupRelayerWaitTimeFlag(cmd *cobra.Command) (uint64, bool, error) {
+	changed := cmd.Flags().Changed(FlagBackupRelayerWaitTime)
+	val, err := cmd.Flags().GetUint64(FlagBackupRelayerWaitTime)
 	if err != nil {
 		return 0, changed, err
 	}
