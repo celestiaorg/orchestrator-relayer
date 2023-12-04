@@ -9,4 +9,5 @@ var (
 	ErrAttestationNotDataCommitmentRequest = errors.New("attestation is not a data commitment request")
 	ErrAttestationNotFound                 = errors.New("attestation not found")
 	ErrValidatorSetMismatch                = errors.New("p2p validator set is different from the trusted contract one")
+	ErrTransactionStillPending             = errors.New("evm transaction still pending")
 )
