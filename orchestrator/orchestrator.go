@@ -27,6 +27,10 @@ import (
 	coretypes "github.com/tendermint/tendermint/types"
 )
 
+// RequeueWindow the number of nonces that we want to re-enqueue if we can't process them even after retry.
+// After this window is elapsed, the nonce is discarded.
+const RequeueWindow = 50
+
 type Orchestrator struct {
 	Logger tmlog.Logger // maybe use a more general interface
 
@@ -70,18 +74,16 @@ func (orch Orchestrator) Start(ctx context.Context) {
 	// used to send a signal when the nonces processor wants to notify the nonces enqueuing services to stop.
 	signalChan := make(chan struct{})
 
-	withCancel, cancel := context.WithCancel(ctx)
-
 	wg := &sync.WaitGroup{}
 
 	// go routine to listen for new attestation nonces
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := orch.StartNewEventsListener(withCancel, noncesQueue, signalChan)
+		err := orch.StartNewEventsListener(ctx, noncesQueue, signalChan)
 		if err != nil {
 			orch.Logger.Error("error listening to new attestations", "err", err)
-			cancel()
+			return
 		}
 		orch.Logger.Info("stopping listening to new attestations")
 	}()
@@ -90,10 +92,10 @@ func (orch Orchestrator) Start(ctx context.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := orch.ProcessNonces(withCancel, noncesQueue, signalChan)
+		err := orch.ProcessNonces(ctx, noncesQueue, signalChan)
 		if err != nil {
 			orch.Logger.Error("error processing attestations", "err", err)
-			cancel()
+			return
 		}
 		orch.Logger.Info("stopping processing attestations")
 	}()
@@ -102,10 +104,10 @@ func (orch Orchestrator) Start(ctx context.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := orch.EnqueueMissingEvents(withCancel, noncesQueue, signalChan)
+		err := orch.EnqueueMissingEvents(ctx, noncesQueue, signalChan)
 		if err != nil {
 			orch.Logger.Error("error enqueuing missing attestations", "err", err)
-			cancel()
+			return
 		}
 	}()
 
@@ -241,7 +243,7 @@ func (orch Orchestrator) EnqueueMissingEvents(
 
 func (orch Orchestrator) ProcessNonces(
 	ctx context.Context,
-	noncesQueue <-chan uint64,
+	noncesQueue chan uint64,
 	signalChan chan<- struct{},
 ) error {
 	for {
@@ -256,11 +258,26 @@ func (orch Orchestrator) ProcessNonces(
 				if err := orch.Retrier.Retry(ctx, func() error {
 					return orch.Process(ctx, nonce)
 				}); err != nil {
-					close(signalChan)
-					return err
+					orch.Logger.Error("error processing nonce even after retrying", "err", err.Error())
+					go orch.MaybeRequeue(ctx, noncesQueue, nonce)
 				}
 			}
 		}
+	}
+}
+
+// MaybeRequeue requeue the nonce to be re-processed subsequently if it's recent.
+func (orch Orchestrator) MaybeRequeue(ctx context.Context, noncesQueue chan<- uint64, nonce uint64) {
+	latestNonce, err := orch.AppQuerier.QueryLatestAttestationNonce(ctx)
+	if err != nil {
+		orch.Logger.Debug("error requeuing nonce", "nonce", nonce, "err", err.Error())
+		return
+	}
+	if latestNonce <= RequeueWindow || nonce >= latestNonce-RequeueWindow {
+		orch.Logger.Debug("requeuing nonce", "nonce", nonce)
+		noncesQueue <- nonce
+	} else {
+		orch.Logger.Debug("nonce is too old, will not retry it in the future", "nonce", nonce)
 	}
 }
 

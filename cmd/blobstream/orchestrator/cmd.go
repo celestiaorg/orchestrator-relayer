@@ -122,7 +122,7 @@ func Start() *cobra.Command {
 
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
-			retrier := helpers.NewRetrier(logger, 6, time.Minute)
+			retrier := helpers.NewRetrier(logger, 5, 30*time.Second)
 
 			// creating the broadcaster
 			broadcaster := orchestrator.NewBroadcaster(p2pQuerier.BlobstreamDHT)

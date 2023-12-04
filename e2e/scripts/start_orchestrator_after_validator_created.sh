@@ -54,7 +54,8 @@ then
     --grpc.insecure \
     --p2p.nickname=key \
     --p2p.listen-addr="${P2P_LISTEN}" \
-    --evm.passphrase=123
+    --evm.passphrase=123 \
+    --log.level debug
 else
   # to give time for the bootstrappers to be up
   sleep 5s
@@ -66,5 +67,6 @@ else
     --grpc.insecure \
     --p2p.listen-addr="${P2P_LISTEN}" \
     --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
-    --evm.passphrase=123
+    --evm.passphrase=123 \
+    --log.level debug
 fi
