@@ -49,7 +49,7 @@ func NewRelayer(
 	tempDir := t.TempDir()
 	sigStore, err := badger.NewDatastore(tempDir, store.DefaultBadgerOptions(tempDir))
 	require.NoError(t, err)
-	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier, sigStore, 30*time.Second)
+	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier, sigStore, 30*time.Second, false, 0)
 	return r
 }
 
