@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	stderrors "errors"
 	"fmt"
 	"math/big"
 	"strconv"
 	"time"
+
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/ipfs/go-datastore"
 	badger "github.com/ipfs/go-ds-badger2"
@@ -113,8 +116,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 					return err
 				}
 
-				// wait for transaction to be mined
-				_, err = r.EVMClient.WaitForTransaction(ctx, ethClient, tx, r.RetryTimeout)
+				err = r.waitForTransactionAndRetryIfNeeded(ctx, ethClient, tx)
 				if err != nil {
 					return err
 				}
@@ -371,6 +373,57 @@ func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att c
 		}
 	}
 	return batch.Commit(ctx)
+}
+
+// waitForTransactionAndRetryIfNeeded waits for transaction to be mined. If it's not mined in the provided timeout, it will
+// attempt to speed it up via updating the gas price.
+func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethClient *ethclient.Client, tx *coregethtypes.Transaction) error {
+	r.logger.Debug("submitted transaction", "hash", tx.Hash().Hex(), "gas_price", tx.GasPrice().Uint64())
+	newTx := tx
+	for i := 0; i < 10; i++ {
+		_, err := r.EVMClient.WaitForTransaction(ctx, ethClient, newTx, r.RetryTimeout)
+		if err != nil {
+			if stderrors.Is(err, context.DeadlineExceeded) {
+				newGasPrice, err := ethClient.SuggestGasPrice(ctx)
+				if err != nil {
+					return err
+				}
+				if newGasPrice.Uint64() <= newTx.GasPrice().Uint64() {
+					// no need to resend the transaction if the suggested gas price is lower than the original one
+					continue
+				}
+				legacyTx := toLegacyTransaction(newTx)
+				legacyTx.GasPrice = newGasPrice
+				newTx = coregethtypes.NewTx(legacyTx)
+				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i)
+				err = ethClient.SendTransaction(ctx, newTx)
+				r.logger.Info("submitted speed up transaction", "hash", newTx.Hash().Hex(), "new_gas_price", newTx.GasPrice().Uint64())
+				if err != nil {
+					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
+				}
+			} else {
+				return err
+			}
+		} else {
+			return nil
+		}
+	}
+	return ErrTransactionStillPending
+}
+
+func toLegacyTransaction(tx *coregethtypes.Transaction) *coregethtypes.LegacyTx {
+	v, r, s := tx.RawSignatureValues()
+	return &coregethtypes.LegacyTx{
+		Nonce:    tx.Nonce(),
+		GasPrice: tx.GasPrice(),
+		Gas:      tx.Gas(),
+		To:       tx.To(),
+		Value:    tx.Value(),
+		Data:     tx.Data(),
+		V:        v,
+		R:        r,
+		S:        s,
+	}
 }
 
 // matchAttestationConfirmSigs matches and sorts the confirm signatures with the valset
