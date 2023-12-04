@@ -2,6 +2,7 @@ package orchestrator
 
 import (
 	"context"
+	goerrors "errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -84,7 +85,7 @@ func (orch Orchestrator) Start(ctx context.Context) {
 			orch.Logger.Error("error listening to new attestations", "err", err)
 			return
 		}
-		orch.Logger.Error("stopping listening to new attestations")
+		orch.Logger.Info("stopping listening to new attestations")
 	}()
 
 	// go routine for processing nonces
@@ -96,7 +97,7 @@ func (orch Orchestrator) Start(ctx context.Context) {
 			orch.Logger.Error("error processing attestations", "err", err)
 			return
 		}
-		orch.Logger.Error("stopping processing attestations")
+		orch.Logger.Info("stopping processing attestations")
 	}()
 
 	// go routine for handling the previous attestation nonces
@@ -139,8 +140,11 @@ func (orch Orchestrator) StartNewEventsListener(
 	for {
 		select {
 		case <-signalChan:
-			return ErrSignalChanNotif
+			return nil
 		case <-ctx.Done():
+			if goerrors.Is(ctx.Err(), context.Canceled) {
+				return nil
+			}
 			return ctx.Err()
 		case <-ticker.C:
 			running := orch.TmQuerier.IsRunning(ctx)
@@ -219,7 +223,7 @@ func (orch Orchestrator) EnqueueMissingEvents(
 	for i := uint64(0); i < latestNonce-uint64(earliestAttestationNonce)+1; i++ {
 		select {
 		case <-signalChan:
-			return ErrSignalChanNotif
+			return nil
 		case <-ctx.Done():
 			return ctx.Err()
 		default:

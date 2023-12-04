@@ -34,14 +34,16 @@ import (
 )
 
 type Relayer struct {
-	TmQuerier      *rpc.TmQuerier
-	AppQuerier     *rpc.AppQuerier
-	P2PQuerier     *p2p.Querier
-	EVMClient      *evm.Client
-	logger         tmlog.Logger
-	Retrier        *helpers.Retrier
-	SignatureStore *badger.Datastore
-	RetryTimeout   time.Duration
+	TmQuerier             *rpc.TmQuerier
+	AppQuerier            *rpc.AppQuerier
+	P2PQuerier            *p2p.Querier
+	EVMClient             *evm.Client
+	logger                tmlog.Logger
+	Retrier               *helpers.Retrier
+	SignatureStore        *badger.Datastore
+	RetryTimeout          time.Duration
+	IsBackupRelayer       bool
+	BackupRelayerWaitTime time.Duration
 }
 
 func NewRelayer(
@@ -53,16 +55,20 @@ func NewRelayer(
 	retrier *helpers.Retrier,
 	sigStore *badger.Datastore,
 	retryTimeout time.Duration,
+	isBackupRelayer bool,
+	backupRelayerWaitTime time.Duration,
 ) *Relayer {
 	return &Relayer{
-		TmQuerier:      tmQuerier,
-		AppQuerier:     appQuerier,
-		P2PQuerier:     p2pQuerier,
-		EVMClient:      evmClient,
-		logger:         logger,
-		Retrier:        retrier,
-		SignatureStore: sigStore,
-		RetryTimeout:   retryTimeout,
+		TmQuerier:             tmQuerier,
+		AppQuerier:            appQuerier,
+		P2PQuerier:            p2pQuerier,
+		EVMClient:             evmClient,
+		logger:                logger,
+		Retrier:               retrier,
+		SignatureStore:        sigStore,
+		RetryTimeout:          retryTimeout,
+		IsBackupRelayer:       isBackupRelayer,
+		BackupRelayerWaitTime: backupRelayerWaitTime,
 	}
 }
 
@@ -74,6 +80,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 	}
 	defer ethClient.Close()
 
+	backupRelayerShouldRelay := false
 	processFunc := func() error {
 		// this function will relay attestations as long as there are confirms. And, after the contract is
 		// up-to-date with the chain, it will stop.
@@ -98,6 +105,17 @@ func (r *Relayer) Start(ctx context.Context) error {
 					return nil
 				}
 
+				if r.IsBackupRelayer {
+					if !backupRelayerShouldRelay {
+						// if the relayer is a backup relayer, sleep for the wait time before checking
+						// if the signatures haven't been relayed to relay them.
+						r.logger.Debug("waiting for the backup relayer wait time to elapse before trying to relay attestation", "nonce", lastContractNonce+1)
+						time.Sleep(r.BackupRelayerWaitTime)
+						backupRelayerShouldRelay = true
+						continue
+					}
+				}
+
 				att, err := r.AppQuerier.QueryAttestationByNonce(ctx, lastContractNonce+1)
 				if err != nil {
 					return err
@@ -119,6 +137,12 @@ func (r *Relayer) Start(ctx context.Context) error {
 				err = r.waitForTransactionAndRetryIfNeeded(ctx, ethClient, tx)
 				if err != nil {
 					return err
+				}
+
+				if r.IsBackupRelayer {
+					// if the transaction was mined correctly, the relayer gets back to the pending
+					// state waiting for the next nonce + the backup relayer wait time.
+					backupRelayerShouldRelay = false
 				}
 			}
 		}

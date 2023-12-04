@@ -75,22 +75,30 @@ func Start() *cobra.Command {
 			defer cancel()
 
 			stopFuncs := make([]func() error, 0)
+			defer func() {
+				for _, f := range stopFuncs {
+					err := f()
+					if err != nil {
+						logger.Error(err.Error())
+					}
+				}
+			}()
 
-			tmQuerier, appQuerier, stops, err := common.NewTmAndAppQuerier(logger, config.CoreRPC, config.CoreGRPC, config.GRPCInsecure)
-			stopFuncs = append(stopFuncs, stops...)
+			tmQuerier, appQuerier, storeStops, err := common.NewTmAndAppQuerier(logger, config.CoreRPC, config.CoreGRPC, config.GRPCInsecure)
+			stopFuncs = append(stopFuncs, storeStops...)
 			if err != nil {
 				return err
 			}
 
-			s, stops, err := common.OpenStore(logger, config.Home, store.OpenOptions{
+			s, storeStops, err := common.OpenStore(logger, config.Home, store.OpenOptions{
 				HasDataStore:      true,
 				BadgerOptions:     store.DefaultBadgerOptions(config.Home),
 				HasSignatureStore: false,
 				HasEVMKeyStore:    true,
 				HasP2PKeyStore:    true,
 			})
-			stopFuncs = append(stopFuncs, stops...)
 			if err != nil {
+				stopFuncs = append(stopFuncs, storeStops...)
 				return err
 			}
 
@@ -110,25 +118,14 @@ func Start() *cobra.Command {
 				return err
 			}
 			stopFuncs = append(stopFuncs, func() error { return dht.Close() })
+			stopFuncs = append(stopFuncs, storeStops...)
 
 			// creating the p2p querier
 			p2pQuerier := p2p.NewQuerier(dht, logger)
 			retrier := helpers.NewRetrier(logger, 5, 30*time.Second)
 
-			defer func() {
-				for _, f := range stopFuncs {
-					err := f()
-					if err != nil {
-						logger.Error(err.Error())
-					}
-				}
-			}()
-
 			// creating the broadcaster
 			broadcaster := orchestrator.NewBroadcaster(p2pQuerier.BlobstreamDHT)
-			if err != nil {
-				return err
-			}
 
 			// creating the orchestrator
 			orch := orchestrator.New(
