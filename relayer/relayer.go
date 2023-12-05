@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ethereum/go-ethereum/params"
+
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/ipfs/go-datastore"
@@ -408,19 +410,52 @@ func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethCli
 		_, err := r.EVMClient.WaitForTransaction(ctx, ethClient, newTx, r.RetryTimeout)
 		if err != nil {
 			if stderrors.Is(err, context.DeadlineExceeded) {
-				newGasPrice, err := ethClient.SuggestGasPrice(ctx)
-				if err != nil {
-					return err
+				var rawTx *coregethtypes.Transaction
+				if tx.GasPrice() != nil {
+					rawTx, err = createSpeededUpLegacyTransaction(ctx, ethClient, newTx)
+					if err != nil {
+						return err
+					}
+					if rawTx.GasPrice().Cmp(newTx.GasPrice()) <= 0 {
+						// no need to resend the transaction if the suggested gas price is lower than the original one
+						continue
+					}
+				} else if tx.GasTipCap() != nil && tx.GasFeeCap() != nil {
+					rawTx, err = createSpeededUpDynamicTransaction(ctx, ethClient, newTx)
+					if err != nil {
+						return err
+					}
+					if rawTx.GasFeeCap().Cmp(newTx.GasFeeCap()) <= 0 {
+						// no need to resend the transaction if the suggested gas price is lower than the original one
+						continue
+					}
+				} else {
+					// Only query for basefee if gasPrice not specified
+					if head, errHead := ethClient.HeaderByNumber(ctx, nil); errHead != nil {
+						return errHead
+					} else if head.BaseFee != nil {
+						rawTx, err = createSpeededUpDynamicTransaction(ctx, ethClient, newTx)
+						if err != nil {
+							return err
+						}
+						if rawTx.GasFeeCap().Cmp(newTx.GasFeeCap()) <= 0 {
+							// no need to resend the transaction if the suggested gas price is lower than the original one
+							continue
+						}
+					} else {
+						// Chain is not London ready -> use legacy transaction
+						rawTx, err = createSpeededUpLegacyTransaction(ctx, ethClient, newTx)
+						if err != nil {
+							return err
+						}
+						if rawTx.GasPrice().Cmp(newTx.GasPrice()) <= 0 {
+							// no need to resend the transaction if the suggested gas price is lower than the original one
+							continue
+						}
+					}
 				}
-				if newGasPrice.Uint64() <= newTx.GasPrice().Uint64() {
-					// no need to resend the transaction if the suggested gas price is lower than the original one
-					continue
-				}
-				legacyTx := toLegacyTransaction(newTx)
-				legacyTx.GasPrice = newGasPrice
-				newTx = coregethtypes.NewTx(legacyTx)
 				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i)
-				err = ethClient.SendTransaction(ctx, newTx)
+				err = ethClient.SendTransaction(ctx, rawTx)
 				r.logger.Info("submitted speed up transaction", "hash", newTx.Hash().Hex(), "new_gas_price", newTx.GasPrice().Uint64())
 				if err != nil {
 					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
@@ -435,6 +470,45 @@ func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethCli
 	return ErrTransactionStillPending
 }
 
+// createSpeededUpDynamicTransaction update the EIP1559 dynamic transaction with the current gas price.
+func createSpeededUpDynamicTransaction(ctx context.Context, ethClient *ethclient.Client, newTx *coregethtypes.Transaction) (*coregethtypes.Transaction, error) {
+	// Estimate TipCap
+	gasTipCap, err := ethClient.SuggestGasTipCap(ctx)
+	if err != nil {
+		return nil, err
+	}
+	lastKnownHeader, err := ethClient.HeaderByNumber(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	// Estimate FeeCap
+	gasFeeCap := new(big.Int).Add(
+		gasTipCap,
+		// the DefaultElasticityMultiplier is used to define the wiggle room for the gas
+		// in EIP1559
+		new(big.Int).Mul(lastKnownHeader.BaseFee, big.NewInt(params.DefaultElasticityMultiplier)),
+	)
+	if gasFeeCap.Cmp(gasTipCap) < 0 {
+		return nil, fmt.Errorf("maxFeePerGas (%v) < maxPriorityFeePerGas (%v)", gasFeeCap, gasTipCap)
+	}
+
+	dynamicTransaction := toDynamicTransaction(newTx)
+	dynamicTransaction.GasTipCap = gasTipCap
+	dynamicTransaction.GasFeeCap = gasFeeCap
+	return coregethtypes.NewTx(dynamicTransaction), nil
+}
+
+// createSpeededUpLegacyTransaction update the legacy transaction with the new gas price.
+func createSpeededUpLegacyTransaction(ctx context.Context, ethClient *ethclient.Client, newTx *coregethtypes.Transaction) (tx *coregethtypes.Transaction, err error) {
+	newGasPrice, err := ethClient.SuggestGasPrice(ctx)
+	if err != nil {
+		return nil, err
+	}
+	legacyTx := toLegacyTransaction(newTx)
+	legacyTx.GasPrice = newGasPrice
+	return coregethtypes.NewTx(legacyTx), nil
+}
+
 func toLegacyTransaction(tx *coregethtypes.Transaction) *coregethtypes.LegacyTx {
 	v, r, s := tx.RawSignatureValues()
 	return &coregethtypes.LegacyTx{
@@ -447,6 +521,24 @@ func toLegacyTransaction(tx *coregethtypes.Transaction) *coregethtypes.LegacyTx 
 		V:        v,
 		R:        r,
 		S:        s,
+	}
+}
+
+func toDynamicTransaction(tx *coregethtypes.Transaction) *coregethtypes.DynamicFeeTx {
+	v, r, s := tx.RawSignatureValues()
+	return &coregethtypes.DynamicFeeTx{
+		ChainID:    tx.ChainId(),
+		Nonce:      tx.Nonce(),
+		GasTipCap:  tx.GasTipCap(),
+		GasFeeCap:  tx.GasFeeCap(),
+		Gas:        tx.Gas(),
+		To:         tx.To(),
+		Value:      tx.Value(),
+		Data:       tx.Data(),
+		AccessList: tx.AccessList(),
+		V:          v,
+		R:          r,
+		S:          s,
 	}
 }
 
