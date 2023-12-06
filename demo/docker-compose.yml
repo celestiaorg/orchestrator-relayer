@@ -1,0 +1,112 @@
+version: '3'
+
+services:
+  # validator always needs to start first for the E2E suite to work correctly
+  validator:
+    container_name: validator
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+      - "26657:26657"
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_validator.sh"
+    ]
+    # EVM Address: 0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488
+    # key: da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9
+    volumes:
+      - ${PWD}/validator/config/priv_validator_key.json:/opt/config/priv_validator_key.json:ro
+      - ${PWD}/validator/config/node_key.json:/opt/config/node_key.json:ro
+      - ${PWD}/validator/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/validator/config/config.toml:/opt/config/config.toml:ro
+      - ${PWD}/validator/config/app.toml:/opt/config/app.toml:ro
+      - ${PWD}/validator/config/genesis.json:/opt/config/genesis.json:rw
+      - ${PWD}/scripts/start_validator.sh:/opt/start_validator.sh:ro
+
+  orchestrator:
+    container_name: orchestrator
+    build:
+      dockerfile: Dockerfile
+    depends_on:
+      - validator
+    ports:
+      - "30000:30000"
+    environment:
+      - MONIKER=validator
+      - PRIVATE_KEY=da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9
+      - EVM_ACCOUNT=0x966e6f22781EF6a6A82BBB4DB3df8E225DfD9488
+      - CORE_RPC_HOST=validator
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=validator
+      - CORE_GRPC_PORT=9090
+      # the other peers will consider validator as a bootstrapper. So, it doesn't need to connect to any need during startup
+      - P2P_BOOTSTRAPPERS=
+      - P2P_IDENTITY=f7fd2be6b2abaa8519b0570d3a12e684a397456b0cc721198ebdd7e343cdd8f41813ef8aa857426c4e909c4fe19120a0f3f8c505286ca9d9249b5681475ec459
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_orchestrator_after_validator_created.sh"
+    ]
+    volumes:
+      - ${PWD}/validator/keyring-test:/opt/keyring-test:ro
+      - ${PWD}/scripts/start_orchestrator_after_validator_created.sh:/opt/start_orchestrator_after_validator_created.sh:ro
+
+  ganache:
+    container_name: ganache
+    image: trufflesuite/ganache-cli
+    command: [
+      "--port=8545",
+      "--verbose",
+      "--host=0.0.0.0",
+      "--networkId=1234",
+      "--chainId=1234",
+      "--gasLimit=30000000",
+      "--account=\"0x0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401,0x90000000000000000000000\""
+    ]
+    ports:
+      - "8545:8545"
+
+  relayer:
+    container_name: relayer
+    build:
+      dockerfile: Dockerfile
+    depends_on:
+      - ganache
+      - validator
+    ports:
+      - "30004:30000"
+    environment:
+      - EVM_CHAIN_ID=blobstream-e2e
+      - EVM_ACCOUNT=0x95359c3348e189ef7781546e6E13c80230fC9fB5
+      - PRIVATE_KEY=0e9688e585562e828dcbd4f402d5eddf686f947fb6bf75894a85bf008b017401
+      - CORE_RPC_HOST=validator
+      - CORE_RPC_PORT=26657
+      - CORE_GRPC_HOST=validator
+      - CORE_GRPC_PORT=9090
+      - EVM_CHAIN_ID=1234
+      - EVM_ENDPOINT=http://ganache:8545
+      - STARTING_NONCE=latest
+      - P2P_BOOTSTRAPPERS=/dns/orchestrator/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
+      - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+    entrypoint: [
+      "/bin/bash"
+    ]
+    command: [
+      "/opt/start_relayer.sh"
+    ]
+    volumes:
+      - ${PWD}/scripts/start_relayer.sh:/opt/start_relayer.sh:ro
+      - ${PWD}/scripts/deploy_blobstream_contract.sh:/opt/deploy_blobstream_contract.sh:ro
+
+  sequencer:
+    container_name: sequencer
+    build:
+      context: ./sequencer
+      dockerfile: Dockerfile
+    depends_on:
+      - relayer
