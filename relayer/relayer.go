@@ -460,7 +460,7 @@ func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethCli
 					return err
 				}
 				err = ethClient.SendTransaction(ctx, signedTx)
-				r.logger.Info("submitted speed up transaction", "hash", newTx.Hash().Hex(), "new_gas_price", newTx.GasPrice().Uint64())
+				r.logger.Info("submitted speed up transaction", "hash", signedTx.Hash().Hex(), "new_gas_price", signedTx.GasPrice().Uint64())
 				if err != nil {
 					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
 				}
