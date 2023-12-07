@@ -28,7 +28,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.14
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/dgraph-io/badger/v2 v2.2007.4
-	github.com/ipfs/boxo v0.15.0
+	github.com/ipfs/boxo v0.16.0
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/ipfs/go-ds-badger2 v0.1.3
 	github.com/libp2p/go-libp2p v0.32.0
