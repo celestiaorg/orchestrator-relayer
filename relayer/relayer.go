@@ -136,7 +136,7 @@ func (r *Relayer) Start(ctx context.Context) error {
 					return err
 				}
 
-				err = r.waitForTransactionAndRetryIfNeeded(ctx, ethClient, tx)
+				err = r.waitForTransactionAndRetryIfNeeded(ctx, ethClient, opts, tx)
 				if err != nil {
 					return err
 				}
@@ -403,7 +403,7 @@ func (r *Relayer) SaveDataCommitmentSignaturesToStore(ctx context.Context, att c
 
 // waitForTransactionAndRetryIfNeeded waits for transaction to be mined. If it's not mined in the provided timeout, it will
 // attempt to speed it up via updating the gas price.
-func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethClient *ethclient.Client, tx *coregethtypes.Transaction) error {
+func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethClient *ethclient.Client, opts *bind.TransactOpts, tx *coregethtypes.Transaction) error {
 	r.logger.Debug("submitted transaction", "hash", tx.Hash().Hex(), "gas_price", tx.GasPrice().Uint64())
 	newTx := tx
 	for i := 0; i < 10; i++ {
@@ -455,7 +455,11 @@ func (r *Relayer) waitForTransactionAndRetryIfNeeded(ctx context.Context, ethCli
 					}
 				}
 				r.logger.Debug("transaction still not included. updating the gas price", "retry_number", i)
-				err = ethClient.SendTransaction(ctx, rawTx)
+				signedTx, err := opts.Signer(opts.From, rawTx)
+				if err != nil {
+					return err
+				}
+				err = ethClient.SendTransaction(ctx, signedTx)
 				r.logger.Info("submitted speed up transaction", "hash", newTx.Hash().Hex(), "new_gas_price", newTx.GasPrice().Uint64())
 				if err != nil {
 					r.logger.Debug("response of sending speed up transaction", "resp", err.Error())
