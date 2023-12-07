@@ -36,15 +36,9 @@ func newTransactOptsBuilder(ks *keystore.KeyStore, acc *accounts.Account) transa
 			return nil, fmt.Errorf("failed to create Ethereum transactor: %w", err)
 		}
 
-		bigGasPrice, err := client.SuggestGasPrice(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get Ethereum gas estimate: %w", err)
-		}
-
 		auth.Nonce = new(big.Int).SetUint64(nonce)
 		auth.Value = big.NewInt(0) // in wei
 		auth.GasLimit = gasLim     // in units
-		auth.GasPrice = bigGasPrice
 
 		return auth, nil
 	}
