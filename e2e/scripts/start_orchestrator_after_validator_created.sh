@@ -56,7 +56,7 @@ then
     --p2p.listen-addr="${P2P_LISTEN}" \
     --evm.passphrase=123 \
     --log.level debug \
-    --metrics --metrics.endpoint otel:4318
+    --metrics --metrics.endpoint otel-collector:4318
 else
   # to give time for the bootstrappers to be up
   sleep 5s
@@ -70,5 +70,5 @@ else
     --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
     --evm.passphrase=123 \
     --log.level debug \
-    --metrics --metrics.endpoint otel:4318
+    --metrics --metrics.endpoint otel-collector:4318
 fi

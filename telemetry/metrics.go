@@ -142,7 +142,6 @@ func PrometheusMetrics(ctx context.Context, logger tmlog.Logger, registerer prom
 	if err := promHTTPServer.ListenAndServe(); err != nil {
 		logger.Error("Error starting Prometheus metrics exporter http server: %s", err)
 	}
-
 	logger.Info("Prometheus agent started on :%s/%s", promAgentPort, promAgentEndpoint)
 
 	stopFunc := func() error {
