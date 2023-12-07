@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/prometheus/client_golang/prometheus"
 	"strings"
 	"time"
 
@@ -69,6 +70,7 @@ func CreateDHTAndWaitForPeers(
 	p2pListenAddr string,
 	bootstrappers string,
 	dataStore ds.Batching,
+	registerer prometheus.Registerer,
 ) (*p2p.BlobstreamDHT, error) {
 	// get the p2p private key or generate a new one
 	privKey, err := common2.GetP2PKeyOrGenerateNewOne(p2pKeyStore, p2pNickname)
@@ -77,7 +79,7 @@ func CreateDHTAndWaitForPeers(
 	}
 
 	// creating the host
-	h, err := p2p.CreateHost(p2pListenAddr, privKey)
+	h, err := p2p.CreateHost(p2pListenAddr, privKey, registerer)
 	if err != nil {
 		return nil, err
 	}

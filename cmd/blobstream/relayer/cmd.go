@@ -165,7 +165,7 @@ func Start() *cobra.Command {
 			// creating the data store
 			dataStore := dssync.MutexWrap(s.DataStore)
 
-			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore)
+			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore, nil)
 			if err != nil {
 				return err
 			}

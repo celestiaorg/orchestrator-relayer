@@ -3,6 +3,7 @@ package orchestrator
 import (
 	"bytes"
 	"fmt"
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,6 +46,19 @@ bootstrappers = "{{ .Bootstrappers }}"
 
 # MultiAddr for the p2p peer to listen on.
 listen-addr = "{{ .P2PListenAddr }}"
+
+###############################################################################
+###                         Telemetry Configuration                         ###
+###############################################################################
+
+# Enables OTLP metrics with HTTP exporter.
+metrics = "{{ .MetricsConfig.Metrics }}"
+
+# Sets HTTP endpoint for OTLP metrics to be exported to.
+endpoint = "{{ .MetricsConfig.Endpoint }}"
+
+# Enable TLS connection to OTLP metric backend.
+tls = "{{ .MetricsConfig.TLS }}"
 `
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -63,6 +77,10 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddGRPCInsecureFlag(cmd)
 	base.AddLogLevelFlag(cmd)
 	base.AddLogFormatFlag(cmd)
+	base.AddMetricsFlag(cmd)
+	base.AddMetricsEndpointFlag(cmd)
+	base.AddMetricsTLSFlag(cmd)
+
 	return cmd
 }
 
@@ -77,6 +95,7 @@ type StartConfig struct {
 	GRPCInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
 	LogLevel      string
 	LogFormat     string
+	MetricsConfig telemetry.Config `mapstructure:"metrics-config" json:"metrics-config"`
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -86,6 +105,11 @@ func DefaultStartConfig() *StartConfig {
 		Bootstrappers: "",
 		P2PListenAddr: "/ip4/0.0.0.0/tcp/30000",
 		GRPCInsecure:  true,
+		MetricsConfig: telemetry.Config{
+			Metrics:  false,
+			Endpoint: "localhost:4318",
+			TLS:      false,
+		},
 	}
 }
 
@@ -164,6 +188,30 @@ func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartCo
 	}
 	if changed {
 		startConf.GRPCInsecure = grpcInsecure
+	}
+
+	metrics, changed, err := base.GetMetricsFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.MetricsConfig.Metrics = metrics
+	}
+
+	endpoint, changed, err := base.GetMetricsEndpointFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.MetricsConfig.Endpoint = endpoint
+	}
+
+	tls, changed, err := base.GetMetricsTLSFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.MetricsConfig.TLS = tls
 	}
 
 	logLevel, _, err := base.GetLogLevelFlag(cmd)

@@ -2,6 +2,9 @@ package orchestrator
 
 import (
 	"context"
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 	"path/filepath"
 	"time"
 
@@ -110,10 +113,42 @@ func Start() *cobra.Command {
 				return err
 			}
 
+			var registerer prometheus.Registerer
+			if config.MetricsConfig.Metrics {
+				opts := []otlpmetrichttp.Option{
+					otlpmetrichttp.WithEndpoint(config.MetricsConfig.Endpoint),
+					otlpmetrichttp.WithCompression(otlpmetrichttp.GzipCompression),
+				}
+				if !config.MetricsConfig.TLS {
+					opts = append(opts, otlpmetrichttp.WithInsecure())
+				}
+				var shutdown func() error
+				registerer, shutdown, err = telemetry.Start(ctx, logger, ServiceNameOrchestrator, acc.Address, opts)
+				if shutdown != nil {
+					stopFuncs = append(stopFuncs, shutdown)
+				}
+				if err != nil {
+					return err
+				}
+			}
+			meters, err := telemetry.InitMeters()
+			if err != nil {
+				return err
+			}
+
 			// creating the data store
 			dataStore := dssync.MutexWrap(s.DataStore)
 
-			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.P2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore)
+			dht, err := common.CreateDHTAndWaitForPeers(
+				ctx,
+				logger,
+				s.P2PKeyStore,
+				config.P2pNickname,
+				config.P2PListenAddr,
+				config.Bootstrappers,
+				dataStore,
+				registerer,
+			)
 			if err != nil {
 				return err
 			}
@@ -137,6 +172,7 @@ func Start() *cobra.Command {
 				retrier,
 				s.EVMKeyStore,
 				&acc,
+				meters,
 			)
 			if err != nil {
 				return err

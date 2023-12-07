@@ -5,13 +5,14 @@ import (
 	"github.com/libp2p/go-libp2p/core/crypto"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/multiformats/go-multiaddr"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // CreateHost Creates a LibP2P host using a listen address and a private key.
 // The listen address is a MultiAddress of the format: /ip4/0.0.0.0/tcp/0
 // Using port 0 means that it will use a random open port.
 // The private key shouldn't be nil.
-func CreateHost(listenMultiAddr string, privateKey crypto.PrivKey) (host.Host, error) {
+func CreateHost(listenMultiAddr string, privateKey crypto.PrivKey, registerer prometheus.Registerer) (host.Host, error) {
 	multiAddr, err := multiaddr.NewMultiaddr(listenMultiAddr)
 	if err != nil {
 		return nil, err
@@ -21,12 +22,14 @@ func CreateHost(listenMultiAddr string, privateKey crypto.PrivKey) (host.Host, e
 		return nil, ErrNilPrivateKey
 	}
 
-	h, err := libp2p.New(
-		libp2p.ListenAddrs(multiAddr),
-		libp2p.Identity(privateKey),
-		libp2p.EnableNATService(),
-		// TODO investigate if more options are needed
-	)
+	params := []libp2p.Option{libp2p.ListenAddrs(multiAddr), libp2p.Identity(privateKey), libp2p.EnableNATService()}
+	if registerer != nil {
+		params = append(params, libp2p.PrometheusRegisterer(registerer))
+	} else {
+		params = append(params, libp2p.DisableMetrics())
+	}
+
+	h, err := libp2p.New(params...)
 	if err != nil {
 		return nil, err
 	}
