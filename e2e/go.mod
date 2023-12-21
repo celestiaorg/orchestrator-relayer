@@ -17,7 +17,7 @@ require (
 	github.com/spf13/cobra v1.8.0 // indirect
 	github.com/stretchr/testify v1.8.4
 	github.com/tendermint/tm-db v0.6.7 // indirect
-	golang.org/x/crypto v0.16.0 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
