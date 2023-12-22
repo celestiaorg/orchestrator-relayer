@@ -2,11 +2,12 @@ package orchestrator
 
 import (
 	"context"
+	"path/filepath"
+	"time"
+
 	"github.com/celestiaorg/orchestrator-relayer/telemetry"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
-	"path/filepath"
-	"time"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/version"
 
@@ -113,6 +114,11 @@ func Start() *cobra.Command {
 				return err
 			}
 
+			meters, err := telemetry.InitMeters()
+			if err != nil {
+				return err
+			}
+
 			var registerer prometheus.Registerer
 			if config.MetricsConfig.Metrics {
 				opts := []otlpmetrichttp.Option{
@@ -130,10 +136,14 @@ func Start() *cobra.Command {
 				if err != nil {
 					return err
 				}
-			}
-			meters, err := telemetry.InitMeters()
-			if err != nil {
-				return err
+				// TODO(sweexordious): add flag
+				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer)
+				if shutdown != nil {
+					stopFuncs = append(stopFuncs, shutdown)
+				}
+				if err != nil {
+					return err
+				}
 			}
 
 			// creating the data store

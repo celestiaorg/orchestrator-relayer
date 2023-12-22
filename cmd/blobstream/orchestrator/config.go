@@ -3,11 +3,12 @@ package orchestrator
 import (
 	"bytes"
 	"fmt"
-	"github.com/celestiaorg/orchestrator-relayer/telemetry"
 	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
 
 	"github.com/spf13/viper"
 

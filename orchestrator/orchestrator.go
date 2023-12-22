@@ -4,11 +4,12 @@ import (
 	"context"
 	goerrors "errors"
 	"fmt"
-	"github.com/celestiaorg/orchestrator-relayer/telemetry"
 	"math/big"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
 
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts"

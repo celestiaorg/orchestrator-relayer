@@ -3,9 +3,10 @@ package common
 import (
 	"context"
 	"fmt"
-	"github.com/prometheus/client_golang/prometheus"
 	"strings"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/celestiaorg/orchestrator-relayer/store"
 
