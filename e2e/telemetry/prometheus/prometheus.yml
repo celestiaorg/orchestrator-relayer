@@ -14,12 +14,6 @@ scrape_configs:
     static_configs:
       - targets:
           - 'otel-collector:8889'
-  - job_name: 'p2p-metrics'
-    metrics_path: /metrics
-    honor_timestamps: true
-    scrape_interval: 15s
-    scrape_timeout: 10s
-    scheme: http
+  - job_name: 'libp2p_metrics'
     static_configs:
-      - targets:
-          - 'host.docker.internal:8890'
+      - targets: [ 'core0-orch:8890' ]

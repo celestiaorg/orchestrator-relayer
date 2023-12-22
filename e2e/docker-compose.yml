@@ -321,7 +321,7 @@ services:
     ports:
       - "9000:9090"
     volumes:
-      - ${PWD}/prometheus:/etc/prometheus
+      - ${PWD}/telemetry/prometheus:/etc/prometheus
       - prometheus-data:/prometheus
     # yamllint disable-line rule:line-length
     command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
@@ -333,7 +333,7 @@ services:
     image: otel/opentelemetry-collector
     command: ["--config=/root/otel-collector/config.yml"]
     volumes:
-      - ${PWD}/otel-collector:/root/otel-collector/
+      - ${PWD}/telemetry/otel-collector:/root/otel-collector/
     ports:
       - "8888:8888"   # Prometheus metrics exposed by the collector
       - "8889:8889"   # Prometheus exporter metrics
@@ -351,8 +351,8 @@ services:
       - 3001:3000
     restart: unless-stopped
     volumes:
-      - ${PWD}/grafana/:/etc/grafana/provisioning/
-      - ${PWD}/grafana/:/var/lib/grafana/dashboards/
+      - ${PWD}/telemetry/grafana/:/etc/grafana/provisioning/
+      - ${PWD}/telemetry/grafana/:/var/lib/grafana/dashboards/
       - grafana-data:/var/lib/grafana
 
 
