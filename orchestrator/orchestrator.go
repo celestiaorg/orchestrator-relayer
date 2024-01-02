@@ -47,7 +47,7 @@ type Orchestrator struct {
 	P2PQuerier  *p2p.Querier
 	Broadcaster *Broadcaster
 	Retrier     *helpers.Retrier
-	Meters      *telemetry.Meters
+	Meters      *telemetry.OrchestratorMeters
 }
 
 func New(
@@ -59,7 +59,7 @@ func New(
 	retrier *helpers.Retrier,
 	evmKeyStore *keystore.KeyStore,
 	evmAccount *accounts.Account,
-	meters *telemetry.Meters,
+	meters *telemetry.OrchestratorMeters,
 ) *Orchestrator {
 	return &Orchestrator{
 		Logger:      logger,

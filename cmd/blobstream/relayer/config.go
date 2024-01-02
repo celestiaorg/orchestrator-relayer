@@ -8,6 +8,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
+
 	"github.com/spf13/viper"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -67,6 +69,22 @@ gas-limit = "{{ .EvmGasLimit }}"
 # The time, in minutes, to wait for transactions to be mined
 # on the target EVM chain before recreating them with a different gas price.
 retry-timeout = "{{ .EVMRetryTimeout }}"
+
+###############################################################################
+###                         Telemetry Configuration                         ###
+###############################################################################
+
+# Enables OTLP metrics with HTTP exporter.
+metrics = "{{ .MetricsConfig.Metrics }}"
+
+# Sets HTTP endpoint for OTLP metrics to be exported to.
+endpoint = "{{ .MetricsConfig.Endpoint }}"
+
+# Enable TLS connection to OTLP metric backend.
+tls = "{{ .MetricsConfig.TLS }}"
+
+# Sets the HTTP endpoint for LibP2P metrics to listen on.
+p2p = "{{ .MetricsConfig.P2P }}"
 `
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
@@ -92,6 +110,10 @@ func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddEVMRetryTimeoutFlag(cmd)
 	base.AddBackupRelayerFlag(cmd)
 	base.AddBackupRelayerWaitTimeFlag(cmd)
+	base.AddMetricsFlag(cmd)
+	base.AddMetricsEndpointFlag(cmd)
+	base.AddMetricsTLSFlag(cmd)
+	base.AddP2PMetricsEndpoint(cmd)
 
 	return cmd
 }
@@ -114,6 +136,7 @@ type StartConfig struct {
 	EVMRetryTimeout       uint64 `mapstructure:"retry-timeout" json:"retry-timeout"`
 	isBackupRelayer       bool
 	backupRelayerWaitTime uint64
+	MetricsConfig         telemetry.Config `mapstructure:"metrics-config" json:"metrics-config"`
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -127,6 +150,12 @@ func DefaultStartConfig() *StartConfig {
 		EvmRPC:          "http://localhost:8545",
 		EvmGasLimit:     2500000,
 		EVMRetryTimeout: 15,
+		MetricsConfig: telemetry.Config{
+			Metrics:  false,
+			Endpoint: "localhost:4318",
+			TLS:      false,
+			P2P:      "localhost:30001",
+		},
 	}
 }
 
@@ -274,6 +303,38 @@ func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	fileConfig.backupRelayerWaitTime = backupRelayerWaitTime
+
+	metrics, changed, err := base.GetMetricsFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.MetricsConfig.Metrics = metrics
+	}
+
+	endpoint, changed, err := base.GetMetricsEndpointFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.MetricsConfig.Endpoint = endpoint
+	}
+
+	tls, changed, err := base.GetMetricsTLSFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.MetricsConfig.TLS = tls
+	}
+
+	p2p, changed, err := base.GetP2PMetricsEndpointFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		fileConfig.MetricsConfig.P2P = p2p
+	}
 
 	return *fileConfig, nil
 }

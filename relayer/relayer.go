@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
+
 	"github.com/ethereum/go-ethereum/params"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -46,6 +48,7 @@ type Relayer struct {
 	RetryTimeout          time.Duration
 	IsBackupRelayer       bool
 	BackupRelayerWaitTime time.Duration
+	Meters                *telemetry.RelayerMeters
 }
 
 func NewRelayer(
@@ -59,6 +62,7 @@ func NewRelayer(
 	retryTimeout time.Duration,
 	isBackupRelayer bool,
 	backupRelayerWaitTime time.Duration,
+	meters *telemetry.RelayerMeters,
 ) *Relayer {
 	return &Relayer{
 		TmQuerier:             tmQuerier,
@@ -71,6 +75,7 @@ func NewRelayer(
 		RetryTimeout:          retryTimeout,
 		IsBackupRelayer:       isBackupRelayer,
 		BackupRelayerWaitTime: backupRelayerWaitTime,
+		Meters:                meters,
 	}
 }
 
@@ -118,6 +123,8 @@ func (r *Relayer) Start(ctx context.Context) error {
 					}
 				}
 
+				start := time.Now()
+
 				att, err := r.AppQuerier.QueryAttestationByNonce(ctx, lastContractNonce+1)
 				if err != nil {
 					return err
@@ -138,8 +145,12 @@ func (r *Relayer) Start(ctx context.Context) error {
 
 				err = r.waitForTransactionAndRetryIfNeeded(ctx, ethClient, tx)
 				if err != nil {
+					r.Meters.Failures.Add(ctx, 1)
 					return err
 				}
+
+				r.Meters.ProcessingTime.Record(ctx, time.Since(start).Seconds())
+				r.Meters.ProcessedNonces.Add(ctx, 1)
 
 				if r.IsBackupRelayer {
 					// if the transaction was mined correctly, the relayer gets back to the pending

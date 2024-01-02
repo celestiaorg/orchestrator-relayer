@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
+
 	"github.com/celestiaorg/orchestrator-relayer/store"
 	badger "github.com/ipfs/go-ds-badger2"
 
@@ -49,7 +51,9 @@ func NewRelayer(
 	tempDir := t.TempDir()
 	sigStore, err := badger.NewDatastore(tempDir, store.DefaultBadgerOptions(tempDir))
 	require.NoError(t, err)
-	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier, sigStore, 30*time.Second, false, 0)
+	meters, err := telemetry.InitRelayerMeters()
+	require.NoError(t, err)
+	r := relayer.NewRelayer(tmQuerier, appQuerier, p2pQuerier, evmClient, logger, retrier, sigStore, 30*time.Second, false, 0, meters)
 	return r
 }
 
@@ -80,6 +84,8 @@ func NewOrchestrator(
 	require.NoError(t, err)
 	err = ks.Unlock(acc, "123")
 	require.NoError(t, err)
-	orch := orchestrator.New(logger, appQuerier, tmQuerier, p2pQuerier, broadcaster, retrier, ks, &acc)
+	meters, err := telemetry.InitOrchestratorMeters()
+	require.NoError(t, err)
+	orch := orchestrator.New(logger, appQuerier, tmQuerier, p2pQuerier, broadcaster, retrier, ks, &acc, meters)
 	return orch
 }

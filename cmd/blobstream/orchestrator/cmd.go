@@ -114,7 +114,7 @@ func Start() *cobra.Command {
 				return err
 			}
 
-			meters, err := telemetry.InitMeters()
+			orchestratorMeters, err := telemetry.InitOrchestratorMeters()
 			if err != nil {
 				return err
 			}
@@ -129,15 +129,14 @@ func Start() *cobra.Command {
 					opts = append(opts, otlpmetrichttp.WithInsecure())
 				}
 				var shutdown func() error
-				registerer, shutdown, err = telemetry.Start(ctx, logger, ServiceNameOrchestrator, acc.Address, opts)
+				registerer, shutdown, err = telemetry.Start(ctx, logger, ServiceNameOrchestrator, acc.Address.Hex(), opts)
 				if shutdown != nil {
 					stopFuncs = append(stopFuncs, shutdown)
 				}
 				if err != nil {
 					return err
 				}
-				// TODO(sweexordious): add flag
-				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer)
+				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer, config.MetricsConfig.P2P)
 				if shutdown != nil {
 					stopFuncs = append(stopFuncs, shutdown)
 				}
@@ -182,7 +181,7 @@ func Start() *cobra.Command {
 				retrier,
 				s.EVMKeyStore,
 				&acc,
-				meters,
+				orchestratorMeters,
 			)
 			if err != nil {
 				return err

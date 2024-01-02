@@ -45,7 +45,7 @@ func TestCreateHost(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			host, err := p2p.CreateHost(tt.listenMultiAddr, tt.privateKey)
+			host, err := p2p.CreateHost(tt.listenMultiAddr, tt.privateKey, nil)
 			if tt.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -68,11 +68,11 @@ func TestConnectHosts(t *testing.T) {
 	validPrivateKey2, err := crypto.UnmarshalEd25519PrivateKey(validKeyHex2)
 	require.NoError(t, err)
 
-	host1, err := p2p.CreateHost("/ip4/0.0.0.0/tcp/0", validPrivateKey1)
+	host1, err := p2p.CreateHost("/ip4/0.0.0.0/tcp/0", validPrivateKey1, nil)
 	require.NoError(t, err)
 	require.NotNil(t, host1)
 
-	host2, err := p2p.CreateHost("/ip4/0.0.0.0/tcp/0", validPrivateKey2)
+	host2, err := p2p.CreateHost("/ip4/0.0.0.0/tcp/0", validPrivateKey2, nil)
 	require.NoError(t, err)
 	require.NotNil(t, host2)
 

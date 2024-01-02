@@ -60,6 +60,9 @@ endpoint = "{{ .MetricsConfig.Endpoint }}"
 
 # Enable TLS connection to OTLP metric backend.
 tls = "{{ .MetricsConfig.TLS }}"
+
+# Sets the HTTP endpoint for LibP2P metrics to listen on.
+p2p = "{{ .MetricsConfig.P2P }}"
 `
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -81,6 +84,7 @@ func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
 	base.AddMetricsFlag(cmd)
 	base.AddMetricsEndpointFlag(cmd)
 	base.AddMetricsTLSFlag(cmd)
+	base.AddP2PMetricsEndpoint(cmd)
 
 	return cmd
 }
@@ -110,6 +114,7 @@ func DefaultStartConfig() *StartConfig {
 			Metrics:  false,
 			Endpoint: "localhost:4318",
 			TLS:      false,
+			P2P:      "localhost:30001",
 		},
 	}
 }
@@ -213,6 +218,14 @@ func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartCo
 	}
 	if changed {
 		startConf.MetricsConfig.TLS = tls
+	}
+
+	p2p, changed, err := base.GetP2PMetricsEndpointFlag(cmd)
+	if err != nil {
+		return StartConfig{}, err
+	}
+	if changed {
+		startConf.MetricsConfig.P2P = p2p
 	}
 
 	logLevel, _, err := base.GetLogLevelFlag(cmd)
