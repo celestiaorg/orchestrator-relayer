@@ -63,4 +63,5 @@ sleep 5s
   --evm.contract-address="${BLOBSTREAM_CONTRACT}" \
   --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
   --p2p.listen-addr="${P2P_LISTEN}" \
-  --evm.passphrase=123
+  --evm.passphrase=123 \
+  --metrics --metrics.endpoint otel-collector:4318  --log.level debug #TODO add env vars
