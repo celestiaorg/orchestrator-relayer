@@ -198,8 +198,7 @@ func Start() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				// TODO(sweexordious): add p2p native flags
-				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer, config.MetricsConfig.P2P)
+				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer, config.MetricsConfig.P2PEndpoint)
 				if shutdown != nil {
 					stopFuncs = append(stopFuncs, shutdown)
 				}

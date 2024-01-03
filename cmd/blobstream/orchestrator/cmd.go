@@ -136,7 +136,7 @@ func Start() *cobra.Command {
 				if err != nil {
 					return err
 				}
-				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer, config.MetricsConfig.P2P)
+				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer, config.MetricsConfig.P2PEndpoint)
 				if shutdown != nil {
 					stopFuncs = append(stopFuncs, shutdown)
 				}

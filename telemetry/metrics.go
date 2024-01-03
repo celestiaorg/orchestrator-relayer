@@ -26,10 +26,10 @@ const (
 
 // Config defines the configuration options for blobstream telemetry.
 type Config struct {
-	Metrics  bool   `mapstructure:"metrics" json:"metrics"`
-	Endpoint string `mapstructure:"endpoint" json:"endpoint"`
-	TLS      bool   `mapstructure:"tls" json:"tls"`
-	P2P      string `mapstructure:"p2p" json:"p2p"`
+	Metrics     bool   `mapstructure:"metrics" json:"metrics"`
+	Endpoint    string `mapstructure:"endpoint" json:"endpoint"`
+	TLS         bool   `mapstructure:"tls" json:"tls"`
+	P2PEndpoint string `mapstructure:"p2p-endpoint" json:"p2p-endpoint"`
 }
 
 var meter = otel.Meter(globalMetricsNamespace)
@@ -173,7 +173,7 @@ func PrometheusMetrics(ctx context.Context, logger tmlog.Logger, registerer prom
 		}
 	}()
 	logger.Info(
-		"Prometheus agent started",
+		"libp2p prometheus agent started",
 		"listen_addr",
 		fmt.Sprintf("%s%s", listenAddress, promAgentEndpoint),
 	)

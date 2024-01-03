@@ -73,7 +73,7 @@ retry-timeout = "{{ .EVMRetryTimeout }}"
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################
-
+[telemetry]
 # Enables OTLP metrics with HTTP exporter.
 metrics = "{{ .MetricsConfig.Metrics }}"
 
@@ -84,7 +84,7 @@ endpoint = "{{ .MetricsConfig.Endpoint }}"
 tls = "{{ .MetricsConfig.TLS }}"
 
 # Sets the HTTP endpoint for LibP2P metrics to listen on.
-p2p = "{{ .MetricsConfig.P2P }}"
+p2p-endpoint = "{{ .MetricsConfig.P2PEndpoint }}"
 `
 
 func addRelayerStartFlags(cmd *cobra.Command) *cobra.Command {
@@ -136,7 +136,7 @@ type StartConfig struct {
 	EVMRetryTimeout       uint64 `mapstructure:"retry-timeout" json:"retry-timeout"`
 	isBackupRelayer       bool
 	backupRelayerWaitTime uint64
-	MetricsConfig         telemetry.Config `mapstructure:"metrics-config" json:"metrics-config"`
+	MetricsConfig         telemetry.Config `mapstructure:"telemetry" json:"telemetry"`
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -151,10 +151,10 @@ func DefaultStartConfig() *StartConfig {
 		EvmGasLimit:     2500000,
 		EVMRetryTimeout: 15,
 		MetricsConfig: telemetry.Config{
-			Metrics:  false,
-			Endpoint: "localhost:4318",
-			TLS:      false,
-			P2P:      "localhost:30001",
+			Metrics:     false,
+			Endpoint:    "localhost:4318",
+			TLS:         false,
+			P2PEndpoint: "localhost:30001",
 		},
 	}
 }
@@ -333,7 +333,7 @@ func parseRelayerStartFlags(cmd *cobra.Command, fileConfig *StartConfig) (StartC
 		return StartConfig{}, err
 	}
 	if changed {
-		fileConfig.MetricsConfig.P2P = p2p
+		fileConfig.MetricsConfig.P2PEndpoint = p2p
 	}
 
 	return *fileConfig, nil

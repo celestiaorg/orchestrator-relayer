@@ -92,7 +92,7 @@ const (
 	FlagMetrics            = "metrics"
 	FlagMetricsEndpoint    = "metrics.endpoint"
 	FlagMetricsTLS         = "metrics.tls"
-	FlagMetricsP2PEndpoint = "metrics.p2p.endpoint"
+	FlagMetricsP2PEndpoint = "metrics.p2p"
 )
 
 func AddLogLevelFlag(cmd *cobra.Command) {
@@ -453,7 +453,7 @@ func AddP2PMetricsEndpoint(cmd *cobra.Command) {
 	cmd.Flags().String(
 		FlagMetricsP2PEndpoint,
 		"localhost:30001",
-		"Sets HTTP endpoint for LibP2P metrics to listen on. Depends on '--metrics'. The metrics will be handled at the `/metrics` URI",
+		"Sets HTTP endpoint for LibP2P metrics to listen on. Depends on '--metrics'. The metrics will be handled at the '/metrics' URI",
 	)
 }
 

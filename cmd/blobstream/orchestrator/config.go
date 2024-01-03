@@ -51,7 +51,7 @@ listen-addr = "{{ .P2PListenAddr }}"
 ###############################################################################
 ###                         Telemetry Configuration                         ###
 ###############################################################################
-
+[telemetry]
 # Enables OTLP metrics with HTTP exporter.
 metrics = "{{ .MetricsConfig.Metrics }}"
 
@@ -62,7 +62,7 @@ endpoint = "{{ .MetricsConfig.Endpoint }}"
 tls = "{{ .MetricsConfig.TLS }}"
 
 # Sets the HTTP endpoint for LibP2P metrics to listen on.
-p2p = "{{ .MetricsConfig.P2P }}"
+p2p-endpoint = "{{ .MetricsConfig.P2PEndpoint }}"
 `
 
 func addOrchestratorFlags(cmd *cobra.Command) *cobra.Command {
@@ -100,7 +100,7 @@ type StartConfig struct {
 	GRPCInsecure  bool `mapstructure:"grpc-insecure" json:"grpc-insecure"`
 	LogLevel      string
 	LogFormat     string
-	MetricsConfig telemetry.Config `mapstructure:"metrics-config" json:"metrics-config"`
+	MetricsConfig telemetry.Config `mapstructure:"telemetry" json:"telemetry"`
 }
 
 func DefaultStartConfig() *StartConfig {
@@ -111,10 +111,10 @@ func DefaultStartConfig() *StartConfig {
 		P2PListenAddr: "/ip4/0.0.0.0/tcp/30000",
 		GRPCInsecure:  true,
 		MetricsConfig: telemetry.Config{
-			Metrics:  false,
-			Endpoint: "localhost:4318",
-			TLS:      false,
-			P2P:      "localhost:30001",
+			Metrics:     false,
+			Endpoint:    "localhost:4318",
+			TLS:         false,
+			P2PEndpoint: "localhost:30001",
 		},
 	}
 }
@@ -225,7 +225,7 @@ func parseOrchestratorFlags(cmd *cobra.Command, startConf *StartConfig) (StartCo
 		return StartConfig{}, err
 	}
 	if changed {
-		startConf.MetricsConfig.P2P = p2p
+		startConf.MetricsConfig.P2PEndpoint = p2p
 	}
 
 	logLevel, _, err := base.GetLogLevelFlag(cmd)
