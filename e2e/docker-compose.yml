@@ -37,7 +37,6 @@ services:
       - core0
     ports:
       - "30000:30000"
-      - "30010:30001"
     environment:
       - MONIKER=core0
       - PRIVATE_KEY=da6ed55cb2894ac2c9c10209c09de8e8b9d109b910338d5bf3d747a7e1fc9eb9
