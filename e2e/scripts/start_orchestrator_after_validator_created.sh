@@ -6,10 +6,10 @@
 if [[ -z "${MONIKER}" || -z "${PRIVATE_KEY}" ]] || \
    [[ -z "${CORE_GRPC_HOST}" || -z "${CORE_GRPC_PORT}" ]] || \
    [[ -z "${CORE_RPC_HOST}" || -z "${CORE_RPC_PORT}" ]] || \
-   [[ -z "${P2P_LISTEN}" ]]
+   [[ -z "${P2P_LISTEN}" || -z "${METRICS_ENDPOINT}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "MONIKER, PRIVATE_KEY, CORE_GRPC_HOST, CORE_GRPC_PORT, CORE_RPC_HOST, CORE_RPC_PORT, P2P_LISTEN variables"
+  echo "MONIKER, PRIVATE_KEY, CORE_GRPC_HOST, CORE_GRPC_PORT, CORE_RPC_HOST, CORE_RPC_PORT, P2P_LISTEN, METRICS_ENDPOINT variables"
   exit 1
 fi
 
@@ -55,8 +55,9 @@ then
     --p2p.nickname=key \
     --p2p.listen-addr="${P2P_LISTEN}" \
     --evm.passphrase=123 \
-    --log.level debug \
-    --metrics --metrics.endpoint otel-collector:4318 #TODO use env vars
+    --log.level=debug \
+    --metrics \
+    --metrics.endpoint="${METRICS_ENDPOINT}"
 else
   # to give time for the bootstrappers to be up
   sleep 5s
@@ -69,6 +70,7 @@ else
     --p2p.listen-addr="${P2P_LISTEN}" \
     --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
     --evm.passphrase=123 \
-    --log.level debug \
-    --metrics --metrics.endpoint otel-collector:4318 #TODO use env vars
+    --log.level=debug \
+    --metrics \
+    --metrics.endpoint="${METRICS_ENDPOINT}"
 fi
