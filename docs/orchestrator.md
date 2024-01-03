@@ -255,6 +255,28 @@ If the validator still has access to the previously running orchestrator, it wou
 
 Running a second orchestrator in the same machine would require using different P2P listening ports, i.e. changing the `listen-addr` value in the `<orchestrator_home>/config/config.toml` file and using different ports between the two instances.
 
+### Telemetry
+
+The orchestrator supports metrics that describe its runtime and gives more information on its health. The supported metrics are:
+
+- `orchestrator_processed_nonces_counter`: The count of the total number of nonces that have been processed by the orchestrator. During normal conditions, this number will be incremented by 1 every hour, i.e. 400 blocks which is the current data commitment window. The health of the orchestrator can be determined using this metric via checking if it's been constantly signing nonces. If the counter wasn't incremented for more than an hour, the orchestrator might be failing.
+- `orchestrator_failed_nonces_counter`: The count of the number of nonces that the orchestrator tried to process, but failed. These nonces might be re-queued to be reprocessed subsequently. If the orchestrator manages to process them correctly, the `orchestrator_processed_nonces_counter` will be incremented. Otherwise, they might be re-enqueued to be re-processed.
+- `orchestrator_reprocessed_nonces_counter`: The count of the number of nonces that failed to be processed by the orchestrator, but were re-enqueued.
+- `orchestrator_processing_time`: The time it takes for a nonce to be processed or fail after it was picked by the orchestrator processor.
+
+To enable these metrics, make sure to set the `metrics` to true in the orchestrator configuration file:
+
+```toml
+# Enables OTLP metrics with HTTP exporter.
+metrics = "true"
+```
+
+And setup a correct endpoint to connect to an [otel collector](https://opentelemetry.io/docs/collector/installation/), by default it targets the `"localhost:4318"` endpoint. These can also be setup using the command line flags.
+
+The orchestrator provides also the LibP2P native metrics. These are also enabled when the above parameter is set to `true` and are served, by default, to the `"localhost:30001/metrics"`, which can be updated using the orchestrator config file or the command line flags.
+
+An example configuration is provided in the `e2e/telemetry` folder along with the corresponding docker-compose file.
+
 #### Systemd service
 
 If you want to start the orchestrator as a `systemd` service, you could use the following:
