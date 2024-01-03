@@ -49,6 +49,7 @@ services:
       - P2P_BOOTSTRAPPERS=
       - P2P_IDENTITY=f7fd2be6b2abaa8519b0570d3a12e684a397456b0cc721198ebdd7e343cdd8f41813ef8aa857426c4e909c4fe19120a0f3f8c505286ca9d9249b5681475ec459
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+      - METRICS_ENDPOINT=otel-collector:4318
     entrypoint: [
       "/bin/bash"
     ]
@@ -107,6 +108,7 @@ services:
       - CORE_GRPC_PORT=9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+      - METRICS_ENDPOINT=otel-collector:4318
     entrypoint: [
       "/bin/bash"
     ]
@@ -165,6 +167,7 @@ services:
       - CORE_GRPC_PORT=9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+      - METRICS_ENDPOINT=otel-collector:4318
     entrypoint: [
       "/bin/bash"
     ]
@@ -223,6 +226,7 @@ services:
       - CORE_GRPC_PORT=9090
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+      - METRICS_ENDPOINT=otel-collector:4318
     entrypoint: [
       "/bin/bash"
     ]
@@ -301,6 +305,7 @@ services:
       - STARTING_NONCE=latest
       - P2P_BOOTSTRAPPERS=/dns/core0-orch/tcp/30000/p2p/12D3KooWBSMasWzRSRKXREhediFUwABNZwzJbkZcYz5rYr9Zdmfn
       - P2P_LISTEN=/ip4/0.0.0.0/tcp/30000
+      - METRICS_ENDPOINT=otel-collector:4318
 #      set the following environment variable to some value
 #      if you want to relay to an existing Blobstream contract
 #      - BLOBSTREAM_CONTRACT=0x123
@@ -313,3 +318,48 @@ services:
     volumes:
       - ${PWD}/scripts/start_relayer.sh:/opt/start_relayer.sh:ro
       - ${PWD}/scripts/deploy_blobstream_contract.sh:/opt/deploy_blobstream_contract.sh:ro
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - "9000:9090"
+    volumes:
+      - ${PWD}/telemetry/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
+    # yamllint disable-line rule:line-length
+    command: --web.enable-lifecycle  --config.file=/etc/prometheus/prometheus.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  otel-collector:
+    container_name: otel-collector
+    image: otel/opentelemetry-collector
+    command: ["--config=/root/otel-collector/config.yml"]
+    volumes:
+      - ${PWD}/telemetry/otel-collector:/root/otel-collector/
+    ports:
+      - "8888:8888"   # Prometheus metrics exposed by the collector
+      - "8889:8889"   # Prometheus exporter metrics
+      - "55681:55681"
+      - "13133:13133"  # health_check extension
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP http receiver
+      - "4319:4319"   # OTLP http receiver
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    user: "0"
+    ports:
+      - 3001:3000
+    restart: unless-stopped
+    volumes:
+      - ${PWD}/telemetry/grafana/:/etc/grafana/provisioning/
+      - ${PWD}/telemetry/grafana/:/var/lib/grafana/dashboards/
+      - grafana-data:/var/lib/grafana
+
+
+volumes:
+  prometheus-data:
+  grafana-data:

@@ -8,10 +8,10 @@ if [[ -z "${EVM_CHAIN_ID}" || -z "${PRIVATE_KEY}" ]] || \
    [[ -z "${CORE_GRPC_HOST}" || -z "${CORE_GRPC_PORT}" ]] || \
    [[ -z "${CORE_RPC_HOST}" || -z "${CORE_RPC_PORT}" ]] || \
    [[ -z "${EVM_ENDPOINT}" || -z "${P2P_BOOTSTRAPPERS}" ]] || \
-   [[ -z "${P2P_LISTEN}" ]]
+   [[ -z "${P2P_LISTEN}" || -z "${METRICS_ENDPOINT}" ]]
 then
   echo "Environment not setup correctly. Please set:"
-  echo "EVM_CHAIN_ID, PRIVATE_KEY, CORE_GRPC_HOST, CORE_GRPC_PORT, CORE_RPC_HOST, CORE_RPC_PORT, EVM_ENDPOINT, P2P_BOOTSTRAPPERS, P2P_LISTEN variables"
+  echo "EVM_CHAIN_ID, PRIVATE_KEY, CORE_GRPC_HOST, CORE_GRPC_PORT, CORE_RPC_HOST, CORE_RPC_PORT, EVM_ENDPOINT, P2P_BOOTSTRAPPERS, P2P_LISTEN, METRICS_ENDPOINT variables"
   exit 1
 fi
 
@@ -63,4 +63,7 @@ sleep 5s
   --evm.contract-address="${BLOBSTREAM_CONTRACT}" \
   --p2p.bootstrappers="${P2P_BOOTSTRAPPERS}" \
   --p2p.listen-addr="${P2P_LISTEN}" \
-  --evm.passphrase=123
+  --evm.passphrase=123 \
+  --metrics \
+  --metrics.endpoint="${METRICS_ENDPOINT}" \
+  --log.level=debug

@@ -85,7 +85,7 @@ func Start() *cobra.Command {
 			}
 
 			// creating the host
-			h, err := p2p.CreateHost(config.p2pListenAddr, privKey)
+			h, err := p2p.CreateHost(config.p2pListenAddr, privKey, nil)
 			if err != nil {
 				return err
 			}

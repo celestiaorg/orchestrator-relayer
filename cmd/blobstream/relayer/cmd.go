@@ -2,8 +2,13 @@ package relayer
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"time"
+
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
 
 	"github.com/celestiaorg/orchestrator-relayer/cmd/blobstream/version"
 
@@ -165,7 +170,44 @@ func Start() *cobra.Command {
 			// creating the data store
 			dataStore := dssync.MutexWrap(s.DataStore)
 
-			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore)
+			relayerMeters, err := telemetry.InitRelayerMeters()
+			if err != nil {
+				return err
+			}
+
+			var registerer prometheus.Registerer
+			if config.MetricsConfig.Metrics {
+				opts := []otlpmetrichttp.Option{
+					otlpmetrichttp.WithEndpoint(config.MetricsConfig.Endpoint),
+					otlpmetrichttp.WithCompression(otlpmetrichttp.GzipCompression),
+				}
+				if !config.MetricsConfig.TLS {
+					opts = append(opts, otlpmetrichttp.WithInsecure())
+				}
+				var shutdown func() error
+				registerer, shutdown, err = telemetry.Start(
+					ctx,
+					logger,
+					fmt.Sprintf("%s:%s", ServiceNameRelayer, config.ContractAddr),
+					acc.Address.Hex(),
+					opts,
+				)
+				if shutdown != nil {
+					stopFuncs = append(stopFuncs, shutdown)
+				}
+				if err != nil {
+					return err
+				}
+				shutdown, err := telemetry.PrometheusMetrics(ctx, logger, registerer, config.MetricsConfig.P2PEndpoint)
+				if shutdown != nil {
+					stopFuncs = append(stopFuncs, shutdown)
+				}
+				if err != nil {
+					return err
+				}
+			}
+
+			dht, err := common.CreateDHTAndWaitForPeers(ctx, logger, s.P2PKeyStore, config.p2pNickname, config.P2PListenAddr, config.Bootstrappers, dataStore, registerer)
 			if err != nil {
 				return err
 			}
@@ -207,6 +249,7 @@ func Start() *cobra.Command {
 				time.Duration(config.EVMRetryTimeout)*time.Minute,
 				config.isBackupRelayer,
 				time.Duration(config.backupRelayerWaitTime)*time.Minute,
+				relayerMeters,
 			)
 
 			// Listen for and trap any OS signal to graceful shutdown and exit
