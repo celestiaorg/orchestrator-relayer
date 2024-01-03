@@ -9,6 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/celestiaorg/orchestrator-relayer/telemetry"
+
 	"github.com/celestiaorg/orchestrator-relayer/evm"
 	"github.com/ethereum/go-ethereum/accounts"
 	"github.com/ethereum/go-ethereum/accounts/keystore"
@@ -45,6 +47,7 @@ type Orchestrator struct {
 	P2PQuerier  *p2p.Querier
 	Broadcaster *Broadcaster
 	Retrier     *helpers.Retrier
+	Meters      *telemetry.OrchestratorMeters
 }
 
 func New(
@@ -56,6 +59,7 @@ func New(
 	retrier *helpers.Retrier,
 	evmKeyStore *keystore.KeyStore,
 	evmAccount *accounts.Account,
+	meters *telemetry.OrchestratorMeters,
 ) *Orchestrator {
 	return &Orchestrator{
 		Logger:      logger,
@@ -66,6 +70,7 @@ func New(
 		P2PQuerier:  p2pQuerier,
 		Broadcaster: broadcaster,
 		Retrier:     retrier,
+		Meters:      meters,
 	}
 }
 
@@ -266,20 +271,26 @@ func (orch Orchestrator) ProcessNonces(
 				go func() {
 					nonce := <-requeueQueue
 					noncesQueue <- nonce
+					orch.Meters.ReprocessedNonces.Add(ctx, 1)
 					orch.Logger.Debug("failed nonce added to the nonces queue to be processed", "nonce", nonce)
 				}()
 			}
 		case nonce := <-noncesQueue:
 			orch.Logger.Info("processing nonce", "nonce", nonce)
+			start := time.Now()
 			if err := orch.Process(ctx, nonce); err != nil {
+				orch.Meters.ProcessingTime.Record(ctx, time.Since(start).Seconds())
 				orch.Logger.Error("failed to process nonce, retrying", "nonce", nonce, "err", err)
 				if err := orch.Retrier.Retry(ctx, func() error {
 					return orch.Process(ctx, nonce)
 				}); err != nil {
+					orch.Meters.FailedNonces.Add(ctx, 1)
 					orch.Logger.Error("error processing nonce even after retrying", "err", err.Error())
 					go orch.MaybeRequeue(ctx, requeueQueue, nonce)
 				}
 			}
+			orch.Meters.ProcessingTime.Record(ctx, time.Since(start).Seconds())
+			orch.Meters.ProcessedNonces.Add(ctx, 1)
 		}
 	}
 }

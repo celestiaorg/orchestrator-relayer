@@ -88,6 +88,11 @@ const (
 
 	FlagBackupRelayer         = "relayer.backup"
 	FlagBackupRelayerWaitTime = "relayer.wait-time"
+
+	FlagMetrics            = "metrics"
+	FlagMetricsEndpoint    = "metrics.endpoint"
+	FlagMetricsTLS         = "metrics.tls"
+	FlagMetricsP2PEndpoint = "metrics.p2p"
 )
 
 func AddLogLevelFlag(cmd *cobra.Command) {
@@ -391,4 +396,72 @@ func AddEVMRetryTimeoutFlag(cmd *cobra.Command) {
 		15,
 		"The time, in minutes, to wait for transactions to be mined on the target EVM chain before recreating them with a different gas price",
 	)
+}
+
+func AddMetricsFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool(
+		FlagMetrics,
+		false,
+		"Enables OTLP metrics with HTTP exporter",
+	)
+}
+
+func GetMetricsFlag(cmd *cobra.Command) (bool, bool, error) {
+	changed := cmd.Flags().Changed(FlagMetrics)
+	val, err := cmd.Flags().GetBool(FlagMetrics)
+	if err != nil {
+		return false, changed, err
+	}
+	return val, changed, nil
+}
+
+func AddMetricsEndpointFlag(cmd *cobra.Command) {
+	cmd.Flags().String(
+		FlagMetricsEndpoint,
+		"localhost:4318",
+		"Sets HTTP endpoint for OTLP metrics to be exported to. Depends on '--metrics'",
+	)
+}
+
+func GetMetricsEndpointFlag(cmd *cobra.Command) (string, bool, error) {
+	changed := cmd.Flags().Changed(FlagMetricsEndpoint)
+	val, err := cmd.Flags().GetString(FlagMetricsEndpoint)
+	if err != nil {
+		return "", changed, err
+	}
+	return val, changed, nil
+}
+
+func AddMetricsTLSFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool(
+		FlagMetricsTLS,
+		false,
+		"Enable TLS connection to OTLP metric backend",
+	)
+}
+
+func GetMetricsTLSFlag(cmd *cobra.Command) (bool, bool, error) {
+	changed := cmd.Flags().Changed(FlagMetricsTLS)
+	val, err := cmd.Flags().GetBool(FlagMetricsTLS)
+	if err != nil {
+		return false, changed, err
+	}
+	return val, changed, nil
+}
+
+func AddP2PMetricsEndpoint(cmd *cobra.Command) {
+	cmd.Flags().String(
+		FlagMetricsP2PEndpoint,
+		"localhost:30001",
+		"Sets HTTP endpoint for LibP2P metrics to listen on. Depends on '--metrics'. The metrics will be handled at the '/metrics' URI",
+	)
+}
+
+func GetP2PMetricsEndpointFlag(cmd *cobra.Command) (string, bool, error) {
+	changed := cmd.Flags().Changed(FlagMetricsP2PEndpoint)
+	val, err := cmd.Flags().GetString(FlagMetricsP2PEndpoint)
+	if err != nil {
+		return "", changed, err
+	}
+	return val, changed, nil
 }
