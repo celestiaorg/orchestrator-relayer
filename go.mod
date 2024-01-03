@@ -37,7 +37,7 @@ require (
 	github.com/multiformats/go-multiaddr v0.12.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/rs/zerolog v1.31.0
-	github.com/spf13/viper v1.17.0
+	github.com/spf13/viper v1.18.2
 	github.com/tendermint/tendermint v0.35.9
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.45.0
 	go.opentelemetry.io/otel v1.21.0
@@ -45,8 +45,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.21.0
 	go.opentelemetry.io/otel/sdk v1.21.0
 	go.opentelemetry.io/otel/sdk/metric v1.21.0
-	github.com/spf13/viper v1.18.2
-	github.com/tendermint/tendermint v0.34.28
 )
 
 require (
