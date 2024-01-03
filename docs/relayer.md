@@ -137,8 +137,8 @@ To enable these metrics, make sure to set the `metrics` to true in the relayer c
 metrics = "true"
 ```
 
-And setup a correct endpoint to connect to an otel collector, by default it targets the `"localhost:4318"` endpoint. These can also be setup using the command line flags.
+And setup a correct endpoint to connect to an [otel collector](https://opentelemetry.io/docs/collector/installation/), by default it targets the `"localhost:4318"` endpoint. These can also be setup using the command line flags.
 
 The relayer provides also the LibP2P native metrics. These are also enabled when the above parameter is set to `true` and are served, by default, to the `"localhost:30001/metrics"`, which can be updated using the relayer config file or the command line flags.
 
-An example configuration is provided in the `e2e/telemetry` folder along with the corresponding docker-compose file.
+An example configuration is provided in the `e2e/telemetry` folder along with the corresponding docker-compose file `e2e/docker-compose.yml`.
