@@ -16,4 +16,4 @@ scrape_configs:
           - 'otel-collector:8889'
   - job_name: 'libp2p_metrics'
     static_configs:
-      - targets: [ 'core0-orch:8890' ]
+      - targets: [ 'core0-orch:30001' ]
