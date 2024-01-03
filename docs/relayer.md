@@ -121,3 +121,24 @@ To start the relayer using the default home directory, run the following:
 > **_NOTE:_** The above command assumes that the necessary configuration is specified in the `<relayer_home>/config/config.toml` file.
 
 Then, you will be prompted to enter your EVM key passphrase for the EVM address passed using the `--evm.account` flag, so that the relayer can use it to send transactions to the target Blobstream smart contract. Make sure that it's funded.
+
+### Telemetry
+
+The relayer supports metrics that describe its runtime and gives more information on its health. The supported metrics are:
+
+- `relayer_processed_nonces_counter`: The count of the total number of nonces that have been processed by the relayer. During normal conditions, this number will be incremented by 1 every hour, i.e. 400 blocks which is the current data commitment window. The health of the relayer can be determined using this metric via checking if it's been constantly signing nonces. If the counter wasn't incremented for more than an hour, the relayer might be failing.
+- `relayer_number_of_failures`: The number of failures the relayer failed to relay a nonce.
+- `relayer_processing_time`: The time it takes for a nonce to be processed or fail after it was picked by the relayer.
+
+To enable these metrics, make sure to set the `metrics` to true in the relayer configuration file:
+
+```toml
+# Enables OTLP metrics with HTTP exporter.
+metrics = "true"
+```
+
+And setup a correct endpoint to connect to an otel collector, by default it targets the `"localhost:4318"` endpoint. These can also be setup using the command line flags.
+
+The relayer provides also the LibP2P native metrics. These are also enabled when the above parameter is set to `true` and are served, by default, to the `"localhost:30001/metrics"`, which can be updated using the relayer config file or the command line flags.
+
+An example configuration is provided in the `e2e/telemetry` folder along with the corresponding docker-compose file.
