@@ -7,7 +7,7 @@ replace github.com/celestiaorg/orchestrator-relayer => ../
 require (
 	github.com/celestiaorg/celestia-app v1.6.0
 	github.com/celestiaorg/nmt v0.20.0 // indirect
-	github.com/ethereum/go-ethereum v1.13.8
+	github.com/ethereum/go-ethereum v1.13.9
 	github.com/gogo/protobuf v1.3.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.5.0
