@@ -1,5 +1,5 @@
 # stage 1 Build blobstream binary
-FROM golang:1.21.1-alpine as builder
+FROM golang:1.21.6-alpine as builder
 RUN apk update && apk --no-cache add make gcc musl-dev git
 COPY . /orchestrator-relayer
 WORKDIR /orchestrator-relayer

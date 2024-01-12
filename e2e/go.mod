@@ -1,6 +1,6 @@
 module github.com/celestiaorg/orchestrator-relayer/e2e
 
-go 1.21.1
+go 1.21.6
 
 replace github.com/celestiaorg/orchestrator-relayer => ../
 
