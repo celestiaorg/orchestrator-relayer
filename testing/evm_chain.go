@@ -6,8 +6,10 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common/math"
+	"github.com/ethereum/go-ethereum/ethclient/simulated"
+
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 )
@@ -20,7 +22,7 @@ const EVMTestNetworkChainID = 1337
 type EVMChain struct {
 	Auth         *bind.TransactOpts
 	GenesisAlloc core.GenesisAlloc
-	Backend      *backends.SimulatedBackend
+	Backend      *simulated.Backend
 	Key          *ecdsa.PrivateKey // TODO provide the keystore directly here
 	ChainID      uint64
 }
@@ -39,7 +41,7 @@ func NewEVMChain(key *ecdsa.PrivateKey) *EVMChain {
 		auth.From: {Balance: genBal},
 	}
 
-	backend := backends.NewSimulatedBackend(gAlloc, 100000000000000)
+	backend := simulated.New(gAlloc, math.MaxUint64-1)
 
 	return &EVMChain{
 		Auth:         auth,

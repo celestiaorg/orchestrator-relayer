@@ -52,7 +52,7 @@ func (s *HistoricalRelayerTestSuite) SetupSuite() {
 	go s.Node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
 	initVs, err := s.Relayer.AppQuerier.QueryLatestValset(s.Node.Context)
 	require.NoError(t, err)
-	_, _, _, err = s.Relayer.EVMClient.DeployBlobstreamContract(s.Node.EVMChain.Auth, s.Node.EVMChain.Backend, *initVs, initVs.Nonce, true)
+	_, _, _, err = s.Relayer.EVMClient.DeployBlobstreamContract(s.Node.EVMChain.Auth, s.Node.EVMChain.Backend.Client(), *initVs, initVs.Nonce, true)
 	require.NoError(t, err)
 	rpc.BlocksIn20DaysPeriod = 50
 }
