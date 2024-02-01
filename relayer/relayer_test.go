@@ -40,7 +40,7 @@ func (s *RelayerTestSuite) TestProcessAttestation() {
 
 	tx, err := s.Relayer.ProcessAttestation(ctx, s.Node.EVMChain.Auth, att)
 	require.NoError(t, err)
-	receipt, err := s.Relayer.EVMClient.WaitForTransaction(ctx, s.Node.EVMChain.Backend, tx, 20*time.Second)
+	receipt, err := s.Relayer.EVMClient.WaitForTransaction(ctx, s.Node.EVMChain.Backend.Client(), tx, 20*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), receipt.Status)
 
@@ -106,14 +106,14 @@ func TestUseValsetFromP2P(t *testing.T) {
 
 	relayer := blobstreamtesting.NewRelayer(t, node)
 	go node.EVMChain.PeriodicCommit(ctx, time.Millisecond)
-	_, _, _, err = relayer.EVMClient.DeployBlobstreamContract(node.EVMChain.Auth, node.EVMChain.Backend, *latestValset.ToValset(), latestValset.Nonce, true)
+	_, _, _, err = relayer.EVMClient.DeployBlobstreamContract(node.EVMChain.Auth, node.EVMChain.Backend.Client(), *latestValset.ToValset(), latestValset.Nonce, true)
 	require.NoError(t, err)
 
 	// make sure the relayer is able to relay the signature using the pruned valset
 	tx, err := relayer.ProcessAttestation(ctx, node.EVMChain.Auth, att)
 	require.NoError(t, err)
 
-	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend, tx, 20*time.Second)
+	receipt, err := relayer.EVMClient.WaitForTransaction(ctx, node.EVMChain.Backend.Client(), tx, 20*time.Second)
 	assert.NoError(t, err)
 	assert.Equal(t, uint64(1), receipt.Status)
 
