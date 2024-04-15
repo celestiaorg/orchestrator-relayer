@@ -6,6 +6,8 @@ The orchestrator is the software that signs Blobstream attestations, and the rel
 
 For a high-level overview of how Blobstream works, check [here](https://github.com/celestiaorg/quantum-gravity-bridge/tree/76efeca0be1a17d32ef633c0fdbd3c8f5e4cc53f#how-it-works) and [here](https://blog.celestia.org/celestiums/).
 
+**This repo has been archived as vanilla blobstream has been decommissioned. The currently in-production version is [BlobstreamX](https://docs.celestia.org/developers/blobstream#what-is-blobstream-x).**
+
 ## Install
 
 1. [Install Go](https://go.dev/doc/install) 1.21
